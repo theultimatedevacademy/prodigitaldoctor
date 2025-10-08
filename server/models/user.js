@@ -25,11 +25,10 @@ const UserSchema = new Schema(
       {
         type: String,
         enum: ["patient", "doctor", "assistant", "clinic_owner", "admin"],
-        required: true,
       },
     ],
     name: { type: String },
-    email: { type: String, index: true },
+    email: { type: String, unique: true, sparse: true, lowercase: true },
     phone: { type: String },
     profilePhotoUrl: { type: String },
     qualifications: { type: String },

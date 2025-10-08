@@ -1,7 +1,10 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import { User, Clinic, Patient, Medication, Composition } from "./models/index.js";
+import authRoutes from "./routes/auth.js";
+import webhookRoutes from "./routes/webhook.js";
 
 // Load environment variables
 dotenv.config();
@@ -10,12 +13,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true
+}));
+
+// Webhook routes MUST come before express.json() middleware
+// Webhooks need raw body for signature verification
+app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+
+// Parse JSON for all other routes
 app.use(express.json());
 
 // Test route
 app.get("/", (req, res) => {
   res.json({ message: "ProDigitalDoctor API is running" });
 });
+
+// API Routes
+app.use("/api/auth", authRoutes);
 
 // Database connection test route
 app.get("/api/test-db", async (req, res) => {

@@ -15,9 +15,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "mongodb": "^6.20.0",
-    "mongoose": "^8.19.1"
+    "mongoose": "^8.19.1",
+    "svix": "^1.76.1"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

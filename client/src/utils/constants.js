@@ -9,7 +9,8 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 // API Endpoints
 export const API_ENDPOINTS = {
   // Auth
-  ME: '/api/me',
+  ME: '/api/auth/me',
+  UPDATE_MY_ROLE: '/api/auth/my-role',
   
   // Patients
   PATIENTS: '/api/patients',

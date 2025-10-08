@@ -14,6 +14,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { ToastContainer } from 'react-toastify';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { RoleBasedDashboard } from './components/RoleBasedDashboard';
 import { ClinicProvider } from './hooks/useClinicContext';
 import { MainLayout } from './layouts/MainLayout';
 import { AuthLayout } from './layouts/AuthLayout';
@@ -65,7 +66,7 @@ createRoot(document.getElementById('root')).render(
                   </ProtectedRoute>
                 }
               >
-                <Route path="/dashboard" element={<DoctorDashboard />} />
+                <Route path="/dashboard" element={<RoleBasedDashboard />} />
                 
                 {/* Patients */}
                 <Route path="/patients" element={<PatientsPage />} />

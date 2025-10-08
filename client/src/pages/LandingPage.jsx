@@ -6,8 +6,9 @@
 
 import { SignInButton, SignUpButton, useUser } from '@clerk/clerk-react';
 import { Navigate } from 'react-router';
-import { FileText, Users, Calendar, Shield, Zap, Globe, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { FileText, Users, Calendar, Shield, Zap, Globe, ArrowRight, Check, Sparkles, Play, Star, Quote } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { useState } from 'react';
 
 const LandingPage = () => {
   const { isSignedIn, isLoaded } = useUser();
@@ -31,18 +32,21 @@ const LandingPage = () => {
                 ProDigital Doctor
               </span>
             </div>
-            <div className="flex gap-3">
-              <SignInButton mode="modal">
-                <Button variant="ghost" className="text-gray-700 hover:text-gray-900">
-                  Sign In
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                className="hidden sm:block text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              >
+                Pricing
+              </button>
+              <SignInButton 
+                mode="modal"
+                forceRedirectUrl="/dashboard"
+              >
+                <Button className="shadow-sm hover:shadow transition-shadow">
+                  Sign In / Sign Up
                 </Button>
               </SignInButton>
-              <SignUpButton mode="modal">
-                <Button className="shadow-sm hover:shadow transition-shadow">
-                  Get Started
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </SignUpButton>
             </div>
           </div>
         </div>
@@ -75,17 +79,22 @@ const LandingPage = () => {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <SignUpButton mode="modal">
+              <SignUpButton 
+                mode="modal"
+                forceRedirectUrl="/dashboard"
+              >
                 <Button size="lg" className="shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all">
-                  Start Free Trial
+                  Get Started Free
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </SignUpButton>
-              <SignInButton mode="modal">
-                <Button variant="outline" size="lg" className="border-gray-300 hover:border-gray-400 shadow-sm">
-                  Doctor Sign In
-                </Button>
-              </SignInButton>
+              <button
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-flex items-center gap-2 px-6 py-3 text-lg font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <Play className="w-5 h-5" />
+                View Demo
+              </button>
             </div>
             
             {/* Trust Indicators */}
@@ -112,7 +121,7 @@ const LandingPage = () => {
       </section>
       
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
             Everything you need to manage patient care
@@ -162,6 +171,99 @@ const LandingPage = () => {
         </div>
       </section>
       
+      {/* Pricing Section */}
+      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-gray-50">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-lg text-gray-600">
+            Choose the plan that's right for your practice
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <PricingCard
+            name="Starter"
+            price="₹999"
+            period="per month"
+            description="Perfect for individual practitioners"
+            features={[
+              'Up to 50 patients',
+              'Basic prescription management',
+              'Appointment scheduling',
+              'Email support',
+              'ABDM integration',
+            ]}
+            popular={false}
+          />
+          <PricingCard
+            name="Professional"
+            price="₹2,499"
+            period="per month"
+            description="For growing clinics and practices"
+            features={[
+              'Unlimited patients',
+              'Advanced prescription features',
+              'Multi-doctor support',
+              'DDI checking',
+              'Priority support',
+              'Custom branding',
+              'Analytics dashboard',
+            ]}
+            popular={true}
+          />
+          <PricingCard
+            name="Enterprise"
+            price="Custom"
+            period="contact us"
+            description="For hospitals and large practices"
+            features={[
+              'Everything in Professional',
+              'Multi-location support',
+              'Custom integrations',
+              'Dedicated account manager',
+              'SLA guarantee',
+              'Training & onboarding',
+            ]}
+            popular={false}
+          />
+        </div>
+      </section>
+      
+      {/* Testimonials Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+            Trusted by Healthcare Professionals
+          </h2>
+          <p className="text-lg text-gray-600">
+            See what doctors are saying about ProDigital Doctor
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <TestimonialCard
+            quote="ProDigital Doctor has transformed how I manage my practice. The prescription system is intuitive and the DDI checking gives me peace of mind."
+            author="Dr. Priya Sharma"
+            role="General Physician, Mumbai"
+            rating={5}
+          />
+          <TestimonialCard
+            quote="The ABDM integration is seamless. My patients love being able to access their records digitally. Highly recommend for any modern practice."
+            author="Dr. Rajesh Kumar"
+            role="Cardiologist, Delhi"
+            rating={5}
+          />
+          <TestimonialCard
+            quote="Best EMR solution I've used. Clean interface, powerful features, and excellent support. It's made my clinic operations so much more efficient."
+            author="Dr. Anjali Patel"
+            role="Pediatrician, Bangalore"
+            rating={5}
+          />
+        </div>
+      </section>
+      
       {/* CTA Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -177,7 +279,10 @@ const LandingPage = () => {
               <p className="text-xl mb-10 text-blue-100 leading-relaxed">
                 Join hundreds of doctors already using ProDigital Doctor to deliver better patient care
               </p>
-              <SignUpButton mode="modal">
+              <SignUpButton 
+                mode="modal"
+                forceRedirectUrl="/dashboard"
+              >
                 <Button size="lg" variant="secondary" className="shadow-xl hover:shadow-2xl transition-shadow bg-white hover:bg-gray-50">
                   Get Started Now
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -242,6 +347,70 @@ function FeatureCard({ icon: Icon, iconColor, title, description }) {
             {description}
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PricingCard({ name, price, period, description, features, popular }) {
+  return (
+    <div className={`relative bg-white rounded-2xl border-2 p-8 ${popular ? 'border-blue-600 shadow-xl' : 'border-gray-200'}`}>
+      {popular && (
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+          <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+            Most Popular
+          </span>
+        </div>
+      )}
+      
+      <div className="text-center mb-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">{name}</h3>
+        <p className="text-gray-600 text-sm mb-4">{description}</p>
+        <div className="flex items-baseline justify-center gap-2">
+          <span className="text-4xl font-bold text-gray-900">{price}</span>
+          {period && <span className="text-gray-600">/ {period}</span>}
+        </div>
+      </div>
+      
+      <ul className="space-y-4 mb-8">
+        {features.map((feature, index) => (
+          <li key={index} className="flex items-start gap-3">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <span className="text-gray-700">{feature}</span>
+          </li>
+        ))}
+      </ul>
+      
+      <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+        <Button 
+          className={`w-full ${popular ? '' : 'variant-outline'}`}
+          variant={popular ? 'primary' : 'outline'}
+        >
+          Get Started
+        </Button>
+      </SignUpButton>
+    </div>
+  );
+}
+
+function TestimonialCard({ quote, author, role, rating }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-8 hover:shadow-lg transition-shadow">
+      <div className="flex gap-1 mb-4">
+        {[...Array(rating)].map((_, i) => (
+          <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+        ))}
+      </div>
+      
+      <Quote className="w-10 h-10 text-blue-600 mb-4 opacity-20" />
+      
+      <p className="text-gray-700 mb-6 leading-relaxed">
+        "{quote}"
+      </p>
+      
+      <div className="border-t border-gray-200 pt-4">
+        <p className="font-semibold text-gray-900">{author}</p>
+        <p className="text-sm text-gray-600">{role}</p>
       </div>
     </div>
   );
