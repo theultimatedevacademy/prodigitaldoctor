@@ -134,9 +134,14 @@ const NewAppointmentPage = () => {
       return;
     }
 
-    // Combine date and time into ISO8601 timestamp
-    const startAt = new Date(`${formData.date}T${formData.time}`).toISOString();
-    const endAt = new Date(new Date(startAt).getTime() + 30 * 60000).toISOString(); // 30 min default
+    // Combine date and time - send as-is to backend without timezone conversion
+    // The backend will treat this as the appointment time in the clinic's local timezone
+    const startAt = `${formData.date}T${formData.time}:00`;
+    
+    // Calculate end time (30 minutes later)
+    const startDate = new Date(startAt);
+    const endDate = new Date(startDate.getTime() + 30 * 60000);
+    const endAt = `${formData.date}T${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}:00`;
 
     if (visitType === 'first_visit') {
       const appointmentData = {

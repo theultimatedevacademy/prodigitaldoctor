@@ -9,6 +9,7 @@ import { Calendar } from 'lucide-react';
 
 const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic }) => {
   const [quickDates, setQuickDates] = useState([]);
+  const [quickTimes, setQuickTimes] = useState([]);
   const [timeHour, setTimeHour] = useState('');
   const [timeMinute, setTimeMinute] = useState('');
   const [timePeriod, setTimePeriod] = useState('AM');
@@ -20,11 +21,36 @@ const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic })
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dayAfter = new Date(today);
     dayAfter.setDate(dayAfter.getDate() + 2);
+    const day3 = new Date(today);
+    day3.setDate(day3.getDate() + 3);
+    const day4 = new Date(today);
+    day4.setDate(day4.getDate() + 4);
+    const day5 = new Date(today);
+    day5.setDate(day5.getDate() + 5);
 
     setQuickDates([
       { label: 'Today', value: formatDate(today), date: today },
       { label: 'Tomorrow', value: formatDate(tomorrow), date: tomorrow },
       { label: formatDateDisplay(dayAfter), value: formatDate(dayAfter), date: dayAfter },
+      { label: formatDateDisplay(day3), value: formatDate(day3), date: day3 },
+      { label: formatDateDisplay(day4), value: formatDate(day4), date: day4 },
+      { label: formatDateDisplay(day5), value: formatDate(day5), date: day5 },
+    ]);
+
+    // Generate quick time options
+    setQuickTimes([
+      { label: '9:00', hour: '9', minute: '00', period: 'AM', value: '09:00', isPM: false },
+      { label: '9:30', hour: '9', minute: '30', period: 'AM', value: '09:30', isPM: false },
+      { label: '10:00', hour: '10', minute: '00', period: 'AM', value: '10:00', isPM: false },
+      { label: '10:30', hour: '10', minute: '30', period: 'AM', value: '10:30', isPM: false },
+      { label: '11:00', hour: '11', minute: '00', period: 'AM', value: '11:00', isPM: false },
+      { label: '11:30', hour: '11', minute: '30', period: 'AM', value: '11:30', isPM: false },
+      { label: '6:00', hour: '6', minute: '00', period: 'PM', value: '18:00', isPM: true },
+      { label: '6:30', hour: '6', minute: '30', period: 'PM', value: '18:30', isPM: true },
+      { label: '7:00', hour: '7', minute: '00', period: 'PM', value: '19:00', isPM: true },
+      { label: '7:30', hour: '7', minute: '30', period: 'PM', value: '19:30', isPM: true },
+      { label: '8:00', hour: '8', minute: '00', period: 'PM', value: '20:00', isPM: true },
+      { label: '8:30', hour: '8', minute: '30', period: 'PM', value: '20:30', isPM: true },
     ]);
 
     // Auto-fill today's date if not set
@@ -51,7 +77,11 @@ const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic })
   }, []);
 
   const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
+    // Format date in local timezone, not UTC
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const formatDateToDDMMYYYY = (isoDate) => {
@@ -250,13 +280,13 @@ const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic })
           )}
           
           {/* Quick Date Selector */}
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 grid grid-cols-6 gap-2">
             {quickDates.map((quickDate) => (
               <button
                 key={quickDate.value}
                 type="button"
                 onClick={() => onChange({ target: { name: 'date', value: quickDate.value } })}
-                className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                className={`col-span-2 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                   formData.date === quickDate.value
                     ? 'bg-blue-500 text-white border-blue-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'
@@ -324,6 +354,29 @@ const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic })
           {errors.time && (
             <p className="text-red-500 text-sm mt-1">{errors.time}</p>
           )}
+          
+          {/* Quick Time Selector */}
+          <div className="mt-3 grid grid-cols-6 gap-2">
+            {quickTimes.map((quickTime) => (
+              <button
+                key={quickTime.value}
+                type="button"
+                onClick={() => {
+                  setTimeHour(quickTime.hour);
+                  setTimeMinute(quickTime.minute);
+                  setTimePeriod(quickTime.period);
+                  onChange({ target: { name: 'time', value: quickTime.value } });
+                }}
+                className={`px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                  formData.time === quickTime.value
+                    ? quickTime.isPM ? 'bg-blue-600 text-white border-blue-600' : 'bg-amber-500 text-white border-amber-500'
+                    : quickTime.isPM ? 'bg-blue-50 text-gray-700 border-blue-200 hover:bg-blue-100' : 'bg-amber-50 text-gray-700 border-amber-200 hover:bg-amber-100'
+                }`}
+              >
+                {quickTime.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

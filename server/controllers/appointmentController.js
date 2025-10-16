@@ -133,6 +133,7 @@ export const getAppointments = async (req, res) => {
       startDate,
       endDate,
       status,
+      visitType,
       limit = 50,
       page = 1 
     } = req.query;
@@ -144,6 +145,7 @@ export const getAppointments = async (req, res) => {
     if (doctor && doctor !== 'null' && doctor !== 'undefined') filter.doctor = doctor;
     if (patient && patient !== 'null' && patient !== 'undefined') filter.patient = patient;
     if (status && status !== 'null' && status !== 'undefined') filter.status = status;
+    if (visitType && visitType !== 'null' && visitType !== 'undefined') filter.visitType = visitType;
 
     // Date filtering
     if (date) {
@@ -158,10 +160,23 @@ export const getAppointments = async (req, res) => {
         $lte: endOfDay,
       };
     } else if (startDate && endDate) {
-      // Date range
+      // Date range - set times to cover full days
+      const rangeStart = new Date(startDate);
+      rangeStart.setHours(0, 0, 0, 0);
+      
+      const rangeEnd = new Date(endDate);
+      rangeEnd.setHours(23, 59, 59, 999);
+      
+      logger.info({
+        receivedStartDate: startDate,
+        receivedEndDate: endDate,
+        parsedRangeStart: rangeStart.toISOString(),
+        parsedRangeEnd: rangeEnd.toISOString()
+      }, 'Filtering appointments by date range');
+      
       filter.startAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
+        $gte: rangeStart,
+        $lte: rangeEnd,
       };
     }
 
@@ -449,10 +464,18 @@ export const createFirstVisitAppointment = async (req, res) => {
       return res.status(404).json({ error: 'Clinic or doctor not found' });
     }
 
-    // Time conflict check disabled - allowing overlapping appointments
+    // Parse datetime - treat input as local clinic time
     const startTime = new Date(startAt);
     const endTime = endAt ? new Date(endAt) : new Date(startTime.getTime() + 30 * 60000);
+    
+    logger.info({
+      receivedStartAt: startAt,
+      receivedEndAt: endAt,
+      parsedStartTime: startTime.toISOString(),
+      parsedEndTime: endTime.toISOString()
+    }, 'Creating first visit appointment with datetime');
 
+    // Time conflict check disabled - allowing overlapping appointments
     // const conflicts = await Appointment.find({
     //   doctor,
     //   status: { $in: ['scheduled'] },
@@ -592,10 +615,18 @@ export const createFollowUpAppointment = async (req, res) => {
       });
     }
 
-    // Time conflict check disabled - allowing overlapping appointments
+    // Parse datetime - treat input as local clinic time
     const startTime = new Date(startAt);
     const endTime = endAt ? new Date(endAt) : new Date(startTime.getTime() + 30 * 60000);
+    
+    logger.info({
+      receivedStartAt: startAt,
+      receivedEndAt: endAt,
+      parsedStartTime: startTime.toISOString(),
+      parsedEndTime: endTime.toISOString()
+    }, 'Creating follow-up appointment with datetime');
 
+    // Time conflict check disabled - allowing overlapping appointments
     // const conflicts = await Appointment.find({
     //   doctor,
     //   status: { $in: ['scheduled'] },
@@ -675,13 +706,51 @@ export const searchPatientsForAppointment = async (req, res) => {
       return res.status(400).json({ error: 'Clinic ID is required' });
     }
 
+    // Convert clinicId to ObjectId for proper matching
+    let clinicObjectId;
+    try {
+      clinicObjectId = new mongoose.Types.ObjectId(clinicId);
+    } catch (err) {
+      logger.error({ clinicId, error: err.message }, 'Invalid clinic ID format');
+      return res.status(400).json({ error: 'Invalid clinic ID format' });
+    }
+    
+    // First, check if there are ANY patients for this clinic
+    const totalPatientsInClinic = await Patient.countDocuments({
+      'patientCodes.clinic': clinicObjectId
+    });
+    
+    logger.info({ 
+      searchQuery: q, 
+      clinicId: clinicId.toString(), 
+      totalPatientsInClinic 
+    }, 'Starting patient search');
+    
     // Search by patient code or phone number
+    // Create regex pattern - escape special characters but keep the search flexible
+    const escapedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedQuery, 'i');
+    
+    // Search either by:
+    // 1. Patient code within this clinic (using $elemMatch to ensure clinic and code match in same array element)
+    // 2. Phone number (if patient has visited this clinic)
     const filter = {
-      'patientCodes.clinic': clinicId,
-      $or: [
-        { 'patientCodes.code': new RegExp(q, 'i') },
-        { phone: new RegExp(q, 'i') },
-      ],
+      $and: [
+        { 'patientCodes.clinic': clinicObjectId }, // Must have visited this clinic
+        {
+          $or: [
+            {
+              patientCodes: {
+                $elemMatch: {
+                  clinic: clinicObjectId,
+                  code: regex
+                }
+              }
+            },
+            { phone: regex }
+          ]
+        }
+      ]
     };
 
     const patients = await Patient.find(filter)
@@ -689,20 +758,68 @@ export const searchPatientsForAppointment = async (req, res) => {
       .populate('patientCodes.doctor')
       .limit(10)
       .sort({ createdAt: -1 });
+    
+    logger.info({ 
+      count: patients.length, 
+      sampleCodes: patients.slice(0, 3).map(p => {
+        const code = p.patientCodes.find(pc => pc.clinic._id.toString() === clinicId);
+        return code?.code;
+      })
+    }, 'Found patients');
 
-    // Format response for dropdown
-    const formattedPatients = patients.map(patient => {
-      const clinicCode = patient.patientCodes.find(
-        pc => pc.clinic._id.toString() === clinicId
-      );
-      return {
-        _id: patient._id,
-        name: patient.name,
-        phone: patient.phone,
-        patientCode: clinicCode?.code || 'No code',
-        displayText: `${patient.name} - ${clinicCode?.code || 'No code'}`,
-      };
+    // Get last completed visit dates for all patients
+    const patientIds = patients.map(p => p._id);
+    const lastCompletedVisits = await Appointment.aggregate([
+      {
+        $match: {
+          patient: { $in: patientIds },
+          clinic: new mongoose.Types.ObjectId(clinicId),
+          status: 'completed'
+        }
+      },
+      {
+        $sort: { startAt: -1 }
+      },
+      {
+        $group: {
+          _id: '$patient',
+          lastCompletedVisit: { $first: '$startAt' }
+        }
+      }
+    ]);
+
+    // Create a map for quick lookup
+    const lastVisitMap = {};
+    lastCompletedVisits.forEach(lv => {
+      lastVisitMap[lv._id.toString()] = lv.lastCompletedVisit;
     });
+
+    // Format response for dropdown - ONLY include patients with at least one completed visit
+    const formattedPatients = patients
+      .filter(patient => {
+        // Only include patients who have had at least one completed visit
+        return lastVisitMap[patient._id.toString()] !== undefined;
+      })
+      .map(patient => {
+        const clinicCode = patient.patientCodes.find(
+          pc => pc.clinic._id.toString() === clinicId
+        );
+        const lastCompletedVisitDate = lastVisitMap[patient._id.toString()];
+        
+        return {
+          _id: patient._id,
+          name: patient.name,
+          phone: patient.phone,
+          patientCode: clinicCode?.code || 'No code',
+          lastCompletedVisit: lastCompletedVisitDate,
+          displayText: `${patient.name} - ${clinicCode?.code || 'No code'}`,
+        };
+      });
+
+    logger.info({ 
+      totalFound: patients.length, 
+      withCompletedVisits: formattedPatients.length 
+    }, 'Filtered patients with completed visits');
 
     res.json({ patients: formattedPatients });
   } catch (error) {
