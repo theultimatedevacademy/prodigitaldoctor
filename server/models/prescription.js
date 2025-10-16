@@ -60,6 +60,11 @@ const PrescriptionSchema = new Schema(
     ddiWarnings: [DDIDetailSchema],
     transactionId: String,
     fhirPayload: Schema.Types.Mixed,
+    editHistory: [{
+      editedAt: { type: Date, default: Date.now },
+      editedBy: { type: Schema.Types.ObjectId, ref: "User" }
+    }],
+    lastEditedAt: Date,
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

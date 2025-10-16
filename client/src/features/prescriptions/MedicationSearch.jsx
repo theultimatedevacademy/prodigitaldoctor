@@ -47,7 +47,7 @@ export function MedicationSearch({ onSelect, placeholder = 'Search medications..
     <div ref={wrapperRef} className="relative w-full">
       <div className="relative">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Search className="w-5 h-5 text-clinical-400" />
+          <Search className="w-5 h-5 text-gray-400" />
         </div>
         <input
           type="text"
@@ -58,7 +58,7 @@ export function MedicationSearch({ onSelect, placeholder = 'Search medications..
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="block w-full pl-10 pr-10 py-2 border border-clinical-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         {isLoading && (
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -69,9 +69,9 @@ export function MedicationSearch({ onSelect, placeholder = 'Search medications..
       
       {/* Dropdown results */}
       {isOpen && query.length >= 2 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-clinical-200 max-h-80 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-80 overflow-y-auto">
           {isLoading ? (
-            <div className="p-4 text-center text-clinical-600">
+            <div className="p-4 text-center text-gray-600">
               <Spinner size="md" className="mx-auto mb-2" />
               <p>Searching medications...</p>
             </div>
@@ -81,16 +81,16 @@ export function MedicationSearch({ onSelect, placeholder = 'Search medications..
                 <li key={med._id}>
                   <button
                     onClick={() => handleSelect(med)}
-                    className="w-full text-left px-4 py-3 hover:bg-clinical-50 transition-colors border-b border-clinical-100 last:border-b-0"
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
                     <div className="flex items-start gap-3">
-                      <Pill className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
+                      <Pill className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <div className="font-medium text-clinical-900">{med.brandName}</div>
-                        <div className="text-sm text-clinical-600">{med.genericName}</div>
-                        {med.compositions && med.compositions.length > 0 && (
-                          <div className="text-xs text-clinical-500 mt-1">
-                            {med.compositions.map(c => c.name || c).join(', ')}
+                        <div className="font-medium text-gray-900">{med.brandName}</div>
+                        <div className="text-sm text-gray-600">{med.genericName}</div>
+                        {med.unique_composition && med.unique_composition.length > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {med.unique_composition.map(c => c.name || c).join(', ')}
                           </div>
                         )}
                       </div>
@@ -100,7 +100,7 @@ export function MedicationSearch({ onSelect, placeholder = 'Search medications..
               ))}
             </ul>
           ) : (
-            <div className="p-4 text-center text-clinical-600">
+            <div className="p-4 text-center text-gray-600">
               No medications found for "{query}"
             </div>
           )}

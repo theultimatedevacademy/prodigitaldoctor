@@ -137,10 +137,6 @@ export const prescriptionSchema = z.object({
   doctorId: z.string().min(1, 'Doctor ID is required'),
   appointmentId: z.string().optional(),
   medications: z.array(medicationItemSchema).min(1, 'Please add at least one medication'),
-  diagnosis: z.array(z.object({
-    code: z.string().optional(),
-    text: z.string().min(1, 'Diagnosis text is required'),
-  })).min(1, 'Please add at least one diagnosis'),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   followUpDate: z.string().or(z.date()).optional(),
 });

@@ -107,17 +107,17 @@ export function FileUploader({
         onDragLeave={handleDragLeave}
         className={`
           border-2 border-dashed rounded-lg p-8 text-center transition-colors
-          ${isDragging ? 'border-primary-500 bg-primary-50' : 'border-clinical-300'}
-          ${selectedFile ? 'bg-clinical-50' : 'bg-white'}
+          ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
+          ${selectedFile ? 'bg-gray-50' : 'bg-white'}
         `}
       >
         {!selectedFile ? (
           <>
-            <Upload className="w-12 h-12 mx-auto mb-4 text-clinical-400" />
-            <p className="text-clinical-700 mb-2">
+            <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-700 mb-2">
               Drag and drop a file here, or click to select
             </p>
-            <p className="text-sm text-clinical-500 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Max size: {maxSizeMB}MB | Allowed: {allowedTypes.map(t => t.split('/')[1]).join(', ')}
             </p>
             <Button
@@ -138,12 +138,12 @@ export function FileUploader({
           </>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-clinical-200">
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
               <div className="flex items-center gap-3">
-                <FileIcon className="w-8 h-8 text-primary-600" />
+                <FileIcon className="w-8 h-8 text-blue-600" />
                 <div className="text-left">
-                  <p className="font-medium text-clinical-900">{selectedFile.name}</p>
-                  <p className="text-sm text-clinical-600">{formatFileSize(selectedFile.size)}</p>
+                  <p className="font-medium text-gray-900">{selectedFile.name}</p>
+                  <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
                 </div>
               </div>
               {uploadComplete ? (
@@ -151,7 +151,7 @@ export function FileUploader({
               ) : (
                 <button
                   onClick={handleRemove}
-                  className="text-clinical-400 hover:text-clinical-600"
+                  className="text-gray-400 hover:text-gray-600"
                   disabled={isLoading}
                 >
                   <X className="w-6 h-6" />
@@ -162,13 +162,13 @@ export function FileUploader({
             {/* Progress bar */}
             {isLoading && (
               <div className="space-y-2">
-                <div className="w-full bg-clinical-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-sm text-clinical-600">Uploading... {progress}%</p>
+                <p className="text-sm text-gray-600">Uploading... {progress}%</p>
               </div>
             )}
             

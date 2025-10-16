@@ -6,7 +6,6 @@
 import { useNavigate, useSearchParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { PrescriptionBuilder } from '../features/prescriptions/PrescriptionBuilder';
 import { useClinicContext } from '../hooks/useClinicContext';
@@ -20,9 +19,13 @@ export default function NewPrescriptionPage() {
   
   const patientId = searchParams.get('patientId');
   const appointmentId = searchParams.get('appointmentId');
+  const editId = searchParams.get('editId'); // If editing existing prescription
+  
+  const isEditMode = !!editId;
   
   const handleSuccess = (prescription) => {
-    navigate(`/prescriptions/${prescription._id}`);
+    // Don't navigate - stay on page to show success state
+    // navigate(`/prescriptions/${prescription._id}`);
   };
   
   if (!selectedClinicId) {
@@ -42,27 +45,29 @@ export default function NewPrescriptionPage() {
   }
   
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <Button
-          variant="ghost"
-          size="sm"
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="no-print mb-6">
+        <button
           onClick={() => navigate(-1)}
-          className="mb-4"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4" />
           Back
-        </Button>
-        <h1 className="text-3xl font-bold text-clinical-900">Create Prescription</h1>
-        <p className="text-clinical-600 mt-1">
-          Add medications, check interactions, and generate prescription
+        </button>
+
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Edit Prescription' : 'Create Prescription'}
+        </h1>
+        <p className="text-gray-600 mt-2">
+          {isEditMode 
+            ? 'Update medications and prescription details'
+            : 'Add medications, check interactions, and generate prescription'
+          }
         </p>
       </div>
       
-      {/* Form */}
-      <Card>
-        <CardHeader>
+      <Card className="mb-6">
+        <CardHeader className="no-print">
           <CardTitle>Prescription Details</CardTitle>
         </CardHeader>
         <CardContent>
@@ -71,6 +76,8 @@ export default function NewPrescriptionPage() {
             clinicId={selectedClinicId}
             doctorId={user?._id}
             appointmentId={appointmentId}
+            prescriptionId={editId}
+            isEditMode={isEditMode}
             onSuccess={handleSuccess}
           />
         </CardContent>

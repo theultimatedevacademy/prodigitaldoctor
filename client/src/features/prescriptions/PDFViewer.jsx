@@ -31,14 +31,13 @@ export function PDFViewer({ pdfUrl, title = 'Prescription', onShare }) {
   };
   
   const handleDownload = () => {
-    window.open(pdfUrl, '_blank');
   };
   
   return (
     <div className="w-full h-full flex flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 bg-clinical-50 border-b border-clinical-200">
-        <h3 className="font-semibold text-clinical-900">{title}</h3>
+      <div className="flex items-center justify-between p-4 bg-blue-50 border-b border-blue-200">
+        <h3 className="font-semibold text-blue-900">{title}</h3>
         <div className="flex gap-2">
           {onShare && (
             <Button variant="outline" size="sm" onClick={onShare}>
@@ -46,30 +45,22 @@ export function PDFViewer({ pdfUrl, title = 'Prescription', onShare }) {
               Share via ABDM
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-2" />
-            Download
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.open(pdfUrl, '_blank')}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Open in New Tab
-          </Button>
         </div>
       </div>
       
       {/* PDF Container */}
-      <div className="flex-1 relative bg-clinical-100">
+      <div className="flex-1 relative bg-blue-100">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white">
             <div className="text-center">
               <Spinner size="lg" />
-              <p className="mt-4 text-clinical-600">Loading PDF...</p>
+              <p className="mt-4 text-blue-600">Loading PDF...</p>
             </div>
           </div>
         )}
         
         {error && (
-          <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="absolute inset-0 flex items-center justify-center bg-white">
             <Alert variant="error" className="max-w-md">
               {error}
             </Alert>

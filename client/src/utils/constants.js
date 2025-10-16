@@ -29,11 +29,13 @@ export const API_ENDPOINTS = {
   PRESCRIPTION_BY_ID: (id) => `/api/prescriptions/${id}`,
   
   // Medications
-  MEDICATIONS: '/api/meds',
-  MEDICATION_BY_ID: (id) => `/api/meds/${id}`,
+  MEDICATIONS: '/api/medications',
+  MEDICATIONS_SEARCH: '/api/medications/search',
+  MEDICATION_BY_ID: (id) => `/api/medications/${id}`,
   
   // DDI (Drug-Drug Interactions)
-  DDI_CHECK: '/api/ddi/check',
+  DDI_CHECK_MEDICATIONS: '/api/medications/check-ddi',
+  DDI_CHECK_COMPOSITIONS: '/api/compositions/check-ddi',
   
   // Uploads
   UPLOAD_PRESIGN: '/api/uploads/presign',

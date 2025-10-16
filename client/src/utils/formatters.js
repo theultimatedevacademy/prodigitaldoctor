@@ -143,10 +143,10 @@ export function formatSeverity(severity) {
  */
 export function getSeverityColor(severity) {
   const colors = {
-    minor: 'text-severity-minor bg-green-50 border-green-200',
-    moderate: 'text-severity-moderate bg-amber-50 border-amber-200',
-    major: 'text-severity-major bg-red-50 border-red-200',
-    contraindicated: 'text-severity-contraindicated bg-red-100 border-red-300',
+    minor: 'text-green-700 bg-green-50 border-green-200',
+    moderate: 'text-amber-700 bg-amber-50 border-amber-200',
+    major: 'text-red-700 bg-red-50 border-red-200',
+    contraindicated: 'text-red-800 bg-red-100 border-red-300',
   };
   
   return colors[severity?.toLowerCase()] || 'text-gray-600 bg-gray-50 border-gray-200';
@@ -160,9 +160,9 @@ export function getSeverityColor(severity) {
 export function getStatusColor(status) {
   const colors = {
     scheduled: 'bg-blue-100 text-blue-800',
-    confirmed: 'bg-green-100 text-green-800',
-    'in-progress': 'bg-purple-100 text-purple-800',
-    completed: 'bg-gray-100 text-gray-800',
+    confirmed: 'bg-cyan-100 text-cyan-800',
+    'in-progress': 'bg-amber-100 text-amber-800',
+    completed: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
     'no-show': 'bg-orange-100 text-orange-800',
   };

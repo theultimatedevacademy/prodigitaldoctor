@@ -59,151 +59,153 @@ export default function NewPatientPage() {
   }
   
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <Button
-          variant="ghost"
-          size="sm"
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-6">
+        <button
           onClick={() => navigate('/patients')}
-          className="mb-4"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Patients
-        </Button>
-        <h1 className="text-3xl font-bold text-clinical-900">Add New Patient</h1>
-        <p className="text-clinical-600 mt-1">
-          Create a new patient record
-        </p>
+        </button>
+
+        <h1 className="text-3xl font-bold text-gray-900">Add New Patient</h1>
+        <p className="text-gray-600 mt-2">Create a new patient record</p>
       </div>
       
-      {/* Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Patient Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-clinical-900">Personal Information</h3>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Patient Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
               
-              <Input
-                label="Full Name"
-                placeholder="Enter patient's full name"
-                {...register('name')}
-                error={errors.name?.message}
-                required
-              />
-              
-              <div className="grid md:grid-cols-2 gap-4">
                 <Input
-                  label="Date of Birth"
-                  type="date"
-                  {...register('dob')}
-                  error={errors.dob?.message}
+                  label="Full Name"
+                  placeholder="Enter patient's full name"
+                  {...register('name')}
+                  error={errors.name?.message}
                   required
                 />
                 
-                <Select
-                  label="Gender"
-                  options={GENDER_OPTIONS}
-                  placeholder="Select gender"
-                  {...register('gender')}
-                  error={errors.gender?.message}
-                  required
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input
+                    label="Date of Birth"
+                    type="date"
+                    {...register('dob')}
+                    error={errors.dob?.message}
+                  />
+                  
+                  <Select
+                    label="Gender"
+                    {...register('gender')}
+                    error={errors.gender?.message}
+                  >
+                    <option value="">Select gender</option>
+                    {GENDER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+            
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Contact Information</h3>
+              
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input
+                    label="Phone Number"
+                    type="tel"
+                    placeholder="10-digit mobile number"
+                    {...register('phone')}
+                    error={errors.phone?.message}
+                    required
+                  />
+                  
+                  <Input
+                    label="Email"
+                    type="email"
+                    placeholder="patient@example.com"
+                    {...register('email')}
+                    error={errors.email?.message}
+                  />
+                </div>
+                
+                <Textarea
+                  label="Address"
+                  placeholder="Complete address"
+                  rows={3}
+                  {...register('address')}
+                  error={errors.address?.message}
                 />
               </div>
-            </div>
             
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-clinical-900">Contact Information</h3>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="10-digit mobile number"
-                  {...register('phone')}
-                  error={errors.phone?.message}
-                  required
+              {/* Medical Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Medical Information</h3>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input
+                    label="Blood Group"
+                    placeholder="e.g., A+, B-, O+"
+                    {...register('bloodGroup')}
+                    error={errors.bloodGroup?.message}
+                  />
+                  
+                  <Input
+                    label="Emergency Contact"
+                    type="tel"
+                    placeholder="Emergency contact number"
+                    {...register('emergencyContact')}
+                    error={errors.emergencyContact?.message}
+                  />
+                </div>
+                
+                <Textarea
+                  label="Known Allergies"
+                  placeholder="List any known allergies (medications, food, etc.)"
+                  rows={3}
+                  {...register('allergies')}
+                  error={errors.allergies?.message}
                 />
                 
                 <Input
-                  label="Email"
-                  type="email"
-                  placeholder="patient@example.com"
-                  {...register('email')}
-                  error={errors.email?.message}
+                  label="ABHA ID (Optional)"
+                  placeholder="14-digit ABHA ID"
+                  {...register('abhaId')}
+                  error={errors.abhaId?.message}
                 />
               </div>
-              
-              <Textarea
-                label="Address"
-                placeholder="Complete address"
-                rows={3}
-                {...register('address')}
-                error={errors.address?.message}
-              />
             </div>
-            
-            {/* Medical Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-clinical-900">Medical Information</h3>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <Input
-                  label="Blood Group"
-                  placeholder="e.g., A+, B-, O+"
-                  {...register('bloodGroup')}
-                  error={errors.bloodGroup?.message}
-                />
-                
-                <Input
-                  label="Emergency Contact"
-                  type="tel"
-                  placeholder="Emergency contact number"
-                  {...register('emergencyContact')}
-                  error={errors.emergencyContact?.message}
-                />
-              </div>
-              
-              <Textarea
-                label="Known Allergies"
-                placeholder="List any known allergies (medications, food, etc.)"
-                rows={3}
-                {...register('allergies')}
-                error={errors.allergies?.message}
-              />
-              
-              <Input
-                label="ABHA ID (Optional)"
-                placeholder="14-digit ABHA ID"
-                {...register('abhaId')}
-                error={errors.abhaId?.message}
-              />
-            </div>
-            
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-clinical-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/patients')}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                loading={createPatientMutation.isPending}
-              >
-                Create Patient
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/patients')}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            loading={createPatientMutation.isPending}
+            className="flex-1"
+          >
+            Create Patient
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

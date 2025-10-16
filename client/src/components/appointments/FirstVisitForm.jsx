@@ -1,0 +1,333 @@
+/**
+ * FirstVisitForm Component
+ * Form for booking first visit appointments
+ */
+
+import { useState, useEffect } from 'react';
+import { Input } from '../ui/Input';
+import { Calendar } from 'lucide-react';
+
+const FirstVisitForm = ({ formData, onChange, errors, doctors, selectedClinic }) => {
+  const [quickDates, setQuickDates] = useState([]);
+  const [timeHour, setTimeHour] = useState('');
+  const [timeMinute, setTimeMinute] = useState('');
+  const [timePeriod, setTimePeriod] = useState('AM');
+
+  useEffect(() => {
+    // Generate quick date options (today, tomorrow, day after)
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date(today);
+    dayAfter.setDate(dayAfter.getDate() + 2);
+
+    setQuickDates([
+      { label: 'Today', value: formatDate(today), date: today },
+      { label: 'Tomorrow', value: formatDate(tomorrow), date: tomorrow },
+      { label: formatDateDisplay(dayAfter), value: formatDate(dayAfter), date: dayAfter },
+    ]);
+
+    // Auto-fill today's date if not set
+    if (!formData.date) {
+      onChange({ target: { name: 'date', value: formatDate(today) } });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Auto-select first doctor if available and not already selected
+    if (doctors.length > 0 && !formData.doctor) {
+      onChange({ target: { name: 'doctor', value: doctors[0]._id } });
+    }
+  }, [doctors]);
+
+  // Sync time components with formData.time
+  useEffect(() => {
+    if (formData.time) {
+      const parsed = parseTime(formData.time);
+      setTimeHour(parsed.hour);
+      setTimeMinute(parsed.minute);
+      setTimePeriod(parsed.period);
+    }
+  }, []);
+
+  const formatDate = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatDateToDDMMYYYY = (isoDate) => {
+    if (!isoDate) return '';
+    const [year, month, day] = isoDate.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateFromDDMMYYYY = (ddmmyyyy) => {
+    if (!ddmmyyyy) return '';
+    const [day, month, year] = ddmmyyyy.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDateDisplay = (date) => {
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  // Parse time from HH:mm format to hour, minute, period
+  const parseTime = (time) => {
+    if (!time) return { hour: '', minute: '', period: 'AM' };
+    const [hourStr, minuteStr] = time.split(':');
+    const hour24 = parseInt(hourStr);
+    
+    if (hour24 === 0) {
+      return { hour: '12', minute: minuteStr, period: 'AM' };
+    } else if (hour24 < 12) {
+      return { hour: String(hour24), minute: minuteStr, period: 'AM' };
+    } else if (hour24 === 12) {
+      return { hour: '12', minute: minuteStr, period: 'PM' };
+    } else {
+      return { hour: String(hour24 - 12), minute: minuteStr, period: 'PM' };
+    }
+  };
+
+  // Convert hour, minute, period to HH:mm format
+  const formatTimeToHHMM = (hour, minute, period) => {
+    if (!hour || !minute || !period) return '';
+    let hour24 = parseInt(hour);
+    
+    if (period === 'AM') {
+      if (hour24 === 12) hour24 = 0;
+    } else {
+      if (hour24 !== 12) hour24 += 12;
+    }
+    
+    return `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+  };
+
+  const handleTimeChange = (field, value) => {
+    let newHour = timeHour;
+    let newMinute = timeMinute;
+    let newPeriod = timePeriod;
+    
+    if (field === 'hour') {
+      newHour = value;
+      setTimeHour(value);
+    } else if (field === 'minute') {
+      newMinute = value;
+      setTimeMinute(value);
+    } else if (field === 'period') {
+      newPeriod = value;
+      setTimePeriod(value);
+    }
+    
+    // Only set the time if all components are selected
+    if (newHour && newMinute && newPeriod) {
+      const formattedTime = formatTimeToHHMM(newHour, newMinute, newPeriod);
+      onChange({ target: { name: 'time', value: formattedTime } });
+    }
+  };
+
+  const hours = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+  const minutes = ['00', '15', '30', '45'];
+
+  return (
+    <div className="space-y-6">
+      {/* Doctor Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Doctor *
+        </label>
+        <select
+          name="doctor"
+          value={formData.doctor}
+          onChange={onChange}
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.doctor ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          <option value="">Select a doctor</option>
+          {doctors.map((doctor) => (
+            <option key={doctor._id} value={doctor._id}>
+              {doctor.name} {doctor.isOwner ? '(Owner)' : ''}
+            </option>
+          ))}
+        </select>
+        {errors.doctor && (
+          <p className="text-red-500 text-sm mt-1">{errors.doctor}</p>
+        )}
+      </div>
+
+      {/* Patient Name and Phone Number - Same line on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Patient Name *
+          </label>
+          <Input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={onChange}
+            placeholder="Enter patient's full name"
+            error={errors.name}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number *
+          </label>
+          <Input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={onChange}
+            placeholder="10-digit mobile number"
+            error={errors.phone}
+            maxLength="10"
+          />
+        </div>
+      </div>
+
+      {/* Date and Time - Same line on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Date Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Date *
+          </label>
+          <input
+            type="text"
+            name="date"
+            value={formData.date ? formatDateToDDMMYYYY(formData.date) : ''}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+              
+              // Auto-format with slashes as user types
+              if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+              }
+              if (value.length >= 5) {
+                value = value.substring(0, 5) + '/' + value.substring(5);
+              }
+              
+              // Limit to 10 characters (DD/MM/YYYY)
+              value = value.substring(0, 10);
+              
+              // If complete date entered, convert to ISO format
+              if (value.length === 10) {
+                const [day, month, year] = value.split('/');
+                if (day && month && year) {
+                  const dayNum = parseInt(day);
+                  const monthNum = parseInt(month);
+                  const yearNum = parseInt(year);
+                  
+                  // Basic validation
+                  if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12 && yearNum >= 1900) {
+                    const isoDate = `${year}-${month}-${day}`;
+                    onChange({ target: { name: 'date', value: isoDate } });
+                    return;
+                  }
+                }
+              }
+              
+              // For partial input, temporarily store in a custom attribute
+              e.target.setAttribute('data-partial-date', value);
+            }}
+            onKeyUp={(e) => {
+              // Show the formatted partial input
+              const partial = e.target.getAttribute('data-partial-date');
+              if (partial && partial.length < 10) {
+                e.target.value = partial;
+              }
+            }}
+            placeholder="DD/MM/YYYY"
+            maxLength="10"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.date ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.date && (
+            <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+          )}
+          
+          {/* Quick Date Selector */}
+          <div className="mt-3 flex gap-2">
+            {quickDates.map((quickDate) => (
+              <button
+                key={quickDate.value}
+                type="button"
+                onClick={() => onChange({ target: { name: 'date', value: quickDate.value } })}
+                className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                  formData.date === quickDate.value
+                    ? 'bg-blue-500 text-white border-blue-500'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'
+                }`}
+              >
+                <Calendar className="w-3 h-3 inline mr-1" />
+                {quickDate.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Time Selection - Hour, Minute, AM/PM */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Time *
+          </label>
+          <div className="flex gap-2">
+            {/* Hour */}
+            <select
+              value={timeHour}
+              onChange={(e) => handleTimeChange('hour', e.target.value)}
+              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.time ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">HH</option>
+              {hours.map((h) => (
+                <option key={h} value={h}>
+                  {h.padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+            
+            <span className="flex items-center text-gray-500 font-semibold">:</span>
+            
+            {/* Minute */}
+            <select
+              value={timeMinute}
+              onChange={(e) => handleTimeChange('minute', e.target.value)}
+              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.time ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">MM</option>
+              {minutes.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            
+            {/* AM/PM */}
+            <select
+              value={timePeriod}
+              onChange={(e) => handleTimeChange('period', e.target.value)}
+              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.time ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+          {errors.time && (
+            <p className="text-red-500 text-sm mt-1">{errors.time}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FirstVisitForm;

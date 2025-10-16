@@ -108,7 +108,7 @@ function DDIWarningItem({ warning, onOverride }) {
               {formatSeverity(warning.severity)}
             </Badge>
             <span className="font-semibold text-sm">
-              {warning.compA || 'Medication A'} + {warning.compB || 'Medication B'}
+              {typeof warning.compA === 'object' ? warning.compA?.name : warning.compA || 'Medication A'} + {typeof warning.compB === 'object' ? warning.compB?.name : warning.compB || 'Medication B'}
             </span>
           </div>
           

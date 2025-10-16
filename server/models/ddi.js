@@ -13,7 +13,8 @@ const DDISchema = new Schema({
   compB: { type: Schema.Types.ObjectId, ref: "Composition", required: true },
   severity: {
     type: String,
-    enum: ["minor", "moderate", "major", "contraindicated"],
+    enum: ["minor", "moderate", "major", "contraindicated", "unknown"],
+    default: "unknown" // Default for imported data without explicit severity
   },
   description: String,
   recommendation: String,

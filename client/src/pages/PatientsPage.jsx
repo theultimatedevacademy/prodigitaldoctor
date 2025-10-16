@@ -30,14 +30,13 @@ export default function PatientsPage() {
       </Alert>
     );
   }
-  
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-clinical-900">Patients</h1>
-          <p className="text-clinical-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
+          <p className="text-gray-600 mt-1">
             Manage and view all your patients
           </p>
         </div>
@@ -62,7 +61,7 @@ export default function PatientsPage() {
       {isLoading || searching ? (
         <div className="text-center py-12">
           <Spinner size="lg" />
-          <p className="mt-4 text-clinical-600">Loading patients...</p>
+          <p className="mt-4 text-gray-600">Loading patients...</p>
         </div>
       ) : patients.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,11 +75,11 @@ export default function PatientsPage() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <Search className="w-16 h-16 mx-auto text-clinical-400 mb-4" />
-          <h3 className="text-xl font-semibold text-clinical-700 mb-2">
+          <Search className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
             {searchQuery ? 'No patients found' : 'No patients yet'}
           </h3>
-          <p className="text-clinical-600 mb-4">
+          <p className="text-gray-600 mb-4">
             {searchQuery 
               ? 'Try adjusting your search terms'
               : 'Get started by adding your first patient'

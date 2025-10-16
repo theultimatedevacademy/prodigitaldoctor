@@ -3,21 +3,23 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post } from '../apiClient';
+import { get, post, put, del } from '../apiClient';
 import { API_ENDPOINTS, QUERY_KEYS } from '../../utils/constants';
 
 /**
  * Hook to fetch prescriptions with filters
  * @param {object} filters - Query filters (clinicId, doctorId, patientId)
+ * @param {object} options - React Query options (enabled, etc.)
  * @returns {object} Query result with prescriptions data
  */
-export function usePrescriptions(filters = {}) {
+export function usePrescriptions(filters = {}, options = {}) {
   const params = new URLSearchParams(filters).toString();
   
   return useQuery({
     queryKey: [...QUERY_KEYS.PRESCRIPTIONS, filters],
     queryFn: () => get(`${API_ENDPOINTS.PRESCRIPTIONS}?${params}`),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    ...options, // Allow overriding options like enabled
   });
 }
 
@@ -46,17 +48,51 @@ export function useCreatePrescription() {
     mutationFn: (prescriptionData) => post(API_ENDPOINTS.PRESCRIPTIONS, prescriptionData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRESCRIPTIONS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
     },
   });
 }
 
 /**
- * Hook to check drug-drug interactions
+ * Hook to update a prescription
+ * @returns {object} Mutation object
+ */
+export function useUpdatePrescription() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ prescriptionId, data }) => put(API_ENDPOINTS.PRESCRIPTION_BY_ID(prescriptionId), data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRESCRIPTIONS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRESCRIPTION(variables.prescriptionId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
+    },
+  });
+}
+
+/**
+ * Hook to delete a prescription
+ * @returns {object} Mutation object
+ */
+export function useDeletePrescription() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (prescriptionId) => del(API_ENDPOINTS.PRESCRIPTION_BY_ID(prescriptionId)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRESCRIPTIONS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
+    },
+  });
+}
+
+/**
+ * Hook to check drug-drug interactions by composition IDs
  * @returns {object} Mutation object
  */
 export function useCheckDDI() {
   return useMutation({
-    mutationFn: (compositionIds) => post(API_ENDPOINTS.DDI_CHECK, { compositionIds }),
+    mutationFn: (compositionIds) => post(API_ENDPOINTS.DDI_CHECK_COMPOSITIONS, { compositionIds }),
   });
 }
 

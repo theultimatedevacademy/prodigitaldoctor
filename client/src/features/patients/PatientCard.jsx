@@ -23,12 +23,12 @@ export function PatientCard({ patient, onClick }) {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+              <User className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg text-clinical-900">{patient.name}</h3>
-              <p className="text-sm text-clinical-600">
+              <h3 className="font-semibold text-lg text-gray-900">{patient.name}</h3>
+              <p className="text-sm text-gray-600">
                 {patient.patientCodes?.[0]?.code || 'No code'}
               </p>
             </div>
@@ -41,16 +41,16 @@ export function PatientCard({ patient, onClick }) {
       
       <CardContent>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2 text-clinical-600">
+          <div className="flex items-center gap-2 text-gray-600">
             <Calendar className="w-4 h-4" />
             <span>{age ? `${age} years` : 'Age unknown'}</span>
           </div>
-          <div className="flex items-center gap-2 text-clinical-600">
+          <div className="flex items-center gap-2 text-gray-600">
             <Activity className="w-4 h-4" />
             <span className="capitalize">{patient.gender === 'M' ? 'Male' : patient.gender === 'F' ? 'Female' : 'Other'}</span>
           </div>
           {patient.phone && (
-            <div className="flex items-center gap-2 text-clinical-600 col-span-2">
+            <div className="flex items-center gap-2 text-gray-600 col-span-2">
               <Phone className="w-4 h-4" />
               <span>{formatPhone(patient.phone)}</span>
             </div>

@@ -75,9 +75,9 @@ body {
   animation: skeleton-loading 1.2s ease-in-out infinite;
   background: linear-gradient(
     90deg,
-    #f0f0f0 0px,
-    #f8f8f8 40px,
-    #f0f0f0 80px
+    rgb(243 244 246) 0px,
+    rgb(249 250 251) 40px,
+    rgb(243 244 246) 80px
   );
   background-size: 200px 100%;
 }

@@ -42,7 +42,10 @@ export function useCreateClinic() {
   return useMutation({
     mutationFn: (clinicData) => post(API_ENDPOINTS.CLINICS, clinicData),
     onSuccess: () => {
+      // Invalidate clinics list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINICS });
+      // Invalidate user data to refresh roles (doctor -> clinic_owner)
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
     },
   });
 }
@@ -76,5 +79,19 @@ export function useDeleteClinic() {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.CLINIC(clinicId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINICS });
     },
+  });
+}
+
+/**
+ * Hook to fetch doctors for a clinic
+ * @param {string} clinicId - Clinic ID
+ * @returns {object} Query result with doctors data
+ */
+export function useClinicDoctors(clinicId) {
+  return useQuery({
+    queryKey: ['clinic-doctors', clinicId],
+    queryFn: () => get(`/api/clinics/${clinicId}/doctors`),
+    enabled: !!clinicId && clinicId !== 'null' && clinicId !== 'undefined',
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

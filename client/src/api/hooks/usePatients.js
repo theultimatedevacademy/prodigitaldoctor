@@ -8,19 +8,33 @@ import { API_ENDPOINTS, QUERY_KEYS } from '../../utils/constants';
 /**
  * Hook to fetch list of patients for a clinic
  * @param {string} clinicId - Clinic ID
- * @param {object} filters - Query filters (search, page, limit)
+ * @param {object} filtersOrOptions - Query filters (search, page, limit) or options object
  * @returns {object} Query result with patients data
  */
-export function usePatients(clinicId, filters = {}) {
-  const params = new URLSearchParams({
-    clinicId,
-    ...filters,
-  }).toString();
+export function usePatients(clinicId, filtersOrOptions = {}) {
+  // Separate filters from React Query options
+  const { enabled, limit, page, search, ...otherFilters } = filtersOrOptions;
+  
+  // Build filters object, excluding undefined values
+  const filters = {};
+  if (clinicId) filters.clinicId = clinicId;
+  if (limit !== undefined) filters.limit = limit;
+  if (page !== undefined) filters.page = page;
+  if (search !== undefined && search !== '') filters.search = search;
+  
+  // Add any other filters
+  Object.keys(otherFilters).forEach(key => {
+    if (otherFilters[key] !== undefined) {
+      filters[key] = otherFilters[key];
+    }
+  });
+  
+  const params = new URLSearchParams(filters).toString();
   
   return useQuery({
     queryKey: [...QUERY_KEYS.PATIENTS, clinicId, filters],
     queryFn: () => get(`${API_ENDPOINTS.PATIENTS}?${params}`),
-    enabled: !!clinicId,
+    enabled: enabled !== undefined ? enabled : !!clinicId, // Use provided enabled or default
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

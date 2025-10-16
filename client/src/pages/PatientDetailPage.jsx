@@ -35,7 +35,7 @@ export default function PatientDetailPage() {
   if (!patient) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-clinical-700">Patient not found</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Patient not found</h2>
       </div>
     );
   }
@@ -61,14 +61,14 @@ export default function PatientDetailPage() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-6">
-            <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-              <User className="w-10 h-10 text-primary-600" />
+            <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <User className="w-10 h-10 text-blue-600" />
             </div>
             <div className="flex-1">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-clinical-900">{patient.name}</h1>
-                  <p className="text-clinical-600 mt-1">
+                  <h1 className="text-3xl font-bold text-gray-900">{patient.name}</h1>
+                  <p className="text-gray-600 mt-1">
                     Patient ID: {patient.patientCodes?.[0]?.code || 'N/A'}
                   </p>
                 </div>
@@ -124,7 +124,7 @@ export default function PatientDetailPage() {
       </Card>
       
       {/* Tabs */}
-      <div className="border-b border-clinical-200">
+      <div className="border-b border-gray-200">
         <div className="flex gap-6">
           <TabButton
             active={activeTab === 'overview'}
@@ -165,20 +165,20 @@ export default function PatientDetailPage() {
                 <div className="space-y-3">
                   {patient.allergies && (
                     <div>
-                      <div className="text-sm font-medium text-clinical-700">Allergies</div>
-                      <div className="text-clinical-900">{patient.allergies}</div>
+                      <div className="text-sm font-medium text-gray-700">Allergies</div>
+                      <div className="text-gray-900">{patient.allergies}</div>
                     </div>
                   )}
                   {patient.emergencyContact && (
                     <div>
-                      <div className="text-sm font-medium text-clinical-700">Emergency Contact</div>
-                      <div className="text-clinical-900">{formatPhone(patient.emergencyContact)}</div>
+                      <div className="text-sm font-medium text-gray-700">Emergency Contact</div>
+                      <div className="text-gray-900">{formatPhone(patient.emergencyContact)}</div>
                     </div>
                   )}
                   {patient.abhaId && (
                     <div>
-                      <div className="text-sm font-medium text-clinical-700">ABHA ID</div>
-                      <div className="text-clinical-900">{patient.abhaId}</div>
+                      <div className="text-sm font-medium text-gray-700">ABHA ID</div>
+                      <div className="text-gray-900">{patient.abhaId}</div>
                     </div>
                   )}
                 </div>
@@ -212,11 +212,11 @@ export default function PatientDetailPage() {
               {appointments.length > 0 ? (
                 <div className="space-y-3">
                   {appointments.map((apt) => (
-                    <div key={apt._id} className="p-4 border border-clinical-200 rounded-lg">
+                    <div key={apt._id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="font-medium">{formatDate(apt.date)}</div>
-                          <div className="text-sm text-clinical-600">{apt.time}</div>
+                          <div className="text-sm text-gray-600">{apt.time}</div>
                         </div>
                         <Badge>{apt.status}</Badge>
                       </div>
@@ -224,7 +224,7 @@ export default function PatientDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-clinical-600 py-8">No appointments yet</p>
+                <p className="text-center text-gray-600 py-8">No appointments yet</p>
               )}
             </CardContent>
           </Card>
@@ -236,11 +236,11 @@ export default function PatientDetailPage() {
               {prescriptions.length > 0 ? (
                 <div className="space-y-3">
                   {prescriptions.map((rx) => (
-                    <div key={rx._id} className="p-4 border border-clinical-200 rounded-lg">
+                    <div key={rx._id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="font-medium">Prescription #{rx._id.slice(-6)}</div>
-                          <div className="text-sm text-clinical-600">{formatDate(rx.createdAt)}</div>
+                          <div className="text-sm text-gray-600">{formatDate(rx.createdAt)}</div>
                         </div>
                         <Button size="sm" onClick={() => navigate(`/prescriptions/${rx._id}`)}>
                           View
@@ -250,7 +250,7 @@ export default function PatientDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-clinical-600 py-8">No prescriptions yet</p>
+                <p className="text-center text-gray-600 py-8">No prescriptions yet</p>
               )}
             </CardContent>
           </Card>
@@ -259,7 +259,7 @@ export default function PatientDetailPage() {
         {activeTab === 'files' && (
           <Card>
             <CardContent className="p-6">
-              <p className="text-center text-clinical-600 py-8">No files uploaded yet</p>
+              <p className="text-center text-gray-600 py-8">No files uploaded yet</p>
             </CardContent>
           </Card>
         )}
@@ -271,10 +271,10 @@ export default function PatientDetailPage() {
 function InfoItem({ icon, label, value }) {
   return (
     <div className="flex gap-2">
-      <div className="text-clinical-400 mt-0.5">{icon}</div>
+      <div className="text-gray-400 mt-0.5">{icon}</div>
       <div>
-        <div className="text-xs text-clinical-600">{label}</div>
-        <div className="text-sm font-medium text-clinical-900">{value}</div>
+        <div className="text-xs text-gray-600">{label}</div>
+        <div className="text-sm font-medium text-gray-900">{value}</div>
       </div>
     </div>
   );
@@ -286,8 +286,8 @@ function TabButton({ active, onClick, children }) {
       onClick={onClick}
       className={`pb-4 px-2 font-medium transition-colors border-b-2 ${
         active
-          ? 'border-primary-600 text-primary-600'
-          : 'border-transparent text-clinical-600 hover:text-clinical-900'
+          ? 'border-blue-600 text-blue-600'
+          : 'border-transparent text-gray-600 hover:text-gray-900'
       }`}
     >
       {children}

@@ -12,19 +12,50 @@
     "client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\" ",
     "seed:users": "node server/seeders/userSeeder.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed:meds": "node server/seeders/medicationSeeder.js",
+    "seed:csv": "node server/seeders/csvSeeder.js",
+    "seed:csv-resume": "node server/seeders/csvSeederResume.js",
+    "seed:compositions": "node server/seeders/csvSeederResume.js --compositions-only",
+    "seed:medications": "node server/seeders/csvSeederResume.js --medications-only",
+    "seed:link": "node server/seeders/csvSeederResume.js --link-only",
+    "seed:ddi": "node server/seeders/ddiSeeder.js",
+    "seed:ddi-append": "node server/seeders/ddiSeeder.js --append",
+    "seed:all": "node server/seeders/seedAll.js",
+    "rebuild-indexes": "node server/scripts/rebuildIndexes.js",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint server/ --ext .js",
+    "lint:fix": "eslint server/ --ext .js --fix"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.901.0",
+    "@aws-sdk/s3-request-presigner": "^3.901.0",
     "@clerk/clerk-sdk-node": "^4.13.23",
+    "@sentry/node": "^10.18.0",
+    "axios": "^1.12.2",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.1",
+    "nanoid": "^5.1.6",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^7.0.9",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.1",
     "svix": "^1.76.1"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
-    "nodemon": "^3.1.10"
+    "eslint": "^9.37.0",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.2.3",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "supertest": "^7.1.4"
   }
 }

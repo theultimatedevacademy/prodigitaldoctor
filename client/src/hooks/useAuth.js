@@ -15,12 +15,12 @@ export function useAuth() {
   const { user: clerkUser, isLoaded: isClerkLoaded, isSignedIn } = useUser();
   const { getToken, signOut } = useClerkAuth();
   
-  // Fetch backend user profile
+  // Fetch backend user profile (only when Clerk is loaded and user is signed in)
   const { 
     data: backendUser, 
     isLoading: isUserLoading, 
     error: userError 
-  } = useMe();
+  } = useMe(isSignedIn, isClerkLoaded);
   
   /**
    * Get Clerk session token
@@ -54,8 +54,8 @@ export function useAuth() {
    * @returns {boolean} True if user has role
    */
   const hasRole = (role) => {
-    if (!backendUser?.role) return false;
-    return backendUser.role === role;
+    if (!backendUser?.roles) return false;
+    return Array.isArray(backendUser.roles) && backendUser.roles.includes(role);
   };
   
   /**
@@ -71,16 +71,22 @@ export function useAuth() {
   const isPatient = () => hasRole('patient');
   
   /**
-   * Check if user is staff
+   * Check if user is staff (assistant)
    * @returns {boolean} True if user is staff
    */
-  const isStaff = () => hasRole('staff');
+  const isStaff = () => hasRole('assistant');
   
   /**
    * Check if user is admin
    * @returns {boolean} True if user is admin
    */
   const isAdmin = () => hasRole('admin');
+  
+  /**
+   * Check if user is a clinic owner
+   * @returns {boolean} True if user is a clinic owner
+   */
+  const isClinicOwner = () => hasRole('clinic_owner');
   
   return {
     // Clerk user data
@@ -105,5 +111,6 @@ export function useAuth() {
     isPatient,
     isStaff,
     isAdmin,
+    isClinicOwner,
   };
 }

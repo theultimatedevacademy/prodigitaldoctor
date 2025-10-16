@@ -9,12 +9,15 @@ import { API_ENDPOINTS, QUERY_KEYS } from "../../utils/constants";
 /**
  * Hook to fetch current user profile from backend
  * Maps Clerk user to application user profile
+ * @param {boolean} isSignedIn - Whether user is signed in to Clerk
+ * @param {boolean} isClerkLoaded - Whether Clerk has finished loading
  * @returns {object} Query result with user data
  */
-export function useMe() {
+export function useMe(isSignedIn = false, isClerkLoaded = false) {
   return useQuery({
     queryKey: QUERY_KEYS.ME,
     queryFn: () => get(API_ENDPOINTS.ME),
+    enabled: isSignedIn && isClerkLoaded, // Only fetch when Clerk is ready and user is signed in
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
