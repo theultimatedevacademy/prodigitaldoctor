@@ -3,8 +3,8 @@
  * Lists all appointments for the selected clinic
  */
 
-import { useState, useMemo } from "react";
-import { Link } from "react-router";
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router";
 import { Calendar, Plus, X } from "lucide-react";
 import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -17,11 +17,9 @@ import { useClinicContext } from "../hooks/useClinicContext";
 
 const AppointmentsPage = () => {
   const { selectedClinicId } = useClinicContext();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [visitTypeFilter, setVisitTypeFilter] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Date filter - default to today (using local timezone)
+  // Get today's date for default
   const getTodayLocal = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -31,12 +29,48 @@ const AppointmentsPage = () => {
   };
   
   const today = getTodayLocal();
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
   
-  // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  // Read filters from URL params (with defaults)
+  const searchTerm = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || 'all';
+  const visitTypeFilter = searchParams.get('visitType') || 'all';
+  const startDate = searchParams.get('startDate') || today;
+  const endDate = searchParams.get('endDate') || today;
+  const page = parseInt(searchParams.get('page')) || 1;
+  const pageSize = parseInt(searchParams.get('pageSize')) || 12;
+  
+  // Helper to update URL params
+  const updateFilters = (updates) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        // Special handling for default values - don't add to URL
+        if (key === 'startDate' || key === 'endDate') {
+          // Only add date to URL if it's different from today
+          if (value !== today) {
+            newParams.set(key, value);
+          } else {
+            newParams.delete(key);
+          }
+        } else if (key === 'status' && value === 'all') {
+          newParams.delete(key);
+        } else if (key === 'visitType' && value === 'all') {
+          newParams.delete(key);
+        } else if (key === 'page' && value === 1) {
+          newParams.delete(key);
+        } else if (key === 'pageSize' && value === 12) {
+          newParams.delete(key);
+        } else {
+          newParams.set(key, value);
+        }
+      } else {
+        newParams.delete(key);
+      }
+    });
+    
+    setSearchParams(newParams);
+  };
 
   const { data: appointmentsData, isLoading } = useAppointments(
     {
@@ -126,23 +160,13 @@ const AppointmentsPage = () => {
     );
   });
   
-  // Reset to page 1 when filters change
-  const handleFilterChange = () => {
-    setPage(1);
-  };
-  
-  // Clear all filters
+  // Clear all filters - remove all URL params
   const handleClearFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("all");
-    setVisitTypeFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setPage(1);
+    setSearchParams({});
   };
   
-  // Check if any filters are active
-  const hasActiveFilters = searchTerm || statusFilter !== "all" || visitTypeFilter !== "all" || startDate || endDate;
+  // Check if any filters are active (different from defaults)
+  const hasActiveFilters = searchTerm || statusFilter !== 'all' || visitTypeFilter !== 'all' || (startDate !== today) || (endDate !== today);
 
   if (!selectedClinicId) {
     return (
@@ -191,7 +215,7 @@ const AppointmentsPage = () => {
           <div className="flex-1">
             <SearchInput
               value={searchTerm}
-              onChange={setSearchTerm}
+              onChange={(value) => updateFilters({ search: value, page: 1 })}
               placeholder="Search by patient name, code, or phone..."
             />
           </div>
@@ -200,16 +224,14 @@ const AppointmentsPage = () => {
             startDate={startDate}
             endDate={endDate}
             onChange={({ startDate: newStart, endDate: newEnd }) => {
-              setStartDate(newStart);
-              setEndDate(newEnd);
-              handleFilterChange();
+              updateFilters({ startDate: newStart, endDate: newEnd, page: 1 });
             }}
           />
           
           {/* Visit Type Filter */}
           <select
             value={visitTypeFilter}
-            onChange={(e) => { setVisitTypeFilter(e.target.value); handleFilterChange(); }}
+            onChange={(e) => updateFilters({ visitType: e.target.value, page: 1 })}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-medium text-gray-700 min-w-[150px]"
           >
             <option value="all">All Visits ({visitTypeCounts.all})</option>
@@ -233,7 +255,7 @@ const AppointmentsPage = () => {
         {/* Status Badge Filter Bar */}
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => { setStatusFilter('all'); handleFilterChange(); }}
+            onClick={() => updateFilters({ status: 'all', page: 1 })}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               statusFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -243,7 +265,7 @@ const AppointmentsPage = () => {
             All <span className="ml-1.5 font-semibold">{statusCounts.all}</span>
           </button>
           <button
-            onClick={() => { setStatusFilter('scheduled'); handleFilterChange(); }}
+            onClick={() => updateFilters({ status: 'scheduled', page: 1 })}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               statusFilter === 'scheduled'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -253,7 +275,7 @@ const AppointmentsPage = () => {
             Scheduled <span className="ml-1.5 font-semibold">{statusCounts.scheduled}</span>
           </button>
           <button
-            onClick={() => { setStatusFilter('in-progress'); handleFilterChange(); }}
+            onClick={() => updateFilters({ status: 'in-progress', page: 1 })}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               statusFilter === 'in-progress'
                 ? 'bg-amber-600 text-white shadow-md'
@@ -263,7 +285,7 @@ const AppointmentsPage = () => {
             In Progress <span className="ml-1.5 font-semibold">{statusCounts['in-progress']}</span>
           </button>
           <button
-            onClick={() => { setStatusFilter('completed'); handleFilterChange(); }}
+            onClick={() => updateFilters({ status: 'completed', page: 1 })}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               statusFilter === 'completed'
                 ? 'bg-green-600 text-white shadow-md'
@@ -273,7 +295,7 @@ const AppointmentsPage = () => {
             Completed <span className="ml-1.5 font-semibold">{statusCounts.completed}</span>
           </button>
           <button
-            onClick={() => { setStatusFilter('cancelled'); handleFilterChange(); }}
+            onClick={() => updateFilters({ status: 'cancelled', page: 1 })}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               statusFilter === 'cancelled'
                 ? 'bg-red-600 text-white shadow-md'
@@ -332,7 +354,7 @@ const AppointmentsPage = () => {
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              onChange={(e) => updateFilters({ pageSize: Number(e.target.value), page: 1 })}
               className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value={6}>6 per page</option>
@@ -346,7 +368,7 @@ const AppointmentsPage = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage(page - 1)}
+              onClick={() => updateFilters({ page: page - 1 })}
               disabled={page === 1}
             >
               Previous
@@ -357,7 +379,7 @@ const AppointmentsPage = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage(page + 1)}
+              onClick={() => updateFilters({ page: page + 1 })}
               disabled={page === pagination.pages}
             >
               Next

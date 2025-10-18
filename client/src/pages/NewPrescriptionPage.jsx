@@ -4,24 +4,84 @@
  */
 
 import { useNavigate, useSearchParams } from 'react-router';
-import { ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, CheckCircle, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Alert } from '../components/ui/Alert';
+import { Spinner } from '../components/ui/Spinner';
 import { PrescriptionBuilder } from '../features/prescriptions/PrescriptionBuilder';
 import { useClinicContext } from '../hooks/useClinicContext';
 import { useAuth } from '../hooks/useAuth';
+import { useAppointment } from '../api/hooks/useAppointments';
 
 export default function NewPrescriptionPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { selectedClinicId } = useClinicContext();
   const { user } = useAuth();
   
   const patientId = searchParams.get('patientId');
   const appointmentId = searchParams.get('appointmentId');
   const editId = searchParams.get('editId'); // If editing existing prescription
+  const fromCreation = searchParams.get('fromCreation'); // If just created
   
   const isEditMode = !!editId;
+  const [showSuccessBanner, setShowSuccessBanner] = useState(fromCreation === 'true');
+  
+  // Fetch appointment data to check if prescription already exists
+  const { data: appointment, isLoading: appointmentLoading } = useAppointment(appointmentId, {
+    enabled: !!appointmentId && !isEditMode, // Only fetch in create mode
+  });
+  
+  // Auto-redirect to edit mode if prescription already exists
+  useEffect(() => {
+    if (!isEditMode && appointment?.prescriptions?.length > 0) {
+      const existingPrescriptionId = appointment.prescriptions[0]._id || appointment.prescriptions[0];
+      
+      // Check if this was just created (within last 1 minute)
+      const justCreated = localStorage.getItem('prescription_just_created');
+      if (justCreated) {
+        try {
+          const { prescriptionId, timestamp } = JSON.parse(justCreated);
+          const oneMinute = 60 * 1000;
+          if (Date.now() - timestamp < oneMinute && prescriptionId === existingPrescriptionId) {
+            // Add fromCreation flag to URL
+            navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${existingPrescriptionId}&fromCreation=true`, { replace: true });
+            return;
+          }
+        } catch (e) {
+          // Invalid data, ignore
+        }
+      }
+      
+      // Normal redirect without banner
+      navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${existingPrescriptionId}`, { replace: true });
+    }
+  }, [appointment, isEditMode, appointmentId, patientId, navigate]);
+  
+  // Auto-dismiss success banner and clean up
+  useEffect(() => {
+    if (showSuccessBanner) {
+      // Remove fromCreation param from URL after 500ms
+      const cleanupTimer = setTimeout(() => {
+        const params = new URLSearchParams(searchParams);
+        params.delete('fromCreation');
+        setSearchParams(params, { replace: true });
+      }, 500);
+      
+      // Auto-dismiss banner after 8 seconds
+      const dismissTimer = setTimeout(() => {
+        setShowSuccessBanner(false);
+        // Clean up localStorage
+        localStorage.removeItem('prescription_just_created');
+      }, 8000);
+      
+      return () => {
+        clearTimeout(cleanupTimer);
+        clearTimeout(dismissTimer);
+      };
+    }
+  }, [showSuccessBanner, searchParams, setSearchParams]);
   
   const handleSuccess = (prescription) => {
     // Don't navigate - stay on page to show success state
@@ -44,8 +104,46 @@ export default function NewPrescriptionPage() {
     );
   }
   
+  // Show loading while checking for existing prescription
+  if (appointmentLoading && appointmentId && !isEditMode) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center py-12">
+          <Spinner size="lg" />
+          <p className="text-gray-600 mt-4">Loading prescription data...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Success Banner */}
+      {showSuccessBanner && (
+        <div className="mb-6 bg-green-50 border-2 border-green-500 rounded-lg p-4 animate-in slide-in-from-top">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-green-900">Prescription Created Successfully!</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  You can now edit the prescription below or go back to the appointment.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setShowSuccessBanner(false);
+                localStorage.removeItem('prescription_just_created');
+              }}
+              className="text-green-600 hover:text-green-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="no-print mb-6">
         <button
           onClick={() => navigate(-1)}

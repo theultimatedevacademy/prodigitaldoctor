@@ -745,12 +745,14 @@ export default function AppointmentDetailPage() {
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                 <p className="text-gray-600 mb-4">No prescription created yet</p>
-                <Link to={`/prescriptions/new?appointmentId=${appointmentId}&patientId=${appointment.patient?._id}`}>
-                  <Button>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Create Prescription
-                  </Button>
-                </Link>
+                {appointment.prescriptions?.length === 0 && (
+                  <Link to={`/prescriptions/new?appointmentId=${appointmentId}&patientId=${appointment.patient?._id}`}>
+                    <Button>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Create Prescription
+                    </Button>
+                  </Link>
+                )}
               </div>
             )}
           </CardContent>

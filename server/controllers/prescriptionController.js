@@ -61,6 +61,17 @@ export const createPrescription = async (req, res) => {
       return res.status(404).json({ error: 'Clinic or patient not found' });
     }
 
+    // Check if prescription already exists for this appointment
+    if (appointment) {
+      const existingPrescription = await Prescription.findOne({ appointment });
+      if (existingPrescription) {
+        return res.status(400).json({ 
+          error: 'A prescription already exists for this appointment. Please edit the existing prescription instead.',
+          existingPrescriptionId: existingPrescription._id
+        });
+      }
+    }
+
     // Validate and expand medication IDs to get compositions
     const medicationIds = meds.map(m => m.medication);
     const medications = await Medication.find({
@@ -441,9 +452,16 @@ export const getClinicPrescriptions = async (req, res) => {
     const filter = { clinic: clinicId };
 
     if (startDate && endDate) {
+      // Date range - set times to cover full days
+      const rangeStart = new Date(startDate);
+      rangeStart.setHours(0, 0, 0, 0);
+      
+      const rangeEnd = new Date(endDate);
+      rangeEnd.setHours(23, 59, 59, 999);
+      
       filter.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
+        $gte: rangeStart,
+        $lte: rangeEnd,
       };
     }
 

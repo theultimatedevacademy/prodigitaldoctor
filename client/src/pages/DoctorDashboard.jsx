@@ -12,6 +12,9 @@ import {
   TrendingUp,
   Building2,
   Pill,
+  RefreshCw,
+  BarChart3,
+  UserX,
 } from "lucide-react";
 import {
   Card,
@@ -35,6 +38,53 @@ const DoctorDashboard = () => {
   const { user } = useAuth();
 
   const today = new Date().toISOString().split("T")[0];
+  
+  // Get current month date range
+  const getMonthDateRange = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const formatDate = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+    
+    return {
+      startDate: formatDate(firstDay),
+      endDate: formatDate(lastDay)
+    };
+  };
+  
+  // Get last month date range for comparison
+  const getLastMonthDateRange = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    
+    const formatDate = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+    
+    return {
+      startDate: formatDate(firstDay),
+      endDate: formatDate(lastDay)
+    };
+  };
+  
+  const { startDate: monthStart, endDate: monthEnd } = getMonthDateRange();
+  const { startDate: lastMonthStart, endDate: lastMonthEnd } = getLastMonthDateRange();
 
   const { data: appointmentsData, isLoading: loadingAppointments } =
     useAppointments(
@@ -47,6 +97,19 @@ const DoctorDashboard = () => {
         enabled: !!selectedClinicId, // Only fetch when clinic is selected
       }
     );
+  
+  // Fetch all appointments for the month to calculate stats
+  const { data: monthAppointmentsData } = useAppointments(
+    {
+      clinicId: selectedClinicId,
+      startDate: monthStart,
+      endDate: monthEnd,
+      limit: 1000,
+    },
+    {
+      enabled: !!selectedClinicId,
+    }
+  );
 
   const { data: patientsData, isLoading: loadingPatients } = usePatients(
     selectedClinicId,
@@ -55,19 +118,97 @@ const DoctorDashboard = () => {
       enabled: !!selectedClinicId, // Only fetch when clinic is selected
     }
   );
+  
+  // Fetch all patients count for stats
+  const { data: allPatientsData } = usePatients(
+    selectedClinicId,
+    {
+      limit: 1,
+      enabled: !!selectedClinicId,
+    }
+  );
 
   const { data: prescriptionsData } = usePrescriptions(
     {
       clinicId: selectedClinicId,
-      limit: 5,
+      startDate: monthStart,
+      endDate: monthEnd,
+      limit: 1000,
     },
     {
       enabled: !!selectedClinicId, // Only fetch when clinic is selected
     }
   );
+  
+  // Fetch recent prescriptions for display
+  const { data: recentPrescriptionsData } = usePrescriptions(
+    {
+      clinicId: selectedClinicId,
+      limit: 5,
+    },
+    {
+      enabled: !!selectedClinicId,
+    }
+  );
+  
+  // Fetch last month's patients for growth calculation
+  const { data: lastMonthPatientsData } = usePatients(
+    selectedClinicId,
+    {
+      limit: 1,
+      enabled: !!selectedClinicId,
+    }
+  );
 
   const todayAppointments = appointmentsData?.appointments || [];
   const recentPatients = patientsData?.patients || [];
+  const monthAppointments = monthAppointmentsData?.appointments || [];
+  const monthPrescriptions = prescriptionsData?.data || [];
+  
+  // Calculate Patient Growth Rate
+  const calculatePatientGrowth = () => {
+    const currentTotal = allPatientsData?.total || 0;
+    // For simplicity, we'll show the new patients this month
+    // In a real scenario, you'd fetch last month's total and compare
+    const newPatientsThisMonth = monthAppointments.filter(apt => apt.visitType === 'first_visit').length;
+    return newPatientsThisMonth;
+  };
+  
+  // Calculate Follow-up Rate
+  const calculateFollowUpRate = () => {
+    if (monthAppointments.length === 0) return 0;
+    const followUps = monthAppointments.filter(apt => apt.visitType === 'follow_up').length;
+    return Math.round((followUps / monthAppointments.length) * 100);
+  };
+  
+  // Calculate Average Appointments Per Day
+  const calculateAvgAppointmentsPerDay = () => {
+    if (monthAppointments.length === 0) return 0;
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const daysPassed = Math.ceil((today - firstDayOfMonth) / (1000 * 60 * 60 * 24)) + 1;
+    return (monthAppointments.length / daysPassed).toFixed(1);
+  };
+  
+  // Calculate Cancelled/NoShow Rate
+  const calculateCancelledRate = () => {
+    if (monthAppointments.length === 0) return 0;
+    const cancelled = monthAppointments.filter(apt => apt.status === 'cancelled').length;
+    return Math.round((cancelled / monthAppointments.length) * 100);
+  };
+  
+  // Calculate Average Medications Per Prescription
+  const calculateAvgMedications = () => {
+    if (monthPrescriptions.length === 0) return 0;
+    const totalMeds = monthPrescriptions.reduce((sum, rx) => sum + (rx.medications?.length || 0), 0);
+    return (totalMeds / monthPrescriptions.length).toFixed(1);
+  };
+  
+  const patientGrowth = calculatePatientGrowth();
+  const followUpRate = calculateFollowUpRate();
+  const avgAppointmentsPerDay = calculateAvgAppointmentsPerDay();
+  const cancelledRate = calculateCancelledRate();
+  const avgMedications = calculateAvgMedications();
 
   if (!selectedClinicId) {
     return (
@@ -128,31 +269,63 @@ const DoctorDashboard = () => {
           bgColor="bg-blue-50"
           label="Today's Appointments"
           value={todayAppointments.length}
-          trend="+0 from yesterday"
+          trend={`${monthAppointments.length} this month`}
         />
         <StatCard
           icon={Users}
           iconColor="text-green-600"
           bgColor="bg-green-50"
           label="Total Patients"
-          value={patientsData?.total || 0}
-          trend="Active patients"
+          value={allPatientsData?.total || 0}
+          trend={`+${patientGrowth} new this month`}
         />
         <StatCard
           icon={FileText}
           iconColor="text-purple-600"
           bgColor="bg-purple-50"
           label="Prescriptions (Month)"
-          value={prescriptionsData?.total || 0}
+          value={monthPrescriptions.length}
           trend="This month"
         />
         <StatCard
           icon={TrendingUp}
           iconColor="text-orange-600"
           bgColor="bg-orange-50"
-          label="Completion Rate"
-          value="0%"
-          trend="No data available"
+          label="Patient Growth"
+          value={`+${patientGrowth}`}
+          trend="New patients this month"
+        />
+        <StatCard
+          icon={RefreshCw}
+          iconColor="text-teal-600"
+          bgColor="bg-teal-50"
+          label="Follow-up Rate"
+          value={`${followUpRate}%`}
+          trend="Returning patients"
+        />
+        <StatCard
+          icon={BarChart3}
+          iconColor="text-indigo-600"
+          bgColor="bg-indigo-50"
+          label="Avg Appointments/Day"
+          value={avgAppointmentsPerDay}
+          trend="This month average"
+        />
+        <StatCard
+          icon={UserX}
+          iconColor="text-rose-600"
+          bgColor="bg-rose-50"
+          label="Cancelled Rate"
+          value={`${cancelledRate}%`}
+          trend="Cancelled appointments"
+        />
+        <StatCard
+          icon={Pill}
+          iconColor="text-amber-600"
+          bgColor="bg-amber-50"
+          label="Avg Meds/Prescription"
+          value={avgMedications}
+          trend="Per prescription"
         />
       </div>
 
@@ -214,16 +387,6 @@ const DoctorDashboard = () => {
                     </div>
                     <span className="font-medium text-gray-700 group-hover:text-blue-700">
                       Add New Patient
-                    </span>
-                  </div>
-                </Link>
-                <Link to="/prescriptions/new" className="block">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors group">
-                    <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                      <FileText className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <span className="font-medium text-gray-700 group-hover:text-purple-700">
-                      Create Prescription
                     </span>
                   </div>
                 </Link>

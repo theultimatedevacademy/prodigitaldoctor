@@ -59,6 +59,28 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
   const { data: appointment, isLoading: appointmentLoading } = useAppointment(appointmentId);
   const { data: existingPrescription, isLoading: prescriptionLoading } = usePrescription(prescriptionId);
   
+  // Check if appointment already has a prescription (for create mode)
+  // But don't show warning if this was just created (within last 1 minute)
+  const checkIfJustCreated = () => {
+    if (isEditMode) return false;
+    
+    const justCreated = localStorage.getItem('prescription_just_created');
+    if (justCreated) {
+      try {
+        const { prescriptionId, timestamp } = JSON.parse(justCreated);
+        const oneMinute = 60 * 1000;
+        const withinTimeWindow = Date.now() - timestamp < oneMinute;
+        const matchesCurrent = prescriptionId === (appointment?.prescriptions?.[0]?._id || appointment?.prescriptions?.[0]);
+        return withinTimeWindow && matchesCurrent;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  };
+  
+  const appointmentHasPrescription = !isEditMode && appointment?.prescriptions?.length > 0 && !checkIfJustCreated();
+  
   const checkDDIMutation = useCheckDDI();
   const createPrescriptionMutation = useCreatePrescription();
   const updatePrescriptionMutation = useUpdatePrescription();
@@ -317,9 +339,25 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       window.print();
     };
 
-    // Navigate to prescription detail page
-    const viewPrescription = () => {
-      navigate(`/prescriptions/${savedPrescription._id}`);
+    // Navigate back to appointment
+    const backToAppointment = () => {
+      if (appointmentId) {
+        navigate(`/appointments/${appointmentId}`);
+      } else {
+        navigate('/appointments');
+      }
+    };
+    
+    // Switch to edit mode
+    const editPrescription = () => {
+      // Store success flag in localStorage for brief period
+      localStorage.setItem('prescription_just_created', JSON.stringify({
+        prescriptionId: savedPrescription._id,
+        timestamp: Date.now()
+      }));
+      
+      // Navigate to edit mode
+      navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${savedPrescription._id}&fromCreation=true`);
     };
 
     return (
@@ -389,8 +427,13 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
-                <Button onClick={viewPrescription}>
-                  View Details
+                {appointmentId && (
+                  <Button onClick={backToAppointment} variant="outline">
+                    Back to Appointment
+                  </Button>
+                )}
+                <Button onClick={editPrescription}>
+                  Edit Prescription
                 </Button>
               </div>
             </div>
@@ -619,6 +662,29 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Warning if appointment already has prescription */}
+      {appointmentHasPrescription && (
+        <Alert variant="warning">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Prescription Already Exists</p>
+              <p className="text-sm mt-1">
+                This appointment already has a prescription. Please edit the existing prescription instead of creating a new one.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3"
+                onClick={() => navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${appointment.prescriptions[0]._id || appointment.prescriptions[0]}`)}
+              >
+                Edit Existing Prescription
+              </Button>
+            </div>
+          </div>
+        </Alert>
+      )}
+      
       {/* Clinical Summary Section - PDF Style */}
       <div className="bg-white border border-gray-300 p-8 space-y-4" style={{ fontFamily: 'Arial, sans-serif' }}>
         {/* Header */}
@@ -974,7 +1040,11 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
         <Button
           type="submit"
           loading={createPrescriptionMutation.isPending || updatePrescriptionMutation.isPending}
-          disabled={medicationFields.length === 0 || (hasContraindicated && !overrideReason)}
+          disabled={
+            medicationFields.length === 0 || 
+            (hasContraindicated && !overrideReason) ||
+            appointmentHasPrescription
+          }
         >
           {hasContraindicated 
             ? 'Review & Override' 
