@@ -7,7 +7,7 @@ import Appointment from '../models/appointment.js';
 import Patient from '../models/patient.js';
 import User from '../models/user.js';
 import Clinic from '../models/clinic.js';
-import { generatePatientCode } from '../utils/patientCodeGenerator.js';
+import { findOrCreatePatient } from '../services/patientMatchingService.js';
 import logger from '../utils/logger.js';
 import mongoose from 'mongoose';
 
@@ -149,23 +149,34 @@ export const getAppointments = async (req, res) => {
 
     // Date filtering
     if (date) {
-      // Single day
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
+      // Single day - parse date string as UTC to avoid timezone issues
+      // Date string format: YYYY-MM-DD
+      const dateStr = date.includes('T') ? date.split('T')[0] : date;
+      const [year, month, day] = dateStr.split('-').map(Number);
+      
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      
+      logger.info({
+        receivedDate: date,
+        parsedStartOfDay: startOfDay.toISOString(),
+        parsedEndOfDay: endOfDay.toISOString()
+      }, 'Filtering appointments by single date');
       
       filter.startAt = {
         $gte: startOfDay,
         $lte: endOfDay,
       };
     } else if (startDate && endDate) {
-      // Date range - set times to cover full days
-      const rangeStart = new Date(startDate);
-      rangeStart.setHours(0, 0, 0, 0);
+      // Date range - parse date strings as UTC to avoid timezone issues
+      const startStr = startDate.includes('T') ? startDate.split('T')[0] : startDate;
+      const endStr = endDate.includes('T') ? endDate.split('T')[0] : endDate;
       
-      const rangeEnd = new Date(endDate);
-      rangeEnd.setHours(23, 59, 59, 999);
+      const [startYear, startMonth, startDay] = startStr.split('-').map(Number);
+      const [endYear, endMonth, endDay] = endStr.split('-').map(Number);
+      
+      const rangeStart = new Date(Date.UTC(startYear, startMonth - 1, startDay, 0, 0, 0, 0));
+      const rangeEnd = new Date(Date.UTC(endYear, endMonth - 1, endDay, 23, 59, 59, 999));
       
       logger.info({
         receivedStartDate: startDate,
@@ -182,6 +193,17 @@ export const getAppointments = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    logger.info({ 
+      filter, 
+      patientParam: patient,
+      clinicParam: clinic,
+      doctorParam: doctor,
+      statusParam: status,
+      hasPatientFilter: !!filter.patient,
+      page, 
+      limit 
+    }, 'Fetching appointments with filter');
+
     const appointments = await Appointment.find(filter)
       .populate('clinic')
       .populate('doctor')
@@ -193,6 +215,20 @@ export const getAppointments = async (req, res) => {
       .skip(skip);
 
     const total = await Appointment.countDocuments(filter);
+
+    logger.info({ 
+      appointmentsFound: appointments.length, 
+      total,
+      patientFilter: filter.patient,
+      sampleAppointments: appointments.slice(0, 2).map(a => ({
+        id: a._id,
+        patient: a.patient?._id,
+        status: a.status,
+        hasClinicalNotes: !!a.clinicalNotes,
+        diagnosis: a.clinicalNotes?.diagnosis,
+        prescriptionIds: a.prescriptions
+      }))
+    }, 'Appointments fetched');
 
     res.json({
       appointments,
@@ -498,32 +534,32 @@ export const createFirstVisitAppointment = async (req, res) => {
     //   });
     // }
 
-    // Generate patient code
-    const patientCode = await generatePatientCode(
+    // Use smart patient matching service to find or create patient
+    const patientData = {
+      name,
+      phone,
+      age: req.body.age,
+      gender: req.body.gender,
+      email: req.body.email,
+      addresses: req.body.addresses || [],
+      bloodGroup: req.body.bloodGroup,
+      allergies: req.body.allergies,
+      emergencyContact: req.body.emergencyContact,
+      abhaId: req.body.abhaId,
+      notes: req.body.notes,
+    };
+
+    const patientResult = await findOrCreatePatient(
+      patientData,
       clinic,
       doctor,
       clinicDoc.name,
       doctorDoc.name
     );
 
-    // Create patient record
-    const patient = await Patient.create(
-      [
-        {
-          name,
-          phone,
-          patientCodes: [
-            {
-              clinic,
-              doctor,
-              code: patientCode,
-              active: true,
-            },
-          ],
-        },
-      ],
-      { session }
-    );
+    const patient = patientResult.patient;
+    const patientCode = patientResult.patientCode;
+    const patientReused = patientResult.reused;
 
     // Get current user
     const user = await User.findOne({ clerkId: userId });
@@ -534,7 +570,7 @@ export const createFirstVisitAppointment = async (req, res) => {
         {
           clinic,
           doctor,
-          patient: patient[0]._id,
+          patient: patient._id,
           visitType: 'first_visit',
           tempPatientData: { name, phone },
           startAt: startTime,
@@ -559,17 +595,22 @@ export const createFirstVisitAppointment = async (req, res) => {
     logger.info(
       {
         appointmentId: appointment[0]._id,
-        patientId: patient[0]._id,
+        patientId: patient._id,
         patientCode,
         clinicId: clinic,
         doctorId: doctor,
+        patientReused: patientReused,
       },
-      'First visit appointment created'
+      patientReused ? 'First visit appointment created - patient reused' : 'First visit appointment created - new patient'
     );
 
     res.status(201).json({
       appointment: populatedAppointment,
       patientCode,
+      reused: patientReused,
+      message: patientReused
+        ? 'Appointment created. Existing patient record reused and updated.'
+        : 'Appointment created successfully',
     });
   } catch (error) {
     await session.abortTransaction();

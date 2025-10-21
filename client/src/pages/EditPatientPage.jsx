@@ -1,12 +1,12 @@
 /**
- * NewPatientPage Component
- * Form to create a new patient
+ * EditPatientPage Component
+ * Form to edit existing patient information
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -14,22 +14,22 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
 import { Alert } from '../components/ui/Alert';
+import { Spinner } from '../components/ui/Spinner';
 import { patientSchema } from '../utils/validators';
 import { GENDER_OPTIONS } from '../utils/constants';
-import { useCreatePatient } from '../api/hooks/usePatients';
-import { useClinicContext } from '../hooks/useClinicContext';
-import { useAuth } from '../hooks/useAuth';
+import { usePatient, useUpdatePatient } from '../api/hooks/usePatients';
 import { toast } from 'react-toastify';
 
-export default function NewPatientPage() {
+export default function EditPatientPage() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { selectedClinicId } = useClinicContext();
-  const { user } = useAuth();
-  const createPatientMutation = useCreatePatient();
+  const { data: patient, isLoading } = usePatient(id);
+  const updatePatientMutation = useUpdatePatient();
   
   const {
     register,
     handleSubmit,
+    reset,
     setValue,
     watch,
     formState: { errors },
@@ -39,6 +39,31 @@ export default function NewPatientPage() {
   
   const [age, setAge] = useState('');
   const watchGender = watch('gender');
+  
+  
+  // Populate form when patient data loads
+  useEffect(() => {
+    if (patient) {
+      const address = patient.addresses?.[0] || {};
+      setAge(patient.age || '');
+      
+      reset({
+        name: patient.name || '',
+        gender: patient.gender || '',
+        phone: patient.phone || '',
+        email: patient.email || '',
+        addressLine1: address.line1 || '',
+        addressLine2: address.line2 || '',
+        city: address.city || '',
+        state: address.state || '',
+        pin: address.pin || '',
+        bloodGroup: patient.bloodGroup || '',
+        emergencyContact: patient.emergencyContact || '',
+        allergies: patient.allergies || '',
+        abhaId: patient.abhaId || patient.abhaNumber || '',
+      });
+    }
+  }, [patient, reset]);
   
   const onSubmit = async (data) => {
     try {
@@ -54,7 +79,7 @@ export default function NewPatientPage() {
         });
       }
       
-      const patientData = {
+      const updateData = {
         name: data.name,
         age: age ? parseInt(age) : null,
         gender: data.gender,
@@ -65,24 +90,36 @@ export default function NewPatientPage() {
         allergies: data.allergies,
         emergencyContact: data.emergencyContact,
         abhaId: data.abhaId,
-        clinic: selectedClinicId,
-        doctor: user?._id,
-        notes: data.notes,
       };
       
-      const result = await createPatientMutation.mutateAsync(patientData);
-      toast.success(`Patient created! Code: ${result.patientCodes?.[0]?.code}`);
-      navigate(`/patients/${result._id}`);
+      await updatePatientMutation.mutateAsync({
+        patientId: id,
+        data: updateData,
+      });
+      
+      toast.success('Patient updated successfully!');
+      navigate(`/patients/${id}`);
     } catch (error) {
-      toast.error(error.message || 'Failed to create patient');
+      toast.error(error.message || 'Failed to update patient');
     }
   };
   
-  if (!selectedClinicId) {
+  if (isLoading) {
     return (
-      <Alert variant="warning">
-        Please select a clinic before creating a patient
-      </Alert>
+      <div className="flex items-center justify-center min-h-screen">
+        <Spinner size="xl" />
+        <p className="ml-4 text-gray-600">Loading patient...</p>
+      </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Alert variant="warning">
+          Patient not found
+        </Alert>
+      </div>
     );
   }
   
@@ -90,15 +127,15 @@ export default function NewPatientPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/patients')}
+          onClick={() => navigate(`/patients/${id}`)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Patients
+          Back to Patient
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-900">Add New Patient</h1>
-        <p className="text-gray-600 mt-2">Create a new patient record</p>
+        <h1 className="text-3xl font-bold text-gray-900">Edit Patient</h1>
+        <p className="text-gray-600 mt-2">Update patient information</p>
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -268,17 +305,17 @@ export default function NewPatientPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/patients')}
+            onClick={() => navigate(`/patients/${id}`)}
             className="flex-1"
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            loading={createPatientMutation.isPending}
+            loading={updatePatientMutation.isPending}
             className="flex-1"
           >
-            Create Patient
+            Update Patient
           </Button>
         </div>
       </form>

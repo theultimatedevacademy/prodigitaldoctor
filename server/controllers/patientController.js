@@ -9,6 +9,7 @@ import Clinic from '../models/clinic.js';
 import Prescription from '../models/prescription.js';
 import Appointment from '../models/appointment.js';
 import { generatePatientCode } from '../utils/patientCodeGenerator.js';
+import { findOrCreatePatient } from '../services/patientMatchingService.js';
 import logger from '../utils/logger.js';
 import { logPatientAccess } from '../utils/auditLogger.js';
 import mongoose from 'mongoose';
@@ -32,11 +33,15 @@ export const createPatient = async (req, res) => {
 
     const {
       name,
-      dob,
+      age,
       gender,
       phone,
       email,
       addresses,
+      bloodGroup,
+      allergies,
+      emergencyContact,
+      abhaId,
       clinic,
       doctor,
       notes,
@@ -58,45 +63,51 @@ export const createPatient = async (req, res) => {
       return res.status(404).json({ error: 'Clinic or doctor not found' });
     }
 
-    // Generate patient code
-    const patientCode = await generatePatientCode(
+    // Use smart patient matching service
+    const patientData = {
+      name,
+      age,
+      gender,
+      phone,
+      email,
+      addresses: addresses || [],
+      bloodGroup,
+      allergies,
+      emergencyContact,
+      abhaId,
+      abhaNumber: abhaId, // Support both field names
+      notes,
+    };
+
+    const result = await findOrCreatePatient(
+      patientData,
       clinic,
       doctor,
       clinicDoc.name,
       doctorDoc.name
     );
 
-    // Create patient
-    const patient = await Patient.create([{
-      name,
-      dob,
-      gender,
-      phone,
-      email,
-      addresses: addresses || [],
-      patientCodes: [{
-        clinic,
-        doctor,
-        code: patientCode,
-        active: true,
-      }],
-      notes,
-    }], { session });
-
     await session.commitTransaction();
 
-    const populatedPatient = await Patient.findById(patient[0]._id)
+    const populatedPatient = await Patient.findById(result.patient._id)
       .populate('patientCodes.clinic')
       .populate('patientCodes.doctor');
 
     logger.info({ 
-      patientId: patient[0]._id, 
-      patientCode,
+      patientId: result.patient._id, 
+      patientCode: result.patientCode,
       clinicId: clinic,
-      doctorId: doctor 
-    }, 'Patient created');
+      doctorId: doctor,
+      isNew: result.isNew,
+      reused: result.reused
+    }, result.isNew ? 'Patient created' : 'Patient reused');
 
-    res.status(201).json(populatedPatient);
+    res.status(result.isNew ? 201 : 200).json({
+      ...populatedPatient.toObject(),
+      patientCode: result.patientCode,
+      reused: result.reused,
+      message: result.message
+    });
   } catch (error) {
     await session.abortTransaction();
     logger.error({ error }, 'Error creating patient');
@@ -127,35 +138,117 @@ export const searchPatients = async (req, res) => {
       });
     }
 
-    const filter = {};
+    const matchFilter = {};
 
-    // Search by patient code or name
+    // Search by patient code, name, or phone
     if (q.includes('-')) {
       // Looks like a patient code
-      filter['patientCodes.code'] = new RegExp(q, 'i');
+      matchFilter['patientCodes.code'] = new RegExp(q, 'i');
     } else {
-      // Search by name
-      filter.$text = { $search: q };
+      // Search by name or phone
+      matchFilter.$or = [
+        { name: new RegExp(q, 'i') },
+        { phone: new RegExp(q, 'i') }
+      ];
     }
 
     // Filter by clinic if provided (exclude 'null' string)
     if (clinic && clinic !== 'null' && clinic !== 'undefined') {
-      filter['patientCodes.clinic'] = clinic;
+      const clinicObjectId = mongoose.Types.ObjectId.isValid(clinic) 
+        ? new mongoose.Types.ObjectId(clinic) 
+        : null;
+      
+      if (clinicObjectId) {
+        matchFilter['patientCodes.clinic'] = clinicObjectId;
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const patients = await Patient.find(filter)
+    // Use aggregation to include visit statistics
+    const patientsWithStats = await Patient.aggregate([
+      // Match patients based on search
+      {
+        $match: matchFilter
+      },
+      // Lookup appointments and calculate stats
+      {
+        $lookup: {
+          from: 'appointments',
+          let: { patientId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$patient', '$$patientId'] },
+                    { $eq: ['$status', 'completed'] }
+                  ]
+                }
+              }
+            },
+            {
+              $sort: { startAt: -1 }
+            }
+          ],
+          as: 'completedAppointments'
+        }
+      },
+      // Add visit statistics fields
+      {
+        $addFields: {
+          visitStats: {
+            completedCount: { $size: '$completedAppointments' },
+            lastVisitDate: {
+              $cond: {
+                if: { $gt: [{ $size: '$completedAppointments' }, 0] },
+                then: { $arrayElemAt: ['$completedAppointments.startAt', 0] },
+                else: null
+              }
+            }
+          }
+        }
+      },
+      // Remove the temporary appointments array
+      {
+        $project: {
+          completedAppointments: 0
+        }
+      },
+      // Sort by creation date
+      {
+        $sort: { createdAt: -1 }
+      },
+      // Pagination
+      {
+        $skip: skip
+      },
+      {
+        $limit: parseInt(limit)
+      }
+    ]);
+
+    // Count total
+    const total = await Patient.countDocuments(matchFilter);
+
+    // Populate clinic and doctor references - use Mongoose's populate on hydrated documents
+    const patientIds = patientsWithStats.map(p => p._id);
+    const populatedPatients = await Patient.find({ _id: { $in: patientIds } })
       .populate('patientCodes.clinic')
       .populate('patientCodes.doctor')
-      .limit(parseInt(limit))
-      .skip(skip)
-      .sort({ createdAt: -1 });
+      .lean();
 
-    const total = await Patient.countDocuments(filter);
+    // Merge populated data with visit stats
+    const finalPatients = patientsWithStats.map(patient => {
+      const populated = populatedPatients.find(p => p._id.toString() === patient._id.toString());
+      if (populated) {
+        return { ...patient, patientCodes: populated.patientCodes };
+      }
+      return patient;
+    });
 
     res.json({
-      patients,
+      patients: finalPatients,
       pagination: {
         total,
         page: parseInt(page),
@@ -402,21 +495,112 @@ export const getClinicPatients = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const patients = await Patient.find({
-      'patientCodes.clinic': clinicId
-    })
-    .populate('patientCodes.clinic')
-    .populate('patientCodes.doctor')
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
-    .skip(skip);
+    // Convert clinicId to ObjectId
+    const clinicObjectId = mongoose.Types.ObjectId.isValid(clinicId) 
+      ? new mongoose.Types.ObjectId(clinicId) 
+      : null;
+    
+    if (!clinicObjectId) {
+      return res.status(400).json({ error: 'Invalid clinic ID' });
+    }
 
+    // Use aggregation to include visit statistics
+    const patientsWithStats = await Patient.aggregate([
+      // Match patients for this clinic
+      {
+        $match: {
+          'patientCodes.clinic': clinicObjectId
+        }
+      },
+      // Lookup appointments and calculate stats
+      {
+        $lookup: {
+          from: 'appointments',
+          let: { patientId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$patient', '$$patientId'] },
+                    { $eq: ['$status', 'completed'] }
+                  ]
+                }
+              }
+            },
+            {
+              $sort: { startAt: -1 }
+            }
+          ],
+          as: 'completedAppointments'
+        }
+      },
+      // Add visit statistics fields
+      {
+        $addFields: {
+          visitStats: {
+            completedCount: { $size: '$completedAppointments' },
+            lastVisitDate: {
+              $cond: {
+                if: { $gt: [{ $size: '$completedAppointments' }, 0] },
+                then: { $arrayElemAt: ['$completedAppointments.startAt', 0] },
+                else: null
+              }
+            }
+          }
+        }
+      },
+      // Remove the temporary appointments array
+      {
+        $project: {
+          completedAppointments: 0
+        }
+      },
+      // Sort by creation date
+      {
+        $sort: { createdAt: -1 }
+      },
+      // Pagination
+      {
+        $skip: skip
+      },
+      {
+        $limit: parseInt(limit)
+      }
+    ]);
+
+    // Count total
     const total = await Patient.countDocuments({
-      'patientCodes.clinic': clinicId
+      'patientCodes.clinic': clinicObjectId
     });
 
+    // Populate clinic and doctor references - use Mongoose's populate on hydrated documents
+    const patientIds = patientsWithStats.map(p => p._id);
+    const populatedPatients = await Patient.find({ _id: { $in: patientIds } })
+      .populate('patientCodes.clinic')
+      .populate('patientCodes.doctor')
+      .lean();
+
+    // Merge populated data with visit stats
+    const finalPatients = patientsWithStats.map(patient => {
+      const populated = populatedPatients.find(p => p._id.toString() === patient._id.toString());
+      if (populated) {
+        return { ...patient, patientCodes: populated.patientCodes };
+      }
+      return patient;
+    });
+
+    // Debug: Log first patient's visit stats
+    if (finalPatients.length > 0) {
+      logger.info({
+        patientName: finalPatients[0].name,
+        visitStats: finalPatients[0].visitStats,
+        hasVisitStats: !!finalPatients[0].visitStats
+      }, 'Sample patient with visit stats');
+    }
+
     res.json({
-      patients,
+      patients: finalPatients,
       pagination: {
         total,
         page: parseInt(page),

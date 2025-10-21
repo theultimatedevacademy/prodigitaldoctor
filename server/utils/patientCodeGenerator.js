@@ -3,9 +3,12 @@
  * Generates unique patient codes using clinic/doctor context and atomic counters
  */
 
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import Counter from '../models/counter.js';
 import logger from './logger.js';
+
+// Create nanoid with alphanumeric characters only (no special characters)
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 3);
 
 /**
  * Generate unique patient code
@@ -37,8 +40,8 @@ export async function generatePatientCode(clinicId, doctorId, clinicName, doctor
     // Format sequence number with leading zeros
     const sequence = String(counter.seq).padStart(4, '0');
     
-    // Generate random suffix for additional uniqueness
-    const randomSuffix = nanoid(3).toUpperCase();
+    // Generate random suffix for additional uniqueness (alphanumeric only)
+    const randomSuffix = nanoid();
     
     // Combine to form patient code
     const patientCode = `${clinicShort}-${doctorShort}-${sequence}-${randomSuffix}`;
@@ -58,7 +61,9 @@ export async function generatePatientCode(clinicId, doctorId, clinicName, doctor
  * @returns {string} Short code
  */
 function generateShortCode(name, length = 3) {
-  if (!name) return nanoid(length).toUpperCase();
+  // Create a temporary nanoid with specified length if needed
+  const tempNanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', length);
+  if (!name) return tempNanoid();
   
   // Remove special characters and split into words
   const words = name.toUpperCase().replace(/[^A-Z0-9\s]/g, '').split(/\s+/);

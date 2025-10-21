@@ -25,7 +25,8 @@ import LandingPage from './pages/LandingPage';
 import DoctorDashboard from './pages/DoctorDashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import PatientsPage from './pages/PatientsPage';
-import NewPatientPage from './pages/NewPatientPage';
+// import NewPatientPage from './pages/NewPatientPage'; // Removed: Patients are created through appointments only
+import EditPatientPage from './pages/EditPatientPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import NewAppointmentPage from './pages/NewAppointmentPage';
@@ -78,8 +79,9 @@ createRoot(document.getElementById('root')).render(
                   
                   {/* Patients */}
                   <Route path="patients" element={<PatientsPage />} />
-                  <Route path="patients/new" element={<NewPatientPage />} />
+                  {/* <Route path="patients/new" element={<NewPatientPage />} /> */} {/* Removed: Patients are created through appointments only */}
                   <Route path="patients/:id" element={<PatientDetailPage />} />
+                  <Route path="patients/:id/edit" element={<EditPatientPage />} />
                   
                   {/* Appointments */}
                   <Route path="appointments" element={<AppointmentsPage />} />

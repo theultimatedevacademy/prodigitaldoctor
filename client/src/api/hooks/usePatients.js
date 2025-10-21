@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post, put, del } from '../apiClient';
+import { get, post, put, patch, del } from '../apiClient';
 import { API_ENDPOINTS, QUERY_KEYS } from '../../utils/constants';
 /**
  * Hook to fetch list of patients for a clinic
@@ -79,7 +79,7 @@ export function useUpdatePatient() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ patientId, data }) => put(API_ENDPOINTS.PATIENT_BY_ID(patientId), data),
+    mutationFn: ({ patientId, data }) => patch(API_ENDPOINTS.PATIENT_BY_ID(patientId), data),
     onSuccess: (data, variables) => {
       // Invalidate specific patient and patients list
       queryClient.invalidateQueries({
@@ -122,7 +122,7 @@ export function useDeletePatient() {
 export function useSearchPatients(query, clinicId) {
   return useQuery({
     queryKey: [...QUERY_KEYS.PATIENTS, 'search', query, clinicId],
-    queryFn: () => get(`${API_ENDPOINTS.PATIENTS}?q=${query}&clinicId=${clinicId}`),
+    queryFn: () => get(`${API_ENDPOINTS.PATIENTS}/search?q=${query}&clinic=${clinicId}`),
     enabled: !!query && query.length >= 2 && !!clinicId,
     staleTime: 1 * 60 * 1000, // 1 minute
   });

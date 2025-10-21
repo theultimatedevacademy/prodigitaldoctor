@@ -3,7 +3,7 @@
  * Lists all prescriptions for the selected clinic
  */
 
-import { useSearchParams, useNavigate } from "react-router";
+import { useSearchParams, useNavigate, Link } from "react-router";
 import { FileText, X, Eye } from "lucide-react";
 import { Card, CardContent } from "../components/ui/Card";
 import { SearchInput } from "../components/ui/SearchInput";
@@ -214,6 +214,13 @@ const PrescriptionsPage = () => {
         <PrescriptionsTable prescriptions={filteredPrescriptions} />
       )}
 
+      {/* Helper Text - Show record count */}
+      {!isLoading && filteredPrescriptions.length > 0 && (
+        <div className="text-sm text-gray-600">
+          Showing {filteredPrescriptions.length} of {pagination.total} total prescriptions
+        </div>
+      )}
+      
       {/* Pagination */}
       {!isLoading && pagination.pages > 1 && (
         <div className="flex items-center justify-between border-t pt-6">
@@ -330,7 +337,8 @@ function PrescriptionsTable({ prescriptions }) {
           <tbody className="divide-y divide-gray-200">
             {prescriptions.map((prescription, index) => {
               const patientCode = prescription.patient?.patientCodes?.[0]?.code || 'N/A';
-              const medsCount = prescription.medications?.length || 0;
+              const medsCount = prescription.meds?.length || 0; // Fixed: use 'meds' not 'medications'
+              const visitType = prescription.appointment?.visitType || 'first_visit'; // Get from appointment
               const isEven = index % 2 === 0;
               
               return (
@@ -361,8 +369,8 @@ function PrescriptionsTable({ prescriptions }) {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${getVisitTypeStyle(prescription.visitType)}`}>
-                      {formatVisitType(prescription.visitType)}
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${getVisitTypeStyle(visitType)}`}>
+                      {formatVisitType(visitType)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

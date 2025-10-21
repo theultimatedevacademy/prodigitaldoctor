@@ -80,15 +80,20 @@ export function isValidAge(dob, minAge = 0, maxAge = 150) {
  */
 export const patientSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
-  dob: z.string().or(z.date()).refine(isNotFutureDate, 'Date of birth cannot be in the future'),
+  dob: z.string().or(z.date()).optional().refine(val => !val || isNotFutureDate(val), 'Date of birth cannot be in the future'),
   gender: z.enum(['M', 'F', 'O', 'U'], { required_error: 'Please select a gender' }),
   phone: z.string().refine(isValidPhone, 'Please enter a valid 10-digit phone number'),
   email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
-  address: z.string().max(500, 'Address is too long').optional(),
-  emergencyContact: z.string().refine(isValidPhone, 'Please enter a valid emergency contact number').optional().or(z.literal('')),
-  bloodGroup: z.string().optional(),
-  allergies: z.string().max(500, 'Allergies description is too long').optional(),
-  abhaId: z.string().refine(val => !val || isValidAbhaId(val), 'ABHA ID must be 14 digits').optional().or(z.literal('')),
+  // Structured address fields
+  addressLine1: z.string().max(200, 'Address line 1 is too long').optional(),
+  addressLine2: z.string().max(200, 'Address line 2 is too long').optional(),
+  city: z.string().max(100, 'City name is too long').optional(),
+  state: z.string().max(100, 'State name is too long').optional(),
+  pin: z.string().regex(/^\d{6}$/, 'PIN code must be 6 digits').optional().or(z.literal('')),
+  emergencyContact: z.string().optional().refine(val => !val || isValidPhone(val), 'Please enter a valid emergency contact number'),
+  bloodGroup: z.string().max(10, 'Blood group is invalid').optional(),
+  allergies: z.string().max(1000, 'Allergies description is too long').optional(),
+  abhaId: z.string().optional().refine(val => !val || isValidAbhaId(val), 'ABHA ID must be 14 digits'),
 });
 
 /**

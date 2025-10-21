@@ -3,26 +3,40 @@
  * Complete prescription creation form with DDI checking
  */
 
-import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router';
-import { Trash2, AlertTriangle, CheckCircle, Calendar, ArrowLeft, Plus, Printer } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
-import { Textarea } from '../../components/ui/Textarea';
-import { Alert } from '../../components/ui/Alert';
-import { Modal, ModalFooter } from '../../components/ui/Modal';
-import { MedicationSearch } from './MedicationSearch';
-import { DDIWarnings } from './DDIWarnings';
-import { prescriptionSchema } from '../../utils/validators';
-import { useCheckDDI, useCreatePrescription, useUpdatePrescription, usePrescription } from '../../api/hooks/usePrescriptions';
-import { usePatient } from '../../api/hooks/usePatients';
-import { useAppointment } from '../../api/hooks/useAppointments';
-import { MEDICATION_FREQUENCIES } from '../../utils/constants';
-import { formatDate } from '../../utils/formatters';
-import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router";
+import {
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+  ArrowLeft,
+  Plus,
+  Printer,
+  Edit,
+} from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
+import { Textarea } from "../../components/ui/Textarea";
+import { Alert } from "../../components/ui/Alert";
+import { Modal, ModalFooter } from "../../components/ui/Modal";
+import { MedicationSearch } from "./MedicationSearch";
+import { DDIWarnings } from "./DDIWarnings";
+import { prescriptionSchema } from "../../utils/validators";
+import {
+  useCheckDDI,
+  useCreatePrescription,
+  useUpdatePrescription,
+  usePrescription,
+} from "../../api/hooks/usePrescriptions";
+import { usePatient } from "../../api/hooks/usePatients";
+import { useAppointment } from "../../api/hooks/useAppointments";
+import { MEDICATION_FREQUENCIES } from "../../utils/constants";
+import { formatDate } from "../../utils/formatters";
+import { toast } from "react-toastify";
 
 /**
  * PrescriptionBuilder component
@@ -36,41 +50,54 @@ import { toast } from 'react-toastify';
  * @param {Function} props.onSuccess - Success callback
  * @returns {JSX.Element} PrescriptionBuilder component
  */
-export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointmentId, prescriptionId, isEditMode = false, onSuccess }) {
+export function PrescriptionBuilder({
+  patientId,
+  clinicId,
+  doctorId,
+  appointmentId,
+  prescriptionId,
+  isEditMode = false,
+  onSuccess,
+}) {
   const navigate = useNavigate();
   const [ddiWarnings, setDdiWarnings] = useState([]);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
-  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideReason, setOverrideReason] = useState("");
   const [selectedMedications, setSelectedMedications] = useState([]);
   const [savedPrescription, setSavedPrescription] = useState(null);
   const [isFormInitialized, setIsFormInitialized] = useState(false);
-  
+
   // Staging state for medication being added
   const [stagingMedication, setStagingMedication] = useState(null);
   const [stagingData, setStagingData] = useState({
-    dosage: '',
-    frequency: 'BID',
-    duration: '',
-    instructions: ''
+    dosage: "",
+    frequency: "BID",
+    duration: "",
+    instructions: "",
   });
-  
+
   // Fetch patient and appointment data
   const { data: patient, isLoading: patientLoading } = usePatient(patientId);
-  const { data: appointment, isLoading: appointmentLoading } = useAppointment(appointmentId);
-  const { data: existingPrescription, isLoading: prescriptionLoading } = usePrescription(prescriptionId);
-  
+  const { data: appointment, isLoading: appointmentLoading } =
+    useAppointment(appointmentId);
+  const { data: existingPrescription, isLoading: prescriptionLoading } =
+    usePrescription(prescriptionId);
+
   // Check if appointment already has a prescription (for create mode)
   // But don't show warning if this was just created (within last 1 minute)
   const checkIfJustCreated = () => {
     if (isEditMode) return false;
-    
-    const justCreated = localStorage.getItem('prescription_just_created');
+
+    const justCreated = localStorage.getItem("prescription_just_created");
     if (justCreated) {
       try {
         const { prescriptionId, timestamp } = JSON.parse(justCreated);
         const oneMinute = 60 * 1000;
         const withinTimeWindow = Date.now() - timestamp < oneMinute;
-        const matchesCurrent = prescriptionId === (appointment?.prescriptions?.[0]?._id || appointment?.prescriptions?.[0]);
+        const matchesCurrent =
+          prescriptionId ===
+          (appointment?.prescriptions?.[0]?._id ||
+            appointment?.prescriptions?.[0]);
         return withinTimeWindow && matchesCurrent;
       } catch (e) {
         return false;
@@ -78,13 +105,16 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
     }
     return false;
   };
-  
-  const appointmentHasPrescription = !isEditMode && appointment?.prescriptions?.length > 0 && !checkIfJustCreated();
-  
+
+  const appointmentHasPrescription =
+    !isEditMode &&
+    appointment?.prescriptions?.length > 0 &&
+    !checkIfJustCreated();
+
   const checkDDIMutation = useCheckDDI();
   const createPrescriptionMutation = useCreatePrescription();
   const updatePrescriptionMutation = useUpdatePrescription();
-  
+
   const {
     register,
     control,
@@ -101,64 +131,70 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       doctorId,
       appointmentId,
       medications: [],
-      notes: '',
+      notes: "",
     },
   });
 
   // Watch medications array to show live updates in PDF preview
-  const watchedMedications = watch('medications');
-  
-  const { fields: medicationFields, append: appendMedication, remove: removeMedication, replace } = useFieldArray({
+  const watchedMedications = watch("medications");
+
+  const {
+    fields: medicationFields,
+    append: appendMedication,
+    remove: removeMedication,
+    replace,
+  } = useFieldArray({
     control,
-    name: 'medications',
+    name: "medications",
   });
-  
+
   // Load existing prescription data in edit mode
   useEffect(() => {
     if (isEditMode && existingPrescription && !isFormInitialized) {
       // Populate medications
-      const meds = existingPrescription.meds?.map(med => ({
-        medicationId: med.medication._id,
-        medication: med.medication,
-        dosage: med.dosage,
-        frequency: med.frequency,
-        duration: med.duration,
-        instructions: med.notes || '',
-      })) || [];
-      
+      const meds =
+        existingPrescription.meds?.map((med) => ({
+          medicationId: med.medication._id,
+          medication: med.medication,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.notes || "",
+        })) || [];
+
       replace(meds);
-      setSelectedMedications(meds.map(m => m.medication));
-      setValue('notes', existingPrescription.notes || '');
-      
+      setSelectedMedications(meds.map((m) => m.medication));
+      setValue("notes", existingPrescription.notes || "");
+
       // Check DDI for existing medications
       if (meds.length >= 2) {
-        checkDDI(meds.map(m => m.medication));
+        checkDDI(meds.map((m) => m.medication));
       }
-      
+
       setIsFormInitialized(true);
     }
   }, [isEditMode, existingPrescription, isFormInitialized, replace, setValue]);
-  
+
   // Handle medication selection from dropdown
   const handleMedicationSelect = (medication) => {
     setStagingMedication(medication);
     setStagingData({
-      dosage: '',
-      frequency: 'BID',
-      duration: '',
-      instructions: ''
+      dosage: "",
+      frequency: "BID",
+      duration: "",
+      instructions: "",
     });
   };
-  
+
   // Handle adding staged medication to prescription
   const handleAddMedication = () => {
     if (!stagingMedication) return;
-    
+
     if (!stagingData.dosage || !stagingData.duration) {
-      toast.error('Please fill in dosage and duration');
+      toast.error("Please fill in dosage and duration");
       return;
     }
-    
+
     const newMed = {
       medicationId: stagingMedication._id,
       medication: stagingMedication,
@@ -167,56 +203,56 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       duration: stagingData.duration,
       instructions: stagingData.instructions,
     };
-    
+
     appendMedication(newMed);
     setSelectedMedications([...selectedMedications, stagingMedication]);
-    
+
     // Check DDI with new medication
     checkDDI([...selectedMedications, stagingMedication]);
-    
+
     // Reset staging
     setStagingMedication(null);
     setStagingData({
-      dosage: '',
-      frequency: 'BID',
-      duration: '',
-      instructions: ''
+      dosage: "",
+      frequency: "BID",
+      duration: "",
+      instructions: "",
     });
   };
-  
+
   // Handle cancel staging
   const handleCancelStaging = () => {
     setStagingMedication(null);
     setStagingData({
-      dosage: '',
-      frequency: 'BID',
-      duration: '',
-      instructions: ''
+      dosage: "",
+      frequency: "BID",
+      duration: "",
+      instructions: "",
     });
   };
-  
+
   // Check drug-drug interactions
   const checkDDI = async (medications) => {
     if (medications.length < 2) {
       setDdiWarnings([]);
       return;
     }
-    
+
     const compositionIds = medications.flatMap(
-      med => med.unique_composition?.map(c => c._id || c) || []
+      (med) => med.unique_composition?.map((c) => c._id || c) || []
     );
-    
+
     if (compositionIds.length < 2) return;
-    
+
     try {
       const result = await checkDDIMutation.mutateAsync(compositionIds);
       setDdiWarnings(result.warnings || []);
     } catch (error) {
-      console.error('DDI check failed:', error);
-      toast.error('Failed to check drug interactions');
+      console.error("DDI check failed:", error);
+      toast.error("Failed to check drug interactions");
     }
   };
-  
+
   // Handle medication removal
   const handleRemoveMedication = (index) => {
     removeMedication(index);
@@ -224,10 +260,12 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
     setSelectedMedications(newMeds);
     checkDDI(newMeds);
   };
-  
+
   // Check if there are contraindicated warnings
-  const hasContraindicated = ddiWarnings.some(w => w.severity === 'contraindicated');
-  
+  const hasContraindicated = ddiWarnings.some(
+    (w) => w.severity === "contraindicated"
+  );
+
   // Handle form submission
   const onSubmit = async (data) => {
     // Block if contraindicated without override
@@ -235,101 +273,128 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       setShowOverrideModal(true);
       return;
     }
-    
+
     try {
-      console.log('=== PRESCRIPTION SUBMISSION DEBUG ===');
-      console.log('Form data:', data);
-      console.log('Selected medications:', selectedMedications);
-      console.log('Is edit mode:', isEditMode);
-      
+      console.log("=== PRESCRIPTION SUBMISSION DEBUG ===");
+      console.log("Form data:", data);
+      console.log("Selected medications:", selectedMedications);
+      console.log("Is edit mode:", isEditMode);
+
       // Transform data to match backend expectations
       const prescriptionData = {
-        meds: data.medications.map((med, index) => {
-          const selectedMed = selectedMedications[index];
-          console.log(`Medication ${index}:`, { med, selectedMed });
-          
-          // Get medication ID - try multiple sources
-          const medicationId = med.medicationId || med.medication?._id || med.medication || selectedMed?._id;
-          
-          if (!medicationId) {
-            console.error(`Missing medication ID for index ${index}`, { med, selectedMed });
-          }
-          
-          return {
-            medication: medicationId,
-            dosage: med.dosage,
-            frequency: med.frequency,
-            duration: med.duration,
-            notes: med.instructions,
-          };
-        }).filter(med => med.medication), // Filter out any meds without valid medication ID
+        meds: data.medications
+          .map((med, index) => {
+            const selectedMed = selectedMedications[index];
+            console.log(`Medication ${index}:`, { med, selectedMed });
+
+            // Get medication ID - try multiple sources
+            const medicationId =
+              med.medicationId ||
+              med.medication?._id ||
+              med.medication ||
+              selectedMed?._id;
+
+            if (!medicationId) {
+              console.error(`Missing medication ID for index ${index}`, {
+                med,
+                selectedMed,
+              });
+            }
+
+            return {
+              medication: medicationId,
+              dosage: med.dosage,
+              frequency: med.frequency,
+              duration: med.duration,
+              notes: med.instructions,
+            };
+          })
+          .filter((med) => med.medication), // Filter out any meds without valid medication ID
         notes: data.notes,
         overrideDDI: overrideReason || undefined,
       };
-      
-      console.log('Transformed prescription data:', prescriptionData);
-      console.log('Meds count:', prescriptionData.meds.length);
-      console.log('Medication IDs being sent:', prescriptionData.meds.map(m => m.medication));
-      console.log('Full meds array:', JSON.stringify(prescriptionData.meds, null, 2));
-      console.log('====================================');
-      
+
+      console.log("Transformed prescription data:", prescriptionData);
+      console.log("Meds count:", prescriptionData.meds.length);
+      console.log(
+        "Medication IDs being sent:",
+        prescriptionData.meds.map((m) => m.medication)
+      );
+      console.log(
+        "Full meds array:",
+        JSON.stringify(prescriptionData.meds, null, 2)
+      );
+      console.log("====================================");
+
       // Validate we have medications
       if (prescriptionData.meds.length === 0) {
-        toast.error('Please add at least one medication');
+        toast.error("Please add at least one medication");
         return;
       }
-      
+
       let result;
       if (isEditMode) {
         // Update existing prescription - include clinic ID for RBAC middleware
-        prescriptionData.clinic = existingPrescription.clinic._id || existingPrescription.clinic;
-        
+        prescriptionData.clinic =
+          existingPrescription.clinic._id || existingPrescription.clinic;
+
         result = await updatePrescriptionMutation.mutateAsync({
           prescriptionId,
           data: prescriptionData,
         });
-        toast.success('Prescription updated successfully!');
+        toast.success("Prescription updated successfully!");
       } else {
         // Create new prescription
         prescriptionData.clinic = data.clinicId;
         prescriptionData.patient = data.patientId;
         prescriptionData.appointment = data.appointmentId;
         result = await createPrescriptionMutation.mutateAsync(prescriptionData);
-        toast.success('Prescription created and saved successfully!');
+        toast.success("Prescription created and saved successfully!");
       }
-      
+
       setSavedPrescription(result);
       // Don't call onSuccess - we'll show success state instead
       // onSuccess?.(result);
     } catch (error) {
-      console.error('=== PRESCRIPTION ERROR ===');
-      console.error('Error object:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error message:', error.message);
-      console.error('========================');
-      
-      const errorMessage = error.response?.data?.error || error.message || `Failed to ${isEditMode ? 'update' : 'create'} prescription`;
+      console.error("=== PRESCRIPTION ERROR ===");
+      console.error("Error object:", error);
+      console.error("Error response:", error.response);
+      console.error("Error response data:", error.response?.data);
+      console.error("Error message:", error.message);
+      console.error("========================");
+
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        `Failed to ${isEditMode ? "update" : "create"} prescription`;
       toast.error(errorMessage);
     }
   };
-  
+
   // Handle override confirmation
   const handleOverrideConfirm = () => {
     if (!overrideReason.trim()) {
-      toast.error('Please provide a reason for overriding the warning');
+      toast.error("Please provide a reason for overriding the warning");
       return;
     }
     setShowOverrideModal(false);
     handleSubmit(onSubmit)();
   };
-  
-  // Calculate BMI if vitals exist
-  const bmi = appointment?.vitals?.weight && appointment?.vitals?.height 
-    ? (appointment.vitals.weight / Math.pow(appointment.vitals.height / 100, 2)).toFixed(1)
-    : null;
 
-  if (patientLoading || appointmentLoading || (isEditMode && prescriptionLoading)) {
+  // Calculate BMI if vitals exist
+  const bmi =
+    appointment?.vitals?.weight && appointment?.vitals?.height
+      ? (
+          appointment.vitals.weight /
+          Math.pow(appointment.vitals.height / 100, 2)
+        ).toFixed(1)
+      : null;
+
+  if (
+    patientLoading ||
+    appointmentLoading ||
+    (isEditMode && prescriptionLoading)
+  ) {
     return <div className="text-center py-8 text-gray-600">Loading...</div>;
   }
 
@@ -344,20 +409,25 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       if (appointmentId) {
         navigate(`/appointments/${appointmentId}`);
       } else {
-        navigate('/appointments');
+        navigate("/appointments");
       }
     };
-    
+
     // Switch to edit mode
     const editPrescription = () => {
       // Store success flag in localStorage for brief period
-      localStorage.setItem('prescription_just_created', JSON.stringify({
-        prescriptionId: savedPrescription._id,
-        timestamp: Date.now()
-      }));
-      
+      localStorage.setItem(
+        "prescription_just_created",
+        JSON.stringify({
+          prescriptionId: savedPrescription._id,
+          timestamp: Date.now(),
+        })
+      );
+
       // Navigate to edit mode
-      navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${savedPrescription._id}&fromCreation=true`);
+      navigate(
+        `/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${savedPrescription._id}&fromCreation=true`
+      );
     };
 
     return (
@@ -416,23 +486,38 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                 <CheckCircle className="w-8 h-8 text-green-600" />
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">
-                    {isEditMode ? 'Prescription Updated Successfully!' : 'Prescription Created Successfully!'}
+                    {isEditMode
+                      ? "Prescription Updated Successfully!"
+                      : "Prescription Created Successfully!"}
                   </h2>
                 </div>
               </div>
-              
+
               {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button onClick={handlePrint} variant="outline">
+              <div className="flex gap-3 no-print">
+                <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  className="no-print text-nowrap"
+                >
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
                 {appointmentId && (
-                  <Button onClick={backToAppointment} variant="outline">
+                  <Button
+                    onClick={backToAppointment}
+                    variant="outline"
+                    className="no-print text-nowrap"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Appointment
                   </Button>
                 )}
-                <Button onClick={editPrescription}>
+                <Button
+                  onClick={editPrescription}
+                  className="no-print text-nowrap"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
                   Edit Prescription
                 </Button>
               </div>
@@ -440,15 +525,22 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           </div>
 
           {/* Full Prescription Preview */}
-          <div className="print-container max-w-5xl mx-auto bg-white p-12 shadow-lg border border-gray-300" style={{ fontFamily: 'Arial, sans-serif' }}>
+          <div
+            className="print-container max-w-5xl mx-auto bg-white p-12 shadow-lg border border-gray-300"
+            style={{ fontFamily: "Arial, sans-serif" }}
+          >
             {/* Header */}
             <div className="flex items-start justify-between border-b-2 border-gray-300 pb-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">PRESCRIPTION</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  PRESCRIPTION
+                </h1>
               </div>
               {appointment?.clinic && (
                 <div className="text-right">
-                  <p className="text-lg font-semibold">{appointment.clinic.name}</p>
+                  <p className="text-lg font-semibold">
+                    {appointment.clinic.name}
+                  </p>
                   {appointment.clinic.address && (
                     <p className="text-sm text-gray-600">
                       {[
@@ -456,12 +548,16 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                         appointment.clinic.address.line2,
                         appointment.clinic.address.city,
                         appointment.clinic.address.state,
-                        appointment.clinic.address.pin
-                      ].filter(Boolean).join(', ')}
+                        appointment.clinic.address.pin,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
                     </p>
                   )}
                   {appointment.clinic.phone && (
-                    <p className="text-sm text-gray-600">Phone: {appointment.clinic.phone}</p>
+                    <p className="text-sm text-gray-600">
+                      Phone: {appointment.clinic.phone}
+                    </p>
                   )}
                 </div>
               )}
@@ -471,25 +567,48 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             <div className="flex justify-between items-start mb-4">
               {appointment?.doctor && (
                 <div>
-                  <p className="text-base font-semibold">Dr. {appointment.doctor.name}</p>
+                  <p className="text-base font-semibold">
+                    Dr. {appointment.doctor.name}
+                  </p>
                   {appointment.doctor.specialization && (
-                    <p className="text-sm text-gray-600">{appointment.doctor.specialization}</p>
+                    <p className="text-sm text-gray-600">
+                      {appointment.doctor.specialization}
+                    </p>
                   )}
                   {appointment.doctor.registrationNumber && (
-                    <p className="text-sm text-gray-600">Reg. No.: {appointment.doctor.registrationNumber}</p>
+                    <p className="text-sm text-gray-600">
+                      Reg. No.: {appointment.doctor.registrationNumber}
+                    </p>
                   )}
                 </div>
               )}
 
               <div className="text-right">
                 <p className="text-sm">
-                  <span className="font-semibold">Date:</span> {(() => {
+                  <span className="font-semibold">Date:</span>{" "}
+                  {(() => {
                     const dateStr = savedPrescription.createdAt;
                     const date = new Date(dateStr);
-                    const isoStr = typeof dateStr === 'string' ? dateStr : date.toISOString();
-                    const [datePart] = isoStr.split('T');
-                    const [year, month, day] = datePart.split('-');
-                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const isoStr =
+                      typeof dateStr === "string"
+                        ? dateStr
+                        : date.toISOString();
+                    const [datePart] = isoStr.split("T");
+                    const [year, month, day] = datePart.split("-");
+                    const monthNames = [
+                      "Jan",
+                      "Feb",
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec",
+                    ];
                     return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
                   })()}
                 </p>
@@ -498,15 +617,29 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
 
             {/* Patient Information */}
             <div className="border border-gray-300 rounded p-4 mb-6">
-              <h2 className="text-sm font-semibold mb-3 text-gray-700">PATIENT INFORMATION</h2>
+              <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                PATIENT INFORMATION
+              </h2>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p><span className="font-semibold">Name:</span> {patient?.name || 'N/A'}</p>
-                  <p><span className="font-semibold">Age/Gender:</span> {patient?.age || 'N/A'} years / {patient?.gender || 'N/A'}</p>
+                  <p>
+                    <span className="font-semibold">Name:</span>{" "}
+                    {patient?.name || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Age/Gender:</span>{" "}
+                    {patient?.age || "N/A"} years / {patient?.gender || "N/A"}
+                  </p>
                 </div>
                 <div>
-                  <p><span className="font-semibold">Patient ID:</span> {patient?.patientCodes?.[0]?.code || 'N/A'}</p>
-                  <p><span className="font-semibold">Phone:</span> {patient?.phone || 'N/A'}</p>
+                  <p>
+                    <span className="font-semibold">Patient ID:</span>{" "}
+                    {patient?.patientCodes?.[0]?.code || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {patient?.phone || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -514,12 +647,17 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             {/* Vitals */}
             {appointment?.vitals && (
               <div className="border border-gray-300 rounded p-4 mb-6">
-                <h2 className="text-sm font-semibold mb-3 text-gray-700">VITALS</h2>
+                <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                  VITALS
+                </h2>
                 <div className="grid grid-cols-4 gap-3 text-sm">
                   {appointment.vitals.bloodPressureSystolic && (
                     <div>
                       <p className="font-semibold">BP:</p>
-                      <p>{appointment.vitals.bloodPressureSystolic}/{appointment.vitals.bloodPressureDiastolic} mmHg</p>
+                      <p>
+                        {appointment.vitals.bloodPressureSystolic}/
+                        {appointment.vitals.bloodPressureDiastolic} mmHg
+                      </p>
                     </div>
                   )}
                   {appointment.vitals.pulse && (
@@ -565,19 +703,33 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             {/* Clinical Notes */}
             {appointment?.clinicalNotes && (
               <div className="border border-gray-300 rounded p-4 mb-6">
-                <h2 className="text-sm font-semibold mb-3 text-gray-700">CLINICAL NOTES</h2>
+                <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                  CLINICAL NOTES
+                </h2>
                 <div className="space-y-2 text-sm">
                   {appointment.clinicalNotes.chiefComplaint && (
-                    <p><span className="font-semibold">Chief Complaint:</span> {appointment.clinicalNotes.chiefComplaint}</p>
+                    <p>
+                      <span className="font-semibold">Chief Complaint:</span>{" "}
+                      {appointment.clinicalNotes.chiefComplaint}
+                    </p>
                   )}
                   {appointment.clinicalNotes.symptoms && (
-                    <p><span className="font-semibold">Symptoms:</span> {appointment.clinicalNotes.symptoms}</p>
+                    <p>
+                      <span className="font-semibold">Symptoms:</span>{" "}
+                      {appointment.clinicalNotes.symptoms}
+                    </p>
                   )}
                   {appointment.clinicalNotes.examination && (
-                    <p><span className="font-semibold">Examination:</span> {appointment.clinicalNotes.examination}</p>
+                    <p>
+                      <span className="font-semibold">Examination:</span>{" "}
+                      {appointment.clinicalNotes.examination}
+                    </p>
                   )}
                   {appointment.clinicalNotes.diagnosis && (
-                    <p><span className="font-semibold">Diagnosis:</span> {appointment.clinicalNotes.diagnosis}</p>
+                    <p>
+                      <span className="font-semibold">Diagnosis:</span>{" "}
+                      {appointment.clinicalNotes.diagnosis}
+                    </p>
                   )}
                 </div>
               </div>
@@ -585,7 +737,9 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
 
             {/* Medications */}
             <div className="mb-6">
-              <h2 className="text-base font-semibold mb-4 pb-2 border-b-2 border-gray-300">Rx</h2>
+              <h2 className="text-base font-semibold mb-4 pb-2 border-b-2 border-gray-300">
+                Rx
+              </h2>
               <div className="space-y-4">
                 {savedPrescription.meds?.map((med, index) => (
                   <div key={index} className="border-b border-gray-200 pb-3">
@@ -593,7 +747,9 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                       <span className="font-semibold mr-2">{index + 1}.</span>
                       <div className="flex-1">
                         <p className="font-semibold text-base">
-                          {med.medication?.brandName || med.medication?.genericName || 'Medication'}
+                          {med.medication?.brandName ||
+                            med.medication?.genericName ||
+                            "Medication"}
                         </p>
                         {med.medication?.exact_composition && (
                           <p className="text-xs italic text-gray-600 mt-1">
@@ -601,7 +757,12 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                           </p>
                         )}
                         <p className="text-sm text-gray-800 mt-2">
-                          <span className="font-semibold">Dosage:</span> {med.dosage} | <span className="font-semibold">Frequency:</span> {med.frequency} | <span className="font-semibold">Duration:</span> {med.duration}
+                          <span className="font-semibold">Dosage:</span>{" "}
+                          {med.dosage} |{" "}
+                          <span className="font-semibold">Frequency:</span>{" "}
+                          {med.frequency} |{" "}
+                          <span className="font-semibold">Duration:</span>{" "}
+                          {med.duration}
                         </p>
                         {med.notes && (
                           <p className="text-sm text-gray-600 mt-1 italic">
@@ -618,8 +779,12 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             {/* Additional Notes */}
             {savedPrescription.notes && (
               <div className="mb-6">
-                <h2 className="text-sm font-semibold mb-2 text-gray-700">ADDITIONAL NOTES</h2>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{savedPrescription.notes}</p>
+                <h2 className="text-sm font-semibold mb-2 text-gray-700">
+                  ADDITIONAL NOTES
+                </h2>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {savedPrescription.notes}
+                </p>
               </div>
             )}
 
@@ -629,27 +794,51 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                 <div className="text-xs text-gray-600">
                   <p>Electronically generated by Ocura360</p>
                   <p className="mt-1">
-                    Generated on: {(() => {
+                    Generated on:{" "}
+                    {(() => {
                       const dateStr = savedPrescription.createdAt;
                       const date = new Date(dateStr);
-                      const isoStr = typeof dateStr === 'string' ? dateStr : date.toISOString();
-                      const [datePart, timePart] = isoStr.split('T');
-                      const [year, month, day] = datePart.split('-');
-                      const [hour, minute] = timePart.split(':');
-                      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      const isoStr =
+                        typeof dateStr === "string"
+                          ? dateStr
+                          : date.toISOString();
+                      const [datePart, timePart] = isoStr.split("T");
+                      const [year, month, day] = datePart.split("-");
+                      const [hour, minute] = timePart.split(":");
+                      const monthNames = [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                      ];
                       const formattedDate = `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
                       let hourNum = parseInt(hour);
-                      const ampm = hourNum >= 12 ? 'PM' : 'AM';
+                      const ampm = hourNum >= 12 ? "PM" : "AM";
                       hourNum = hourNum % 12 || 12;
-                      const formattedTime = `${hourNum.toString().padStart(2, '0')}:${minute} ${ampm}`;
+                      const formattedTime = `${hourNum.toString().padStart(2, "0")}:${minute} ${ampm}`;
                       return `${formattedDate} at ${formattedTime}`;
                     })()}
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="border-t-2 border-gray-800 pt-2 mt-8" style={{ minWidth: '200px' }}>
-                    <p className="text-sm font-semibold">Dr. {appointment?.doctor?.name}</p>
-                    <p className="text-xs text-gray-600">Authorized Signature</p>
+                  <div
+                    className="border-t-2 border-gray-800 pt-2 mt-8"
+                    style={{ minWidth: "200px" }}
+                  >
+                    <p className="text-sm font-semibold">
+                      Dr. {appointment?.doctor?.name}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Authorized Signature
+                    </p>
                   </div>
                 </div>
               </div>
@@ -670,13 +859,18 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             <div>
               <p className="font-semibold">Prescription Already Exists</p>
               <p className="text-sm mt-1">
-                This appointment already has a prescription. Please edit the existing prescription instead of creating a new one.
+                This appointment already has a prescription. Please edit the
+                existing prescription instead of creating a new one.
               </p>
               <Button
                 type="button"
                 size="sm"
                 className="mt-3"
-                onClick={() => navigate(`/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${appointment.prescriptions[0]._id || appointment.prescriptions[0]}`)}
+                onClick={() =>
+                  navigate(
+                    `/prescriptions/new?appointmentId=${appointmentId}&patientId=${patientId}&editId=${appointment.prescriptions[0]._id || appointment.prescriptions[0]}`
+                  )
+                }
               >
                 Edit Existing Prescription
               </Button>
@@ -684,9 +878,12 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           </div>
         </Alert>
       )}
-      
+
       {/* Clinical Summary Section - PDF Style */}
-      <div className="bg-white border border-gray-300 p-8 space-y-4" style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div
+        className="bg-white border border-gray-300 p-8 space-y-4"
+        style={{ fontFamily: "Arial, sans-serif" }}
+      >
         {/* Header */}
         <div className="flex items-start justify-between border-b-2 border-gray-300 pb-4 mb-4">
           <div>
@@ -694,7 +891,9 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           </div>
           {appointment?.clinic && (
             <div className="text-right">
-              <p className="text-base font-semibold">{appointment.clinic.name}</p>
+              <p className="text-base font-semibold">
+                {appointment.clinic.name}
+              </p>
               {appointment.clinic.address && (
                 <p className="text-xs text-gray-600">
                   {[
@@ -702,12 +901,16 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                     appointment.clinic.address.line2,
                     appointment.clinic.address.city,
                     appointment.clinic.address.state,
-                    appointment.clinic.address.pin
-                  ].filter(Boolean).join(', ')}
+                    appointment.clinic.address.pin,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
               {appointment.clinic.phone && (
-                <p className="text-xs text-gray-600">Phone: {appointment.clinic.phone}</p>
+                <p className="text-xs text-gray-600">
+                  Phone: {appointment.clinic.phone}
+                </p>
               )}
             </div>
           )}
@@ -718,12 +921,18 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           {/* Doctor Info - Left Side */}
           {appointment?.doctor && (
             <div>
-              <p className="text-sm font-semibold">Dr. {appointment.doctor.name}</p>
+              <p className="text-sm font-semibold">
+                Dr. {appointment.doctor.name}
+              </p>
               {appointment.doctor.specialization && (
-                <p className="text-xs text-gray-600">{appointment.doctor.specialization}</p>
+                <p className="text-xs text-gray-600">
+                  {appointment.doctor.specialization}
+                </p>
               )}
               {appointment.doctor.registrationNumber && (
-                <p className="text-xs text-gray-600">Reg. No.: {appointment.doctor.registrationNumber}</p>
+                <p className="text-xs text-gray-600">
+                  Reg. No.: {appointment.doctor.registrationNumber}
+                </p>
               )}
             </div>
           )}
@@ -731,50 +940,95 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           {/* Date - Right Side */}
           <div className="text-right">
             <p className="text-xs">
-              <span className="font-semibold">Date:</span> {(() => {
+              <span className="font-semibold">Date:</span>{" "}
+              {(() => {
                 // Extract date without timezone conversion
-                const dateStr = appointment?.startAt || new Date().toISOString();
+                const dateStr =
+                  appointment?.startAt || new Date().toISOString();
                 const date = new Date(dateStr);
-                const isoStr = typeof dateStr === 'string' ? dateStr : date.toISOString();
-                const [datePart] = isoStr.split('T');
-                const [year, month, day] = datePart.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const isoStr =
+                  typeof dateStr === "string" ? dateStr : date.toISOString();
+                const [datePart] = isoStr.split("T");
+                const [year, month, day] = datePart.split("-");
+                const monthNames = [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ];
                 return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
               })()}
             </p>
             {isEditMode && existingPrescription?.lastEditedAt && (
               <p className="text-xs text-gray-600 mt-1">
-                Edited on {(() => {
+                Edited on{" "}
+                {(() => {
                   const dateStr = existingPrescription.lastEditedAt;
                   const date = new Date(dateStr);
-                  const isoStr = typeof dateStr === 'string' ? dateStr : date.toISOString();
-                  const [datePart, timePart] = isoStr.split('T');
-                  const [year, month, day] = datePart.split('-');
-                  const [hour, minute] = timePart.split(':');
-                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  const isoStr =
+                    typeof dateStr === "string" ? dateStr : date.toISOString();
+                  const [datePart, timePart] = isoStr.split("T");
+                  const [year, month, day] = datePart.split("-");
+                  const [hour, minute] = timePart.split(":");
+                  const monthNames = [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ];
                   const formattedDate = `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
                   let hourNum = parseInt(hour);
-                  const ampm = hourNum >= 12 ? 'PM' : 'AM';
+                  const ampm = hourNum >= 12 ? "PM" : "AM";
                   hourNum = hourNum % 12 || 12;
-                  const formattedTime = `${hourNum.toString().padStart(2, '0')}:${minute} ${ampm}`;
+                  const formattedTime = `${hourNum.toString().padStart(2, "0")}:${minute} ${ampm}`;
                   return `${formattedDate} at ${formattedTime}`;
                 })()}
               </p>
             )}
           </div>
         </div>
-        
+
         {/* Patient Information */}
         <div className="border border-gray-300 rounded p-4 mb-4">
-          <h3 className="text-xs font-semibold mb-2 text-gray-700">PATIENT INFORMATION</h3>
+          <h3 className="text-xs font-semibold mb-2 text-gray-700">
+            PATIENT INFORMATION
+          </h3>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <p><span className="font-semibold">Name:</span> {patient?.name || 'N/A'}</p>
-              <p><span className="font-semibold">Age/Gender:</span> {patient?.age || 'N/A'} years / {patient?.gender || 'N/A'}</p>
+              <p>
+                <span className="font-semibold">Name:</span>{" "}
+                {patient?.name || "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Age/Gender:</span>{" "}
+                {patient?.age || "N/A"} years / {patient?.gender || "N/A"}
+              </p>
             </div>
             <div>
-              <p><span className="font-semibold">Patient ID:</span> {patient?.patientCodes?.[0]?.code || 'N/A'}</p>
-              <p><span className="font-semibold">Phone:</span> {patient?.phone || 'N/A'}</p>
+              <p>
+                <span className="font-semibold">Patient ID:</span>{" "}
+                {patient?.patientCodes?.[0]?.code || "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Phone:</span>{" "}
+                {patient?.phone || "N/A"}
+              </p>
             </div>
           </div>
         </div>
@@ -787,7 +1041,10 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
               {appointment.vitals.bloodPressureSystolic && (
                 <div>
                   <p className="font-semibold">BP:</p>
-                  <p>{appointment.vitals.bloodPressureSystolic}/{appointment.vitals.bloodPressureDiastolic} mmHg</p>
+                  <p>
+                    {appointment.vitals.bloodPressureSystolic}/
+                    {appointment.vitals.bloodPressureDiastolic} mmHg
+                  </p>
                 </div>
               )}
               {appointment.vitals.pulse && (
@@ -833,19 +1090,33 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
         {/* Clinical Notes */}
         {appointment?.clinicalNotes && (
           <div className="border border-gray-300 rounded p-4 mb-4">
-            <h3 className="text-xs font-semibold mb-2 text-gray-700">CLINICAL NOTES</h3>
+            <h3 className="text-xs font-semibold mb-2 text-gray-700">
+              CLINICAL NOTES
+            </h3>
             <div className="space-y-1 text-xs">
               {appointment.clinicalNotes.chiefComplaint && (
-                <p><span className="font-semibold">Chief Complaint:</span> {appointment.clinicalNotes.chiefComplaint}</p>
+                <p>
+                  <span className="font-semibold">Chief Complaint:</span>{" "}
+                  {appointment.clinicalNotes.chiefComplaint}
+                </p>
               )}
               {appointment.clinicalNotes.symptoms && (
-                <p><span className="font-semibold">Symptoms:</span> {appointment.clinicalNotes.symptoms}</p>
+                <p>
+                  <span className="font-semibold">Symptoms:</span>{" "}
+                  {appointment.clinicalNotes.symptoms}
+                </p>
               )}
               {appointment.clinicalNotes.examination && (
-                <p><span className="font-semibold">Examination:</span> {appointment.clinicalNotes.examination}</p>
+                <p>
+                  <span className="font-semibold">Examination:</span>{" "}
+                  {appointment.clinicalNotes.examination}
+                </p>
               )}
               {appointment.clinicalNotes.diagnosis && (
-                <p><span className="font-semibold">Diagnosis:</span> {appointment.clinicalNotes.diagnosis}</p>
+                <p>
+                  <span className="font-semibold">Diagnosis:</span>{" "}
+                  {appointment.clinicalNotes.diagnosis}
+                </p>
               )}
             </div>
           </div>
@@ -853,7 +1124,9 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
 
         {/* Medications Preview */}
         <div className="mb-4">
-          <h3 className="text-sm font-semibold mb-3 pb-2 border-b-2 border-gray-300">Rx</h3>
+          <h3 className="text-sm font-semibold mb-3 pb-2 border-b-2 border-gray-300">
+            Rx
+          </h3>
           {medicationFields.length > 0 ? (
             <div className="space-y-3">
               {medicationFields.map((field, index) => {
@@ -862,27 +1135,38 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                 return (
                   <div key={field.id} className="border-b border-gray-200 pb-2">
                     <div className="flex items-start">
-                      <span className="font-semibold mr-2 text-sm">{index + 1}.</span>
+                      <span className="font-semibold mr-2 text-sm">
+                        {index + 1}.
+                      </span>
                       <div className="flex-1">
                         {/* Medicine Name */}
                         <p className="font-semibold text-sm">
-                          {medication?.brandName || medication?.genericName || 'Medication'}
+                          {medication?.brandName ||
+                            medication?.genericName ||
+                            "Medication"}
                         </p>
-                        
+
                         {/* Exact Composition - Small, Italics */}
                         {medication?.exact_composition && (
                           <p className="text-xs italic text-gray-600 mt-1">
                             {medication.exact_composition}
                           </p>
                         )}
-                        
+
                         {/* Dosage, Frequency, Duration - Single Line */}
-                        {medData.dosage && medData.frequency && medData.duration && (
-                          <p className="text-xs text-gray-800 mt-1">
-                            <span className="font-semibold">Dosage:</span> {medData.dosage} | <span className="font-semibold">Frequency:</span> {medData.frequency} | <span className="font-semibold">Duration:</span> {medData.duration}
-                          </p>
-                        )}
-                        
+                        {medData.dosage &&
+                          medData.frequency &&
+                          medData.duration && (
+                            <p className="text-xs text-gray-800 mt-1">
+                              <span className="font-semibold">Dosage:</span>{" "}
+                              {medData.dosage} |{" "}
+                              <span className="font-semibold">Frequency:</span>{" "}
+                              {medData.frequency} |{" "}
+                              <span className="font-semibold">Duration:</span>{" "}
+                              {medData.duration}
+                            </p>
+                          )}
+
                         {/* Instructions if available */}
                         {medData.instructions && (
                           <p className="text-xs text-gray-600 mt-1 italic">
@@ -896,7 +1180,9 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">No medications added yet</p>
+            <p className="text-sm text-gray-500 italic">
+              No medications added yet
+            </p>
           )}
         </div>
       </div>
@@ -904,16 +1190,20 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       {/* Medications Section */}
       <div>
         <h3 className="text-lg font-semibold mb-3">Add Medications</h3>
-        
+
         <MedicationSearch onSelect={handleMedicationSelect} />
-        
+
         {/* Staging Form - Show when medication is selected */}
         {stagingMedication && (
           <div className="mt-4 border-2 border-blue-500 rounded-lg p-4 bg-blue-50">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h4 className="font-medium text-lg">{stagingMedication.brandName}</h4>
-                <p className="text-sm text-blue-600">{stagingMedication.genericName}</p>
+                <h4 className="font-medium text-lg">
+                  {stagingMedication.brandName}
+                </h4>
+                <p className="text-sm text-blue-600">
+                  {stagingMedication.genericName}
+                </p>
               </div>
               <Button
                 type="button"
@@ -924,40 +1214,48 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <Input
                 label="Dosage *"
                 placeholder="e.g., 500 mg"
                 value={stagingData.dosage}
-                onChange={(e) => setStagingData({...stagingData, dosage: e.target.value})}
+                onChange={(e) =>
+                  setStagingData({ ...stagingData, dosage: e.target.value })
+                }
               />
               <Select
                 label="Frequency"
                 options={MEDICATION_FREQUENCIES}
                 value={stagingData.frequency}
-                onChange={(e) => setStagingData({...stagingData, frequency: e.target.value})}
+                onChange={(e) =>
+                  setStagingData({ ...stagingData, frequency: e.target.value })
+                }
               />
               <Input
                 label="Duration *"
                 placeholder="e.g., 5 days"
                 value={stagingData.duration}
-                onChange={(e) => setStagingData({...stagingData, duration: e.target.value})}
+                onChange={(e) =>
+                  setStagingData({ ...stagingData, duration: e.target.value })
+                }
               />
               <Textarea
                 label="Instructions"
                 placeholder="e.g., Take with food"
                 rows={2}
                 value={stagingData.instructions}
-                onChange={(e) => setStagingData({...stagingData, instructions: e.target.value})}
+                onChange={(e) =>
+                  setStagingData({
+                    ...stagingData,
+                    instructions: e.target.value,
+                  })
+                }
               />
             </div>
-            
+
             <div className="flex gap-2 mt-4">
-              <Button
-                type="button"
-                onClick={handleAddMedication}
-              >
+              <Button type="button" onClick={handleAddMedication}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add to Prescription
               </Button>
@@ -971,29 +1269,50 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             </div>
           </div>
         )}
-        
+
         {/* Added Medications List */}
         {medicationFields.length > 0 && (
           <div className="mt-4">
-            <h4 className="font-semibold text-md mb-3">Added Medications ({medicationFields.length})</h4>
+            <h4 className="font-semibold text-md mb-3">
+              Added Medications ({medicationFields.length})
+            </h4>
             <div className="space-y-2">
               {medicationFields.map((field, index) => {
                 const medication = selectedMedications[index];
                 const medData = watchedMedications?.[index] || {};
                 return (
-                  <div key={field.id} className="border border-gray-300 rounded-lg p-3 bg-gray-50">
+                  <div
+                    key={field.id}
+                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{medication?.brandName || 'Medication'}</h4>
-                          <span className="text-xs text-gray-500">({medication?.genericName})</span>
+                          <h4 className="font-medium">
+                            {medication?.brandName || "Medication"}
+                          </h4>
+                          <span className="text-xs text-gray-500">
+                            ({medication?.genericName})
+                          </span>
                         </div>
                         <div className="mt-2 text-sm text-gray-700 space-y-1">
-                          <p><span className="font-medium">Dosage:</span> {medData.dosage}</p>
-                          <p><span className="font-medium">Frequency:</span> {medData.frequency}</p>
-                          <p><span className="font-medium">Duration:</span> {medData.duration}</p>
+                          <p>
+                            <span className="font-medium">Dosage:</span>{" "}
+                            {medData.dosage}
+                          </p>
+                          <p>
+                            <span className="font-medium">Frequency:</span>{" "}
+                            {medData.frequency}
+                          </p>
+                          <p>
+                            <span className="font-medium">Duration:</span>{" "}
+                            {medData.duration}
+                          </p>
                           {medData.instructions && (
-                            <p><span className="font-medium">Instructions:</span> {medData.instructions}</p>
+                            <p>
+                              <span className="font-medium">Instructions:</span>{" "}
+                              {medData.instructions}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -1012,12 +1331,14 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
             </div>
           </div>
         )}
-        
+
         {errors.medications && (
-          <p className="text-red-600 text-sm mt-2">{errors.medications.message}</p>
+          <p className="text-red-600 text-sm mt-2">
+            {errors.medications.message}
+          </p>
         )}
       </div>
-      
+
       {/* DDI Warnings */}
       {medicationFields.length >= 2 && (
         <DDIWarnings
@@ -1025,36 +1346,38 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           onOverride={() => setShowOverrideModal(true)}
         />
       )}
-      
+
       {/* Notes */}
       <Textarea
         label="Additional Notes"
         placeholder="Any additional instructions or notes..."
         rows={4}
-        {...register('notes')}
+        {...register("notes")}
         error={errors.notes?.message}
       />
-      
+
       {/* Submit Button */}
       <div className="flex justify-end gap-3">
         <Button
           type="submit"
-          loading={createPrescriptionMutation.isPending || updatePrescriptionMutation.isPending}
+          loading={
+            createPrescriptionMutation.isPending ||
+            updatePrescriptionMutation.isPending
+          }
           disabled={
-            medicationFields.length === 0 || 
+            medicationFields.length === 0 ||
             (hasContraindicated && !overrideReason) ||
             appointmentHasPrescription
           }
         >
-          {hasContraindicated 
-            ? 'Review & Override' 
-            : isEditMode 
-              ? 'Update Prescription' 
-              : 'Save & Generate PDF'
-          }
+          {hasContraindicated
+            ? "Review & Override"
+            : isEditMode
+              ? "Update Prescription"
+              : "Save & Generate PDF"}
         </Button>
       </div>
-      
+
       {/* Override Modal */}
       <Modal
         isOpen={showOverrideModal}
@@ -1064,10 +1387,10 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
       >
         <Alert variant="error" className="mb-4">
           <AlertTriangle className="w-5 h-5" />
-          <strong>Warning:</strong> You are about to override a contraindicated drug interaction.
-          This action requires clinical justification.
+          <strong>Warning:</strong> You are about to override a contraindicated
+          drug interaction. This action requires clinical justification.
         </Alert>
-        
+
         <Textarea
           label="Justification for Override"
           placeholder="Provide detailed clinical reasoning for overriding this warning..."
@@ -1076,7 +1399,7 @@ export function PrescriptionBuilder({ patientId, clinicId, doctorId, appointment
           onChange={(e) => setOverrideReason(e.target.value)}
           required
         />
-        
+
         <ModalFooter>
           <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
             Cancel

@@ -16,7 +16,7 @@ import { formatPhone } from '../../utils/formatters';
  * @returns {JSX.Element} PatientCard component
  */
 export function PatientCard({ patient, onClick }) {
-  const age = patient.dob ? calculateAge(patient.dob) : null;
+  const age = patient.age;
   
   return (
     <Card onClick={onClick} className="hover:shadow-md transition-shadow">
@@ -61,20 +61,3 @@ export function PatientCard({ patient, onClick }) {
   );
 }
 
-/**
- * Calculate age from date of birth
- * @param {string|Date} dob - Date of birth
- * @returns {number} Age in years
- */
-function calculateAge(dob) {
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  
-  return age;
-}

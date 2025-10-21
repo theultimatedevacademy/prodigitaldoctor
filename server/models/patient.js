@@ -1,6 +1,6 @@
 /* 
 Purpose: Patient demographics, contact, linked ABHA (ABHA number & status), and patient codes generated per clinic/doctor.
-Key fields: name, dob, gender, phone, email, addresses, abhaNumber, abhaLinked, patientCodes (array of clinic/doctor/code entries), notes.
+Key fields: name, age, gender, phone, email, addresses, abhaNumber, abhaLinked, patientCodes (array of clinic/doctor/code entries), notes.
 Indexes: unique sparse index on patientCodes.code (ensures patient codes unique across collection), unique sparse index on abhaNumber when present, index on phone.
 Relationships: patientCodes reference Clinic and User (doctor). Prescription and Appointment reference Patient.
 Usage notes: generate patient code atomically (Counter + transaction) and push to patient.patientCodes. Use sparse unique index carefully: it enforces uniqueness for documents that include a patientCodes.code value. For deletion/merging workflows, consider soft-delete flags and retention. Encrypt PII if required.
@@ -21,19 +21,30 @@ const PatientCodeSchema = new Schema(
 );
 
 const AddressSchema = new Schema(
-  { line1: String, city: String, state: String, pin: String },
+  { 
+    line1: String, 
+    line2: String,
+    city: String, 
+    state: String, 
+    pin: String,
+    country: { type: String, default: 'India' }
+  },
   { _id: false }
 );
 
 const PatientSchema = new Schema(
   {
     name: { type: String, required: true },
-    dob: Date,
-    gender: { type: String, enum: ["M", "F", "O"] },
+    age: Number,
+    gender: { type: String, enum: ["M", "F", "O", "U"] },
     phone: { type: String, index: true },
     email: String,
     addresses: [AddressSchema],
+    bloodGroup: String,
+    allergies: String,
+    emergencyContact: String,
     abhaNumber: { type: String },
+    abhaId: { type: String }, // Alternative field name for consistency
     abhaLinked: { type: Boolean, default: false },
     patientCodes: [PatientCodeSchema],
     notes: String,
@@ -44,5 +55,7 @@ const PatientSchema = new Schema(
 
 PatientSchema.index({ "patientCodes.code": 1 }, { unique: true, sparse: true });
 PatientSchema.index({ abhaNumber: 1 }, { unique: true, sparse: true });
+// Index on phone for fast patient matching lookups
+PatientSchema.index({ phone: 1 });
 
 export default mongoose.model("Patient", PatientSchema);

@@ -37,7 +37,16 @@ const DoctorDashboard = () => {
   const { selectedClinicId } = useClinicContext();
   const { user } = useAuth();
 
-  const today = new Date().toISOString().split("T")[0];
+  // Get today's date in local timezone (not UTC)
+  const getTodayDateString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const today = getTodayDateString();
   
   // Get current month date range
   const getMonthDateRange = () => {
@@ -200,7 +209,7 @@ const DoctorDashboard = () => {
   // Calculate Average Medications Per Prescription
   const calculateAvgMedications = () => {
     if (monthPrescriptions.length === 0) return 0;
-    const totalMeds = monthPrescriptions.reduce((sum, rx) => sum + (rx.medications?.length || 0), 0);
+    const totalMeds = monthPrescriptions.reduce((sum, rx) => sum + (rx.meds?.length || 0), 0);
     return (totalMeds / monthPrescriptions.length).toFixed(1);
   };
   
@@ -246,14 +255,8 @@ const DoctorDashboard = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Link to="/patients/new">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Patient
-            </Button>
-          </Link>
           <Link to="/appointments/new">
-            <Button variant="outline">
+            <Button>
               <Calendar className="w-4 h-4 mr-2" />
               New Appointment
             </Button>
@@ -276,7 +279,7 @@ const DoctorDashboard = () => {
           iconColor="text-green-600"
           bgColor="bg-green-50"
           label="Total Patients"
-          value={allPatientsData?.total || 0}
+          value={allPatientsData?.pagination?.total || 0}
           trend={`+${patientGrowth} new this month`}
         />
         <StatCard
@@ -380,16 +383,6 @@ const DoctorDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Link to="/patients/new" className="block">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
-                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                      <Plus className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <span className="font-medium text-gray-700 group-hover:text-blue-700">
-                      Add New Patient
-                    </span>
-                  </div>
-                </Link>
                 <Link to="/meds" className="block">
                   <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors group">
                     <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
@@ -397,6 +390,16 @@ const DoctorDashboard = () => {
                     </div>
                     <span className="font-medium text-gray-700 group-hover:text-green-700">
                       Search Medications
+                    </span>
+                  </div>
+                </Link>
+                <Link to="/appointments/new" className="block">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
+                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="font-medium text-gray-700 group-hover:text-blue-700">
+                      New Appointment
                     </span>
                   </div>
                 </Link>

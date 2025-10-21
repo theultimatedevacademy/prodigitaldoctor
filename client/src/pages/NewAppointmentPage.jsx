@@ -158,7 +158,13 @@ const NewAppointmentPage = () => {
         onSuccess: (response) => {
           setGeneratedPatientCode(response.patientCode);
           setShowSuccess(true);
-          toast.success(`Appointment created! Patient Code: ${response.patientCode}`);
+          
+          // Show different message if patient was reused
+          if (response.reused) {
+            toast.info(`Existing patient record found and reused. Patient Code: ${response.patientCode}`);
+          } else {
+            toast.success(`Appointment created! Patient Code: ${response.patientCode}`);
+          }
           
           // Navigate after showing success
           setTimeout(() => {

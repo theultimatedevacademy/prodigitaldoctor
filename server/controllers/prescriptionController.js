@@ -408,20 +408,40 @@ export const deletePrescription = async (req, res) => {
  */
 export const getPatientPrescriptions = async (req, res) => {
   try {
-    const { patientId } = req.params;
+    // Accept patientId from both params and query for flexibility
+    const patientId = req.params.patientId || req.query.patientId;
     const { limit = 20, page = 1 } = req.query;
 
+    if (!patientId) {
+      return res.status(400).json({ error: 'Patient ID is required' });
+    }
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    logger.info({ patientId, limit, page, source: req.params.patientId ? 'params' : 'query' }, 'Fetching patient prescriptions');
 
     const prescriptions = await Prescription.find({ patient: patientId })
       .populate('clinic')
       .populate('doctor')
+      .populate('appointment') // Populate appointment to get visitType
       .populate('meds.medication')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(skip);
 
     const total = await Prescription.countDocuments({ patient: patientId });
+
+    logger.info({ 
+      patientId,
+      prescriptionsFound: prescriptions.length,
+      total,
+      samplePrescriptions: prescriptions.slice(0, 2).map(p => ({
+        id: p._id,
+        appointmentId: p.appointment?._id,
+        appointmentPopulated: typeof p.appointment === 'object' && p.appointment !== null,
+        medsCount: p.meds?.length
+      }))
+    }, 'Patient prescriptions fetched');
 
     res.json({
       data: prescriptions, // Changed from prescriptions to data
@@ -470,6 +490,7 @@ export const getClinicPrescriptions = async (req, res) => {
     const prescriptions = await Prescription.find(filter)
       .populate('doctor')
       .populate('patient')
+      .populate('appointment') // Populate appointment to get visitType
       .populate('meds.medication')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
@@ -505,6 +526,7 @@ export const getPrescriptionPDFData = async (req, res) => {
       .populate('clinic')
       .populate('doctor')
       .populate('patient')
+      .populate('appointment') // Populate appointment to get visitType
       .populate('meds.medication')
       .populate('meds.compRefs')
       .lean();
