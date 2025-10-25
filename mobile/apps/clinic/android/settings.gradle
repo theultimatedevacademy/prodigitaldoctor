@@ -34,5 +34,10 @@ dependencyResolutionManagement {
 apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle");
 useExpoModules()
 
-include ':app'
-includeBuild(new File(["node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile())
+// --- FIX: prevent Expo autolinking from re-applying library plugin to :app ---
+apply from: new File(["node", "--print", "require.resolve('expo/package.json')"]
+    .execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
+
+if (project.name != "app") {
+  useExpoModules()
+}
