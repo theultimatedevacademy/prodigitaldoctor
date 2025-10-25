@@ -63,7 +63,8 @@
         {
           "photosPermission": "Allow Ocura360 to access your photos to upload documents."
         }
-      ]
+      ],
+      "./plugins/withExpoMonorepoFix"
     ],
     "experiments": {
       "typedRoutes": true
