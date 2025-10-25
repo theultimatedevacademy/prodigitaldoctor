@@ -1,0 +1,49 @@
+{
+  "name": "ocura360-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ocura360 Mobile Apps - Clinic and Patient",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "clinic:start": "npm run start --workspace=apps/clinic",
+    "clinic:android": "npm run android --workspace=apps/clinic",
+    "clinic:ios": "npm run ios --workspace=apps/clinic",
+    "clinic:prebuild": "npm --workspace=@ocura360/clinic run prebuild",
+    "clinic:run-android-native": "npm --workspace=@ocura360/clinic run run:android-native",
+    "clinic:run-devclient": "npm --workspace=@ocura360/clinic run devclient-start",
+    "clinic:assemble-debug": "cd apps/clinic/android && ./gradlew assembleDebug || cd apps/clinic/android && gradlew.bat assembleDebug",
+    "clinic:install-debug-gradle": "cd apps/clinic/android && ./gradlew installDebug || cd apps/clinic/android && gradlew.bat installDebug",
+    "clinic:adb-install-apk": "adb install -r apps/clinic/android/app/build/outputs/apk/debug/app-debug.apk || adb install -r apps/clinic/android/app/build/outputs/apk/app-debug.apk",
+    "clinic:eas-dev-build": "cd apps/clinic && npx eas build --profile development --platform android",
+    "patient:start": "npm run start --workspace=apps/patient",
+    "patient:android": "npm run android --workspace=apps/patient",
+    "patient:ios": "npm run ios --workspace=apps/patient",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "~8.0.1"
+  },
+  "dependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "expo": "~52.0.0",
+    "expo-dev-client": "^6.0.16",
+    "expo-linking": "^7.0.5",
+    "expo-web-browser": "^14.0.2",
+    "prettier": "^3.6.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-worklets": "^0.6.1"
+  },
+  "overrides": {
+    "@expo/config-plugins": "~9.0.0",
+    "@expo/prebuild-config": "^8.0.0"
+  }
+}
