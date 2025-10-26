@@ -92,7 +92,7 @@ export function useCreateFirstVisitAppointment() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (appointmentData) => post('/api/appointments/first-visit', appointmentData),
+    mutationFn: (appointmentData) => post('/appointments/first-visit', appointmentData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PATIENTS });
@@ -108,7 +108,7 @@ export function useCreateFollowUpAppointment() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (appointmentData) => post('/api/appointments/follow-up', appointmentData),
+    mutationFn: (appointmentData) => post('/appointments/follow-up', appointmentData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
     },
@@ -124,7 +124,7 @@ export function useUpdateAppointmentVitals() {
   
   return useMutation({
     mutationFn: ({ appointmentId, vitals }) => 
-      patch(`/api/appointments/${appointmentId}/vitals`, vitals),
+      patch(`/appointments/${appointmentId}/vitals`, vitals),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENT(variables.appointmentId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
@@ -141,7 +141,7 @@ export function useUpdateClinicalNotes() {
   
   return useMutation({
     mutationFn: ({ appointmentId, clinicalNotes }) => 
-      patch(`/api/appointments/${appointmentId}/clinical-notes`, clinicalNotes),
+      patch(`/appointments/${appointmentId}/clinical-notes`, clinicalNotes),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENT(variables.appointmentId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
@@ -158,7 +158,7 @@ export function useUpdateAppointmentStatus() {
   
   return useMutation({
     mutationFn: ({ appointmentId, status }) => 
-      patch(`/api/appointments/${appointmentId}/status`, { status }),
+      patch(`/appointments/${appointmentId}/status`, { status }),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENT(variables.appointmentId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });
@@ -175,7 +175,7 @@ export function useAssignDoctorToAppointment() {
   
   return useMutation({
     mutationFn: ({ appointmentId, doctorId }) => 
-      patch(`/api/appointments/${appointmentId}/assign-doctor`, { doctorId }),
+      patch(`/appointments/${appointmentId}/assign-doctor`, { doctorId }),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENT(variables.appointmentId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPOINTMENTS });

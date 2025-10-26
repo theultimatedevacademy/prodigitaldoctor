@@ -13,29 +13,44 @@ import {
   FileText,
   Building2,
   Pill,
-  User,
   Menu,
   X,
   ChevronLeft,
   ChevronRight,
-  Bell,
+  BarChart3,
+  UserCog,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { ClinicSelector } from "../features/clinics/ClinicSelector";
+import { NotificationBell } from "../components/notifications/NotificationBell";
+import { SubscriptionBanner } from "../components/subscription/SubscriptionBanner";
 import { useAuth } from "../hooks/useAuth";
+import { useClinicContext } from "../contexts/ClinicContext";
+import { getFilteredNavItems } from "../utils/roleConfig";
 
 /**
  * MainLayout component
  * Provides consistent layout for authenticated pages
  */
+// Icon mapping for nav items
+const iconMap = {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  FileText,
+  Pill,
+  BarChart3,
+  UserCog,
+  Settings,
+};
+
 export function MainLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { isDoctor, isClinicOwner, user } = useAuth();
-
-  // Show clinic selector ONLY for clinic_owner role
-  const canManageClinics = isClinicOwner();
+  const { user } = useAuth();
+  const { userClinicRole, isLoading: isClinicLoading } = useClinicContext();
 
   // Check if a nav item is active
   const isActive = (path) => {
@@ -45,39 +60,16 @@ export function MainLayout() {
     return location.pathname.startsWith(path);
   };
 
-  // Clinic Owner navigation (includes clinic management)
-  const clinicOwnerNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Building2, label: "Clinics", path: "/clinics" },
-    { icon: Users, label: "Patients", path: "/patients" },
-    { icon: Calendar, label: "Appointments", path: "/appointments" },
-    { icon: FileText, label: "Prescriptions", path: "/prescriptions" },
-    { icon: Pill, label: "Medications", path: "/meds" },
-  ];
+  // Get filtered nav items based on user's role in current clinic
+  // Handle loading state - show basic nav items during load
+  const navItemsConfig = isClinicLoading ? [] : getFilteredNavItems(userClinicRole);
 
-  // Doctor navigation (no clinic management)
-  const doctorNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Users, label: "Patients", path: "/patients" },
-    { icon: Calendar, label: "Appointments", path: "/appointments" },
-    { icon: FileText, label: "Prescriptions", path: "/prescriptions" },
-    { icon: Pill, label: "Medications", path: "/meds" },
-  ];
-
-  // Patient navigation
-  const patientNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Calendar, label: "My Appointments", path: "/appointments" },
-    { icon: FileText, label: "My Prescriptions", path: "/prescriptions" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
-  // Determine which nav items to show
-  const navItems = isClinicOwner()
-    ? clinicOwnerNavItems
-    : isDoctor()
-      ? doctorNavItems
-      : patientNavItems;
+  // Map icons to nav items
+  const navItems = navItemsConfig.map((item) => ({
+    ...item,
+    icon: iconMap[item.icon] || LayoutDashboard,
+    label: item.name,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,6 +77,9 @@ export function MainLayout() {
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
+
+      {/* Subscription Banner */}
+      <SubscriptionBanner />
 
       {/* Top Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -116,17 +111,11 @@ export function MainLayout() {
 
           {/* Right side */}
           <div className="flex items-center gap-4">
-            {canManageClinics && <ClinicSelector />}
+            {/* Clinic Selector - Show for all users with clinics */}
+            <ClinicSelector />
 
-            {/* Notification Icon Placeholder (Phase 2) */}
-            <button
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Notifications (Coming soon)"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              {/* Badge for notification count - will be dynamic in Phase 2 */}
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {/* Notification Bell */}
+            <NotificationBell />
 
             <UserButton afterSignOutUrl="/" />
           </div>

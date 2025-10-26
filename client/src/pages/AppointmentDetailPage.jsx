@@ -893,7 +893,7 @@ export default function AppointmentDetailPage() {
               <Stethoscope className="w-5 h-5 text-purple-600" />
               Clinical Examination
             </h3>
-            {(isDoctor() || isClinicOwner()) && !editingClinicalNotes && (
+            {(isDoctor(appointment?.clinic?._id) || isClinicOwner(appointment?.clinic?._id)) && !editingClinicalNotes && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1077,7 +1077,7 @@ export default function AppointmentDetailPage() {
               ) : (
                 <p className="text-gray-500 text-center py-8">
                   No clinical notes recorded yet.
-                  {(isDoctor() || isClinicOwner()) &&
+                  {(isDoctor(appointment?.clinic?._id) || isClinicOwner(appointment?.clinic?._id)) &&
                     " Click Edit to add notes."}
                 </p>
               )}
@@ -1087,7 +1087,7 @@ export default function AppointmentDetailPage() {
       </Card>
 
       {/* Prescription Section */}
-      {(isDoctor() || isClinicOwner()) &&
+      {(isDoctor(appointment?.clinic?._id) || isClinicOwner(appointment?.clinic?._id)) &&
         appointment.status !== "cancelled" && (
           <Card className="mt-6">
             <CardHeader>

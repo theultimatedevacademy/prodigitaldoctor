@@ -8,6 +8,7 @@ import Patient from '../models/patient.js';
 import User from '../models/user.js';
 import Clinic from '../models/clinic.js';
 import { findOrCreatePatient } from '../services/patientMatchingService.js';
+import { getUserClinicRole } from '../utils/rbacHelpers.js';
 import logger from '../utils/logger.js';
 import mongoose from 'mongoose';
 
@@ -122,9 +123,12 @@ export const createAppointment = async (req, res) => {
 /**
  * Get appointments list with filters
  * GET /api/appointments?clinic=xxx&doctor=xxx&date=2024-01-01&status=scheduled
+ * Doctors only see their own appointments
+ * Clinic owners and staff see all clinic appointments
  */
 export const getAppointments = async (req, res) => {
   try {
+    const { userId } = req.auth;
     const { 
       clinic, 
       doctor, 
@@ -146,6 +150,19 @@ export const getAppointments = async (req, res) => {
     if (patient && patient !== 'null' && patient !== 'undefined') filter.patient = patient;
     if (status && status !== 'null' && status !== 'undefined') filter.status = status;
     if (visitType && visitType !== 'null' && visitType !== 'undefined') filter.visitType = visitType;
+
+    // Role-based filtering
+    if (clinic) {
+      const user = await User.findOne({ clerkId: userId });
+      const userRole = await getUserClinicRole(user._id, clinic);
+      
+      // If user is a doctor (not owner, not staff), only show their appointments
+      if (userRole === 'doctor') {
+        filter.doctor = user._id;
+        logger.info({ userId: user._id, role: userRole }, 'Doctor viewing only their appointments');
+      }
+      // Clinic owner and staff can see all appointments - no additional filter
+    }
 
     // Date filtering
     if (date) {

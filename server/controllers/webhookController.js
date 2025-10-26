@@ -83,6 +83,7 @@ export const handleClerkWebhook = async (req, res) => {
 /**
  * Handle user.created event
  * Creates new user in MongoDB when user signs up in Clerk
+ * Initializes with free subscription plan
  */
 async function handleUserCreated(data) {
   try {
@@ -106,20 +107,22 @@ async function handleUserCreated(data) {
       }
     }
 
-    // Get roles from public metadata (if set during signup)
-    const roles = data.public_metadata?.roles || [];
-
-    // Create new user
+    // Create new user with free subscription (NO ROLES - roles are clinic-specific now)
     const newUser = await User.create({
       clerkId: data.id,
-      roles: roles,
       name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username,
       email: email,
       phone: data.phone_numbers?.[0]?.phone_number,
       profilePhotoUrl: data.image_url,
+      subscription: {
+        plan: 'free',
+        status: 'active',
+        maxClinics: 0,
+      },
+      clinics: [],
     });
 
-    console.log('✅ User created in MongoDB:', newUser._id);
+    console.log('✅ User created in MongoDB with free subscription:', newUser._id);
   } catch (error) {
     // Handle duplicate email error (MongoDB error code 11000)
     if (error.code === 11000 && error.keyPattern?.email) {
@@ -137,6 +140,7 @@ async function handleUserCreated(data) {
 /**
  * Handle user.updated event
  * Updates user data in MongoDB when user updates profile in Clerk
+ * Does NOT sync roles (roles are clinic-specific now)
  */
 async function handleUserUpdated(data) {
   try {
@@ -150,7 +154,7 @@ async function handleUserUpdated(data) {
       return;
     }
 
-    // Update user data
+    // Update user data (profile info only, NOT roles)
     const updates = {
       name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username,
       email: data.email_addresses?.[0]?.email_address,
@@ -158,10 +162,8 @@ async function handleUserUpdated(data) {
       profilePhotoUrl: data.image_url,
     };
 
-    // Update roles if changed in public metadata
-    if (data.public_metadata?.roles) {
-      updates.roles = data.public_metadata.roles;
-    }
+    // NOTE: Do NOT sync roles from Clerk metadata
+    // Roles are now determined by clinic relationships (owner vs staff)
 
     await User.findOneAndUpdate(
       { clerkId: data.id },

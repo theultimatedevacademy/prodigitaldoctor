@@ -13,6 +13,7 @@ import { logStaffInvite } from '../utils/auditLogger.js';
 /**
  * Create a new clinic
  * POST /api/clinics
+ * Requires valid subscription with available clinic slots
  */
 export const createClinic = async (req, res) => {
   try {
@@ -23,18 +24,17 @@ export const createClinic = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if user has clinic_owner or doctor role
-    const canCreateClinic = user.roles.includes('clinic_owner') || user.roles.includes('doctor');
-    if (!canCreateClinic) {
+    // Check subscription limits
+    const canCreate = await user.canCreateClinic();
+    if (!canCreate) {
+      const ownedClinics = await user.getOwnedClinics();
       return res.status(403).json({ 
-        error: 'Only doctors and clinic owners can create clinics' 
+        error: 'Subscription limit reached',
+        message: 'You have reached the maximum number of clinics for your plan. Please upgrade to create more clinics.',
+        currentPlan: user.subscription.plan,
+        maxClinics: user.subscription.maxClinics,
+        ownedClinics: ownedClinics.length,
       });
-    }
-
-    // Auto-add clinic_owner role when they create their first clinic
-    if (!user.roles.includes('clinic_owner')) {
-      user.roles.push('clinic_owner');
-      logger.info({ userId: user._id }, 'User promoted to clinic_owner role');
     }
 
     const {
@@ -68,7 +68,11 @@ export const createClinic = async (req, res) => {
 
     const populatedClinic = await Clinic.findById(clinic._id).populate('owner');
 
-    logger.info({ clinicId: clinic._id, userId: user._id }, 'Clinic created');
+    logger.info({ 
+      clinicId: clinic._id, 
+      userId: user._id,
+      subscription: user.subscription.plan 
+    }, 'Clinic created');
 
     res.status(201).json(populatedClinic);
   } catch (error) {
@@ -78,25 +82,25 @@ export const createClinic = async (req, res) => {
 };
 
 /**
- * Get all clinics for current user
+ * Get all clinics for current user with their roles
  * GET /api/clinics
  */
 export const getClinics = async (req, res) => {
   try {
     const { userId } = req.auth;
-    const user = await User.findOne({ clerkId: userId }).populate({
-      path: 'clinics',
-      populate: { path: 'owner' }
-    });
+    const user = await User.findOne({ clerkId: userId });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Get all clinics with roles
+    const clinicsWithRoles = await user.getAllClinics();
+
     // Return in expected format { clinics: [...] }
     res.json({ 
-      clinics: user.clinics || [],
-      total: user.clinics?.length || 0 
+      clinics: clinicsWithRoles,
+      total: clinicsWithRoles.length 
     });
   } catch (error) {
     logger.error({ error }, 'Error fetching clinics');
@@ -161,6 +165,8 @@ export const updateClinic = async (req, res) => {
 /**
  * Invite staff to clinic
  * POST /api/clinics/:clinicId/invite
+ * Only clinic owner can invite staff
+ * User must exist on platform before invitation
  */
 export const inviteStaff = async (req, res) => {
   try {
@@ -172,8 +178,11 @@ export const inviteStaff = async (req, res) => {
       return res.status(400).json({ error: 'Email and role are required' });
     }
 
-    if (!['doctor', 'assistant', 'receptionist'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid role' });
+    // Updated valid roles: only 'doctor' or 'staff'
+    if (!['doctor', 'staff'].includes(role)) {
+      return res.status(400).json({ 
+        error: 'Invalid role. Must be "doctor" or "staff"' 
+      });
     }
 
     const clinic = await Clinic.findById(clinicId);
@@ -181,16 +190,21 @@ export const inviteStaff = async (req, res) => {
       return res.status(404).json({ error: 'Clinic not found' });
     }
 
-    // Find or create user by email
-    let invitedUser = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email - must exist
+    const invitedUser = await User.findOne({ email: email.toLowerCase() });
 
     if (!invitedUser) {
-      // Create placeholder user (will be updated when they sign up)
-      invitedUser = await User.create({
-        email: email.toLowerCase(),
-        clerkId: `pending_${nanoid(16)}`, // Temporary clerkId
-        roles: [role === 'doctor' ? 'doctor' : 'assistant'],
-        name: email.split('@')[0], // Temporary name
+      return res.status(404).json({ 
+        error: 'User not found on platform',
+        message: 'Please ask the user to create an account first at your signup page.',
+        suggestedAction: 'Share signup link with the user'
+      });
+    }
+
+    // Check if trying to invite the owner
+    if (clinic.owner.toString() === invitedUser._id.toString()) {
+      return res.status(400).json({ 
+        error: 'Cannot invite clinic owner as staff' 
       });
     }
 
@@ -200,7 +214,9 @@ export const inviteStaff = async (req, res) => {
     );
 
     if (alreadyStaff) {
-      return res.status(400).json({ error: 'User already invited or is staff' });
+      return res.status(400).json({ 
+        error: 'User already invited or is a staff member' 
+      });
     }
 
     // Add to staff with pending status
@@ -213,13 +229,10 @@ export const inviteStaff = async (req, res) => {
 
     await clinic.save();
 
-    // Generate invite token
+    // Generate invite token (for future email links)
     const inviteToken = nanoid(32);
-    
-    // TODO: Store invite token in database for verification
-    // For now, we'll just send the email
 
-    // Send invitation email (dummy)
+    // Send invitation email
     await sendStaffInviteEmail({
       to: email,
       clinicName: clinic.name,
@@ -231,11 +244,18 @@ export const inviteStaff = async (req, res) => {
     const inviter = await User.findOne({ clerkId: userId });
     await logStaffInvite(inviter._id, clinic._id, req.ip, email);
 
-    logger.info({ clinicId, email, role }, 'Staff invitation sent');
+    logger.info({ 
+      clinicId, 
+      email, 
+      role,
+      invitedUserId: invitedUser._id 
+    }, 'Staff invitation sent');
 
     res.status(200).json({
       message: 'Invitation sent successfully',
       invitedUser: {
+        _id: invitedUser._id,
+        name: invitedUser.name,
         email: invitedUser.email,
         role,
         status: 'pending',
@@ -302,6 +322,55 @@ export const acceptInvite = async (req, res) => {
 };
 
 /**
+ * Reject staff invitation
+ * POST /api/clinics/:clinicId/reject-invite
+ */
+export const rejectInvite = async (req, res) => {
+  try {
+    const { clinicId } = req.params;
+    const { userId } = req.auth;
+
+    const user = await User.findOne({ clerkId: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const clinic = await Clinic.findById(clinicId);
+    if (!clinic) {
+      return res.status(404).json({ error: 'Clinic not found' });
+    }
+
+    // Find staff entry
+    const staffEntry = clinic.staff.find(
+      s => s.user.toString() === user._id.toString()
+    );
+
+    if (!staffEntry) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    if (staffEntry.accepted) {
+      return res.status(400).json({ error: 'Cannot reject already accepted invitation' });
+    }
+
+    // Remove staff entry from clinic
+    clinic.staff = clinic.staff.filter(
+      s => s.user.toString() !== user._id.toString()
+    );
+    await clinic.save();
+
+    logger.info({ clinicId, userId: user._id }, 'Staff invitation rejected');
+
+    res.json({
+      message: 'Invitation rejected successfully',
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error rejecting invitation');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
  * Get pending invitations for current user
  * GET /api/clinics/invitations/pending
  */
@@ -314,10 +383,14 @@ export const getPendingInvitations = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Find all clinics where user has pending invitation
+    // Use $elemMatch to ensure both conditions apply to the SAME array element
     const clinics = await Clinic.find({
-      'staff.user': user._id,
-      'staff.accepted': false,
+      staff: {
+        $elemMatch: {
+          user: user._id,
+          accepted: false,
+        },
+      },
     }).populate('owner');
 
     const pendingInvites = clinics.map(clinic => {
@@ -326,6 +399,7 @@ export const getPendingInvitations = async (req, res) => {
       );
 
       return {
+        _id: clinic._id, // Add _id at root level for accept/reject
         clinic: {
           _id: clinic._id,
           name: clinic.name,
@@ -337,7 +411,7 @@ export const getPendingInvitations = async (req, res) => {
       };
     });
 
-    res.json(pendingInvites);
+    res.json({ invitations: pendingInvites, total: pendingInvites.length });
   } catch (error) {
     logger.error({ error }, 'Error fetching pending invitations');
     res.status(500).json({ error: 'Internal server error' });
@@ -392,7 +466,7 @@ export const searchClinics = async (req, res) => {
 
     const filter = {};
     if (city) filter['address.city'] = new RegExp(city, 'i');
-    if (pin) filter['address.pin'] = pin;
+    if (pin) filter['address.pincode'] = pin;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -428,24 +502,25 @@ export const getClinicDoctors = async (req, res) => {
 
     const clinic = await Clinic.findById(clinicId).populate({
       path: 'staff.user',
-      select: 'name email roles',
+      select: 'name email qualifications specializations',
     });
 
     if (!clinic) {
       return res.status(404).json({ error: 'Clinic not found' });
     }
 
-    // Filter staff to only include doctors and owner if they are a doctor
+    // Filter staff to only include doctors and always include owner
     const doctors = [];
 
-    // Add owner if they are a doctor
+    // Always add clinic owner as a doctor (clinic owners are doctors by default)
     const owner = await User.findById(clinic.owner);
-    if (owner && owner.roles.includes('doctor')) {
+    if (owner) {
       doctors.push({
         _id: owner._id,
         name: owner.name,
         email: owner.email,
-        roles: owner.roles,
+        qualifications: owner.qualifications,
+        specializations: owner.specializations,
         isOwner: true,
       });
     }
@@ -463,7 +538,8 @@ export const getClinicDoctors = async (req, res) => {
             _id: staffEntry.user._id,
             name: staffEntry.user.name,
             email: staffEntry.user.email,
-            roles: staffEntry.user.roles,
+            qualifications: staffEntry.user.qualifications,
+            specializations: staffEntry.user.specializations,
             isOwner: false,
           });
         }

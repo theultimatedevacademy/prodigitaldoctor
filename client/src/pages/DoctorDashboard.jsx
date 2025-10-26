@@ -29,7 +29,7 @@ import { AppointmentCard } from "../features/appointments/AppointmentCard";
 import { useAppointments } from "../api/hooks/useAppointments";
 import { usePatients } from "../api/hooks/usePatients";
 import { usePrescriptions } from "../api/hooks/usePrescriptions";
-import { useClinicContext } from "../hooks/useClinicContext";
+import { useClinicContext } from "../contexts/ClinicContext";
 import { useAuth } from "../hooks/useAuth";
 import { formatDate } from "../utils/formatters";
 

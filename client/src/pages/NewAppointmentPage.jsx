@@ -9,7 +9,7 @@ import { Calendar, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
-import { useClinicContext } from '../hooks/useClinicContext';
+import { useClinicContext } from '../contexts/ClinicContext';
 import { useCreateFirstVisitAppointment, useCreateFollowUpAppointment } from '../api/hooks/useAppointments';
 import { useClinicDoctors } from '../api/hooks/useClinics';
 import { useAuth } from '../hooks/useAuth';

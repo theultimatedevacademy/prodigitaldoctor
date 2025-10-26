@@ -23,7 +23,10 @@ export const getAllUsers = async (req, res) => {
     const filter = {};
     
     if (role) {
-      filter.roles = role;
+      // Only 'admin' role is supported via isAdmin field
+      if (role === 'admin') {
+        filter.isAdmin = true;
+      }
     }
 
     if (search) {
@@ -130,16 +133,14 @@ export const getSystemStats = async (req, res) => {
         .populate('actor'),
     ]);
 
-    // User role breakdown
-    const roleStats = await User.aggregate([
-      { $unwind: '$roles' },
-      {
-        $group: {
-          _id: '$roles',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+    // User role breakdown (admin vs non-admin)
+    const adminCount = await User.countDocuments({ isAdmin: true });
+    const nonAdminCount = totalUsers - adminCount;
+    
+    const roleStats = [
+      { _id: 'admin', count: adminCount },
+      { _id: 'user', count: nonAdminCount },
+    ];
 
     // Appointment status breakdown
     const appointmentStats = await Appointment.aggregate([

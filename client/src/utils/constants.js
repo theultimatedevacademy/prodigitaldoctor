@@ -4,47 +4,47 @@
  */
 
 // API Base URL - defaults to localhost for development
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-// API Endpoints
+// API Endpoints (base URL already includes /api)
 export const API_ENDPOINTS = {
   // Auth
-  ME: '/api/auth/me',
-  UPDATE_MY_ROLE: '/api/auth/my-role',
+  ME: '/auth/me',
+  UPDATE_MY_ROLE: '/auth/my-role',
   
   // Patients
-  PATIENTS: '/api/patients',
-  PATIENT_BY_ID: (id) => `/api/patients/${id}`,
+  PATIENTS: '/patients',
+  PATIENT_BY_ID: (id) => `/patients/${id}`,
   
   // Clinics
-  CLINICS: '/api/clinics',
-  CLINIC_BY_ID: (id) => `/api/clinics/${id}`,
+  CLINICS: '/clinics',
+  CLINIC_BY_ID: (id) => `/clinics/${id}`,
   
   // Appointments
-  APPOINTMENTS: '/api/appointments',
-  APPOINTMENT_BY_ID: (id) => `/api/appointments/${id}`,
+  APPOINTMENTS: '/appointments',
+  APPOINTMENT_BY_ID: (id) => `/appointments/${id}`,
   
   // Prescriptions
-  PRESCRIPTIONS: '/api/prescriptions',
-  PRESCRIPTION_BY_ID: (id) => `/api/prescriptions/${id}`,
+  PRESCRIPTIONS: '/prescriptions',
+  PRESCRIPTION_BY_ID: (id) => `/prescriptions/${id}`,
   
   // Medications
-  MEDICATIONS: '/api/medications',
-  MEDICATIONS_SEARCH: '/api/medications/search',
-  MEDICATION_BY_ID: (id) => `/api/medications/${id}`,
+  MEDICATIONS: '/medications',
+  MEDICATIONS_SEARCH: '/medications/search',
+  MEDICATION_BY_ID: (id) => `/medications/${id}`,
   
   // DDI (Drug-Drug Interactions)
-  DDI_CHECK_MEDICATIONS: '/api/medications/check-ddi',
-  DDI_CHECK_COMPOSITIONS: '/api/compositions/check-ddi',
+  DDI_CHECK_MEDICATIONS: '/medications/check-ddi',
+  DDI_CHECK_COMPOSITIONS: '/compositions/check-ddi',
   
   // Uploads
-  UPLOAD_PRESIGN: '/api/uploads/presign',
+  UPLOAD_PRESIGN: '/uploads/presign',
   
   // ABDM
-  ABDM_SHARE: '/api/abdm/share',
+  ABDM_SHARE: '/abdm/share',
   
   // Admin
-  ADMIN_SEED: '/api/admin/seed',
+  ADMIN_SEED: '/admin/seed',
 };
 
 // User Roles

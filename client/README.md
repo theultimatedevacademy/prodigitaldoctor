@@ -1,6 +1,6 @@
-# ProDigital Doctor - EMR SaaS Frontend
+# Ocura360 - Clinic Management and EMR SaaS Frontend
 
-A production-ready Electronic Medical Records (EMR) and Prescription Management system built with Vite, React, Tailwind CSS, and Clerk authentication.
+A production-ready Clinic Management and Electronic Medical Records (EMR) and Prescription Management system built with Vite, React, Tailwind CSS, and Clerk authentication.
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@ A production-ready Electronic Medical Records (EMR) and Prescription Management 
 ## Features
 
 ### Core Functionality
+
 - **Patient Management**: Create, view, and manage patient records with ABHA integration
 - **Prescription Management**: Create prescriptions with medication search, dosage, and frequency
 - **Drug-Drug Interaction (DDI) Checking**: Real-time interaction warnings with severity levels
@@ -29,6 +30,7 @@ A production-ready Electronic Medical Records (EMR) and Prescription Management 
 - **ABDM Integration**: Share prescriptions via Ayushman Bharat Digital Mission
 
 ### Technical Features
+
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
 - **Accessibility**: WCAG AA baseline with keyboard navigation and ARIA labels
 - **Performance Optimized**: React Query for caching, lazy loading, debounced search
@@ -59,6 +61,7 @@ npm install
 ### Environment Setup
 
 Create `.env.local`:
+
 ```env
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 VITE_API_BASE_URL=http://localhost:5000
@@ -82,7 +85,7 @@ npm run preview
 ## Key Features
 
 - ✅ Complete EMR system with patient management
-- ✅ Prescription creation with DDI checking  
+- ✅ Prescription creation with DDI checking
 - ✅ Real-time medication search
 - ✅ PDF generation and viewing
 - ✅ ABDM integration ready
@@ -93,6 +96,7 @@ npm run preview
 ## Documentation
 
 See full documentation above for:
+
 - Component API reference
 - Page functionality
 - Testing guide

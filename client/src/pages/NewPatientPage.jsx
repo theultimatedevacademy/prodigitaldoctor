@@ -17,7 +17,7 @@ import { Alert } from '../components/ui/Alert';
 import { patientSchema } from '../utils/validators';
 import { GENDER_OPTIONS } from '../utils/constants';
 import { useCreatePatient } from '../api/hooks/usePatients';
-import { useClinicContext } from '../hooks/useClinicContext';
+import { useClinicContext } from '../contexts/ClinicContext';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 

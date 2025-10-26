@@ -12,7 +12,7 @@ import { Spinner } from "../components/ui/Spinner";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { usePrescriptions } from "../api/hooks/usePrescriptions";
-import { useClinicContext } from "../hooks/useClinicContext";
+import { useClinicContext } from '../contexts/ClinicContext';
 import { formatDate } from "../utils/formatters";
 
 const PrescriptionsPage = () => {

@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post, put, del } from '../apiClient';
+import { get, post, put, patch, del } from '../apiClient';
 import { API_ENDPOINTS, QUERY_KEYS } from '../../utils/constants';
 
 /**
@@ -14,6 +14,18 @@ export function useClinics() {
   return useQuery({
     queryKey: QUERY_KEYS.CLINICS,
     queryFn: () => get(API_ENDPOINTS.CLINICS),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch clinics with user's role in each clinic
+ * @returns {object} Query result with clinics data including userRole
+ */
+export function useMyClinicsWithRoles() {
+  return useQuery({
+    queryKey: ['auth', 'my-clinics'],
+    queryFn: () => get('/auth/my-clinics'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -58,7 +70,7 @@ export function useUpdateClinic() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ clinicId, data }) => put(API_ENDPOINTS.CLINIC_BY_ID(clinicId), data),
+    mutationFn: ({ clinicId, data }) => patch(API_ENDPOINTS.CLINIC_BY_ID(clinicId), data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINIC(variables.clinicId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINICS });
@@ -90,8 +102,24 @@ export function useDeleteClinic() {
 export function useClinicDoctors(clinicId) {
   return useQuery({
     queryKey: ['clinic-doctors', clinicId],
-    queryFn: () => get(`/api/clinics/${clinicId}/doctors`),
+    queryFn: () => get(`/clinics/${clinicId}/doctors`),
     enabled: !!clinicId && clinicId !== 'null' && clinicId !== 'undefined',
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to remove a staff member from a clinic
+ * @returns {object} Mutation object
+ */
+export function useRemoveStaff() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ clinicId, staffUserId }) => del(`/clinics/${clinicId}/staff/${staffUserId}`),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINIC(variables.clinicId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CLINICS });
+    },
   });
 }

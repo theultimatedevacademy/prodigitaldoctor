@@ -13,7 +13,7 @@ import { Spinner } from "../components/ui/Spinner";
 import { DateRangePicker } from "../components/ui/DateRangePicker";
 import { AppointmentCard } from "../features/appointments/AppointmentCard";
 import { useAppointments } from "../api/hooks/useAppointments";
-import { useClinicContext } from "../hooks/useClinicContext";
+import { useClinicContext } from '../contexts/ClinicContext';
 
 const AppointmentsPage = () => {
   const { selectedClinicId } = useClinicContext();

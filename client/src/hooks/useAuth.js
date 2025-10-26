@@ -49,44 +49,64 @@ export function useAuth() {
   };
   
   /**
-   * Check if user has a specific role
-   * @param {string} role - Role to check
-   * @returns {boolean} True if user has role
+   * Check if user is clinic owner in a specific clinic
+   * @param {string} clinicId - Clinic ID
+   * @returns {boolean} True if user is owner
    */
-  const hasRole = (role) => {
-    if (!backendUser?.roles) return false;
-    return Array.isArray(backendUser.roles) && backendUser.roles.includes(role);
+  const isClinicOwner = (clinicId) => {
+    if (!backendUser?.clinics || !clinicId) return false;
+    const clinic = backendUser.clinics.find(c => c._id === clinicId);
+    return clinic?.userRole === 'clinic_owner';
   };
-  
+
   /**
-   * Check if user is a doctor
-   * @returns {boolean} True if user is a doctor
+   * Check if user is doctor in a specific clinic
+   * @param {string} clinicId - Clinic ID
+   * @returns {boolean} True if user is doctor
    */
-  const isDoctor = () => hasRole('doctor');
-  
+  const isDoctor = (clinicId) => {
+    if (!backendUser?.clinics || !clinicId) return false;
+    const clinic = backendUser.clinics.find(c => c._id === clinicId);
+    return clinic?.userRole === 'doctor';
+  };
+
   /**
-   * Check if user is a patient
-   * @returns {boolean} True if user is a patient
-   */
-  const isPatient = () => hasRole('patient');
-  
-  /**
-   * Check if user is staff (assistant)
+   * Check if user is staff in a specific clinic
+   * @param {string} clinicId - Clinic ID
    * @returns {boolean} True if user is staff
    */
-  const isStaff = () => hasRole('assistant');
-  
+  const isStaff = (clinicId) => {
+    if (!backendUser?.clinics || !clinicId) return false;
+    const clinic = backendUser.clinics.find(c => c._id === clinicId);
+    return clinic?.userRole === 'staff';
+  };
+
   /**
-   * Check if user is admin
-   * @returns {boolean} True if user is admin
+   * Get user's role in a specific clinic
+   * @param {string} clinicId - Clinic ID
+   * @returns {string|null} 'clinic_owner' | 'doctor' | 'staff' | null
    */
-  const isAdmin = () => hasRole('admin');
-  
+  const getClinicRole = (clinicId) => {
+    if (!backendUser?.clinics || !clinicId) return null;
+    const clinic = backendUser.clinics.find(c => c._id === clinicId);
+    return clinic?.userRole || null;
+  };
+
   /**
-   * Check if user is a clinic owner
-   * @returns {boolean} True if user is a clinic owner
+   * Check if user can create clinic based on subscription
+   * @returns {boolean} True if user can create clinic
    */
-  const isClinicOwner = () => hasRole('clinic_owner');
+  const canCreateClinic = () => {
+    return backendUser?.canCreateClinic || false;
+  };
+
+  /**
+   * Check if user has any clinics
+   * @returns {boolean} True if user has at least one clinic
+   */
+  const hasClinics = () => {
+    return backendUser?.clinics && backendUser.clinics.length > 0;
+  };
   
   return {
     // Clerk user data
@@ -106,11 +126,15 @@ export function useAuth() {
     // Helper methods
     getAuthToken,
     signOut: handleSignOut,
-    hasRole,
-    isDoctor,
-    isPatient,
-    isStaff,
-    isAdmin,
+    
+    // Clinic-specific role helpers
+    getClinicRole,
     isClinicOwner,
+    isDoctor,
+    isStaff,
+    
+    // Subscription helpers
+    canCreateClinic,
+    hasClinics,
   };
 }

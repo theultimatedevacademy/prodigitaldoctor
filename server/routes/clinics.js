@@ -11,6 +11,7 @@ import {
   updateClinic,
   inviteStaff,
   acceptInvite,
+  rejectInvite,
   getPendingInvitations,
   removeStaff,
   searchClinics,
@@ -96,7 +97,7 @@ router.post(
   requireClinicOwner,
   [
     body('email').isEmail().withMessage('Valid email is required'),
-    body('role').isIn(['doctor', 'assistant', 'receptionist']).withMessage('Invalid role'),
+    body('role').isIn(['doctor', 'staff']).withMessage('Invalid role. Must be "doctor" or "staff"'),
   ],
   validate,
   inviteStaff
@@ -108,6 +109,13 @@ router.post(
  * @access  Private
  */
 router.post('/:clinicId/accept-invite', requireAuth, acceptInvite);
+
+/**
+ * @route   POST /api/clinics/:clinicId/reject-invite
+ * @desc    Reject staff invitation
+ * @access  Private
+ */
+router.post('/:clinicId/reject-invite', requireAuth, rejectInvite);
 
 /**
  * @route   DELETE /api/clinics/:clinicId/staff/:staffUserId

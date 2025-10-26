@@ -15,7 +15,7 @@ import { Button } from "../components/ui/Button";
 import { Spinner } from "../components/ui/Spinner";
 import { Badge } from "../components/ui/Badge";
 import { useClinics } from "../api/hooks/useClinics";
-import { useClinicContext } from "../hooks/useClinicContext";
+import { useClinicContext } from '../contexts/ClinicContext';
 
 const ClinicsPage = () => {
   const { data: clinicsData, isLoading } = useClinics();

@@ -11,12 +11,15 @@ import Clinic from '../models/clinic.js';
 import Appointment from '../models/appointment.js';
 import { checkDDI } from '../utils/ddiEngine.js';
 import { mapPrescriptionToFHIR } from '../utils/fhir.js';
+import { getUserClinicRole, canCreatePrescription } from '../utils/rbacHelpers.js';
 import logger from '../utils/logger.js';
 import { logPrescriptionCreate, logDDIOverride } from '../utils/auditLogger.js';
 
 /**
  * Create new prescription with DDI checking
  * POST /api/prescriptions
+ * Only doctors and clinic owners can create prescriptions
+ * Staff cannot create prescriptions
  */
 export const createPrescription = async (req, res) => {
   try {
@@ -36,6 +39,15 @@ export const createPrescription = async (req, res) => {
       notes,
       overrideDDI, // Flag if doctor is overriding DDI warnings
     } = req.body;
+
+    // Check if user can create prescriptions (doctor or owner, not staff)
+    const canCreate = await canCreatePrescription(user._id, clinic);
+    if (!canCreate) {
+      return res.status(403).json({ 
+        error: 'Permission denied',
+        message: 'Only doctors and clinic owners can create prescriptions. Staff members do not have this permission.' 
+      });
+    }
 
     logger.info({ 
       clinic, 
@@ -462,14 +474,28 @@ export const getPatientPrescriptions = async (req, res) => {
 /**
  * Get clinic's prescriptions
  * GET /api/clinics/:clinicId/prescriptions
+ * Doctors only see their own prescriptions
+ * Clinic owners and staff see all clinic prescriptions
  */
 export const getClinicPrescriptions = async (req, res) => {
   try {
+    const { userId } = req.auth;
     // Get clinicId from either params (direct route) or query (filter route)
     const clinicId = req.params.clinicId || req.query.clinicId;
     const { limit = 20, page = 1, startDate, endDate } = req.query;
 
     const filter = { clinic: clinicId };
+
+    // Role-based filtering
+    const user = await User.findOne({ clerkId: userId });
+    const userRole = await getUserClinicRole(user._id, clinicId);
+    
+    // If user is a doctor (not owner, not staff), only show their prescriptions
+    if (userRole === 'doctor') {
+      filter.doctor = user._id;
+      logger.info({ userId: user._id, role: userRole }, 'Doctor viewing only their prescriptions');
+    }
+    // Clinic owner and staff can see all prescriptions - no additional filter
 
     if (startDate && endDate) {
       // Date range - set times to cover full days

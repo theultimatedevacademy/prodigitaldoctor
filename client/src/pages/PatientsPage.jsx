@@ -14,7 +14,7 @@ import { Alert } from '../components/ui/Alert';
 import { SearchInput } from '../components/ui/SearchInput';
 import { DateRangePicker } from '../components/ui/DateRangePicker';
 import { usePatients } from '../api/hooks/usePatients';
-import { useClinicContext } from '../hooks/useClinicContext';
+import { useClinicContext } from '../contexts/ClinicContext';
 import { formatDate, formatPhone } from '../utils/formatters';
 
 export default function PatientsPage() {

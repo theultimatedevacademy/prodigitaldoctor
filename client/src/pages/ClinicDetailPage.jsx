@@ -14,8 +14,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Spinner } from '../components/ui/Spinner';
 import { Badge } from '../components/ui/Badge';
-import { Modal } from '../components/ui/Modal';
-import { useClinic, useUpdateClinic } from '../api/hooks/useClinics';
+import { Modal, ConfirmationModal } from '../components/ui/Modal';
+import { useClinic, useUpdateClinic, useRemoveStaff } from '../api/hooks/useClinics';
 import { toast } from 'react-toastify';
 
 const ClinicDetailPage = () => {
@@ -23,10 +23,13 @@ const ClinicDetailPage = () => {
   const navigate = useNavigate();
   const { data: clinic, isLoading } = useClinic(id);
   const { mutate: updateClinic, isPending: isUpdating } = useUpdateClinic();
+  const { mutate: removeStaff, isPending: isRemoving } = useRemoveStaff();
 
   const [activeTab, setActiveTab] = useState('details');
   const [isEditing, setIsEditing] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [staffToRemove, setStaffToRemove] = useState(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [formData, setFormData] = useState({});
 
   // Initialize form data when clinic loads
@@ -183,6 +186,10 @@ const ClinicDetailPage = () => {
         <StaffTab
           clinic={clinic}
           onInvite={() => setShowInviteModal(true)}
+          onRemove={(member) => {
+            setStaffToRemove(member);
+            setShowRemoveConfirm(true);
+          }}
         />
       )}
 
@@ -195,6 +202,40 @@ const ClinicDetailPage = () => {
           onClose={() => setShowInviteModal(false)}
         />
       )}
+
+      {/* Remove Staff Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showRemoveConfirm}
+        onClose={() => {
+          setShowRemoveConfirm(false);
+          setStaffToRemove(null);
+        }}
+        onConfirm={() => {
+          if (!staffToRemove) return;
+          removeStaff(
+            {
+              clinicId: id,
+              staffUserId: staffToRemove.user._id,
+            },
+            {
+              onSuccess: () => {
+                toast.success('Staff member removed successfully');
+                setShowRemoveConfirm(false);
+                setStaffToRemove(null);
+              },
+              onError: (error) => {
+                toast.error(error.data?.error || error.message || 'Failed to remove staff member');
+              },
+            }
+          );
+        }}
+        title="Remove Staff Member"
+        message={`Are you sure you want to remove ${staffToRemove?.user?.name} from your clinic? This action cannot be undone.`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isRemoving}
+      />
     </div>
   );
 };
@@ -311,7 +352,7 @@ function DetailsTab({ clinic, formData, isEditing, onChange }) {
   );
 }
 
-function StaffTab({ clinic, onInvite }) {
+function StaffTab({ clinic, onInvite, onRemove }) {
   const staff = clinic.staff || [];
 
   return (
@@ -350,7 +391,11 @@ function StaffTab({ clinic, onInvite }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge>{member.role}</Badge>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onRemove(member)}
+                  >
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </Button>
                 </div>

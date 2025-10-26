@@ -52,12 +52,12 @@ router.get('/', requireAuth, async (req, res, next) => {
 /**
  * @route   POST /api/prescriptions
  * @desc    Create new prescription
- * @access  Private (doctor)
+ * @access  Private (doctor, clinic_owner)
  */
 router.post(
   '/',
   requireAuth,
-  requireClinicAccess(['doctor']),
+  requireClinicAccess(['doctor', 'clinic_owner']),
   prescriptionLimiter,
   [
     body('clinic').notEmpty().withMessage('Clinic is required'),
@@ -85,12 +85,12 @@ router.get('/:prescriptionId', requireAuth, getPrescriptionById);
 /**
  * @route   PUT /api/prescriptions/:prescriptionId
  * @desc    Update prescription
- * @access  Private (doctor)
+ * @access  Private (doctor, clinic_owner)
  */
 router.put(
   '/:prescriptionId',
   requireAuth,
-  requireClinicAccess(['doctor']),
+  requireClinicAccess(['doctor', 'clinic_owner']),
   [
     body('meds').isArray({ min: 1 }).withMessage('At least one medication required'),
   ],
@@ -101,12 +101,12 @@ router.put(
 /**
  * @route   DELETE /api/prescriptions/:prescriptionId
  * @desc    Delete prescription
- * @access  Private (doctor)
+ * @access  Private (doctor, clinic_owner)
  */
 router.delete(
   '/:prescriptionId',
   requireAuth,
-  requireClinicAccess(['doctor']),
+  requireClinicAccess(['doctor', 'clinic_owner']),
   deletePrescription
 );
 

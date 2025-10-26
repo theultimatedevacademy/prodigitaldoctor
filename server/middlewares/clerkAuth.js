@@ -63,6 +63,7 @@ export const optionalAuth = async (req, res, next) => {
 /**
  * Middleware to check if user has required role
  * Must be used after requireAuth middleware
+ * Currently supports 'admin' role via isAdmin field
  */
 export const requireRole = (allowedRoles) => {
   return async (req, res, next) => {
@@ -79,7 +80,14 @@ export const requireRole = (allowedRoles) => {
       }
       
       // Check if user has any of the allowed roles
-      const hasRole = allowedRoles.some(role => user.roles.includes(role));
+      // For 'admin' role, check isAdmin field
+      const hasRole = allowedRoles.some(role => {
+        if (role === 'admin') {
+          return user.isAdmin === true;
+        }
+        // For other roles, they are clinic-specific and should not use this middleware
+        return false;
+      });
       
       if (!hasRole) {
         return res.status(403).json({ 

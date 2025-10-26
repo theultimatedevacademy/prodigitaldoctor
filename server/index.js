@@ -24,6 +24,7 @@ import prescriptionRoutes from "./routes/prescriptions.js";
 import uploadRoutes from "./routes/uploads.js";
 import analyticsRoutes from "./routes/analytics.js";
 import adminRoutes from "./routes/admin.js";
+import subscriptionRoutes from "./routes/subscription.js";
 
 // Middleware
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
@@ -92,6 +93,7 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/clinics", clinicRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/appointments", appointmentRoutes);

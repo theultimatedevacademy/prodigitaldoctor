@@ -3,9 +3,9 @@
  * Accessible modal dialog with backdrop
  */
 
-import { useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Button } from './Button';
+import { useEffect } from "react";
+import { X } from "lucide-react";
+import { Button } from "./Button";
 
 /**
  * Modal component for dialogs and confirmations
@@ -24,48 +24,48 @@ export function Modal({
   onClose,
   title,
   children,
-  size = 'md',
+  size = "md",
   showClose = true,
-  className = '',
+  className = "",
 }) {
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
-    
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
-  
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
-    
+
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
-  
+
   if (!isOpen) return null;
-  
+
   const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-7xl',
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
+    full: "max-w-7xl",
   };
-  
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -90,11 +90,9 @@ export function Modal({
             </button>
           )}
         </div>
-        
+
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {children}
-        </div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );
@@ -103,9 +101,11 @@ export function Modal({
 /**
  * ModalFooter component for modal actions
  */
-export function ModalFooter({ children, className = '' }) {
+export function ModalFooter({ children, className = "" }) {
   return (
-    <div className={`flex items-center justify-end gap-3 p-6 border-t border-gray-200 ${className}`}>
+    <div
+      className={`flex items-center justify-end gap-3 p-6 border-t border-gray-200 ${className}`}
+    >
       {children}
     </div>
   );
@@ -118,11 +118,11 @@ export function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
-  title = 'Confirm Action',
+  title = "Confirm Action",
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  variant = 'primary',
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  variant = "primary",
   isLoading = false,
 }) {
   return (

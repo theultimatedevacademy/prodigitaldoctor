@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Alert } from '../components/ui/Alert';
 import { Spinner } from '../components/ui/Spinner';
 import { PrescriptionBuilder } from '../features/prescriptions/PrescriptionBuilder';
-import { useClinicContext } from '../hooks/useClinicContext';
+import { useClinicContext } from "../contexts/ClinicContext";
 import { useAuth } from '../hooks/useAuth';
 import { useAppointment } from '../api/hooks/useAppointments';
 

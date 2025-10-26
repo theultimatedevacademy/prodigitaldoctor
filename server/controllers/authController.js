@@ -9,6 +9,7 @@ import { clerkClient } from '@clerk/clerk-sdk-node';
 /**
  * Get or create user profile based on Clerk authentication
  * Maps Clerk user to application user in MongoDB
+ * Returns user with clinics and their roles
  */
 export const getMe = async (req, res) => {
   try {
@@ -19,31 +20,25 @@ export const getMe = async (req, res) => {
     }
     
     // Find user by clerkId
-    let user = await User.findOne({ clerkId: userId })
-      .populate('clinics')
-      .lean();
+    let user = await User.findOne({ clerkId: userId });
     
     // If user doesn't exist, create one from Clerk data
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(userId);
       
-      // Determine role from Clerk public metadata
-      // If no roles in Clerk metadata, create user with empty roles array
-      // User will be prompted to select role on first login
-      const roles = clerkUser.publicMetadata?.roles || [];
-      
       try {
         user = await User.create({
           clerkId: userId,
-          roles: roles,
           name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
           email: clerkUser.emailAddresses[0]?.emailAddress,
           phone: clerkUser.phoneNumbers[0]?.phoneNumber,
           profilePhotoUrl: clerkUser.imageUrl,
+          subscription: {
+            plan: 'free',
+            status: 'active',
+            maxClinics: 0,
+          },
         });
-        
-        // Populate clinics (empty array initially)
-        user = await User.findById(user._id).populate('clinics').lean();
       } catch (createError) {
         // Handle duplicate email error
         if (createError.code === 11000 && createError.keyPattern?.email) {
@@ -54,18 +49,31 @@ export const getMe = async (req, res) => {
           // Try to find and return the existing user with this email
           const existingUserWithEmail = await User.findOne({ 
             email: clerkUser.emailAddresses[0]?.emailAddress 
-          }).populate('clinics').lean();
+          });
           
           if (existingUserWithEmail) {
             console.log('   ℹ️  Returning existing user with matching email');
-            return res.json(existingUserWithEmail);
+            user = existingUserWithEmail;
+          } else {
+            throw createError;
           }
+        } else {
+          throw createError;
         }
-        throw createError;
       }
     }
+
+    // Get all clinics with roles
+    const clinicsWithRoles = await user.getAllClinics();
     
-    res.json(user);
+    // Return user with clinics and subscription info
+    const response = {
+      ...user.toObject(),
+      clinics: clinicsWithRoles,
+      canCreateClinic: await user.canCreateClinic(),
+    };
+    
+    res.json(response);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -73,36 +81,26 @@ export const getMe = async (req, res) => {
 };
 
 /**
- * Update user role (admin only)
+ * Get user's clinics with roles
+ * Returns all clinics user has access to with their role in each
  */
-export const updateUserRole = async (req, res) => {
+export const getMyClinics = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { roles } = req.body;
-    
-    // Validate roles
-    const validRoles = ['patient', 'doctor', 'assistant', 'clinic_owner', 'admin'];
-    const invalidRoles = roles.filter(role => !validRoles.includes(role));
-    
-    if (invalidRoles.length > 0) {
-      return res.status(400).json({ 
-        error: `Invalid roles: ${invalidRoles.join(', ')}` 
-      });
-    }
-    
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { roles },
-      { new: true, runValidators: true }
-    ).populate('clinics');
+    const { userId } = req.auth;
+    const user = await User.findOne({ clerkId: userId });
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    res.json(user);
+    const clinicsWithRoles = await user.getAllClinics();
+    
+    res.json({ 
+      clinics: clinicsWithRoles,
+      total: clinicsWithRoles.length 
+    });
   } catch (error) {
-    console.error('Error updating user role:', error);
+    console.error('Error fetching clinics:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -139,57 +137,55 @@ export const updateProfile = async (req, res) => {
 };
 
 /**
- * Update current user's role
- * Updates both MongoDB and Clerk public metadata
+ * Get pending invitations for current user
+ * Returns clinics where user is invited but hasn't accepted
  */
-export const updateMyRole = async (req, res) => {
+export const getPendingInvitations = async (req, res) => {
   try {
     const { userId } = req.auth;
-    const { roles } = req.body;
-    
-    if (!roles || !Array.isArray(roles) || roles.length === 0) {
-      return res.status(400).json({ 
-        error: 'Roles array is required and must not be empty' 
-      });
-    }
-    
-    // Validate roles
-    const validRoles = ['patient', 'doctor', 'assistant', 'clinic_owner', 'admin'];
-    const invalidRoles = roles.filter(role => !validRoles.includes(role));
-    
-    if (invalidRoles.length > 0) {
-      return res.status(400).json({ 
-        error: `Invalid roles: ${invalidRoles.join(', ')}` 
-      });
-    }
-    
-    // Update user in MongoDB
-    const user = await User.findOneAndUpdate(
-      { clerkId: userId },
-      { roles },
-      { new: true, runValidators: true }
-    ).populate('clinics');
+    const user = await User.findOne({ clerkId: userId });
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Update Clerk public metadata
-    try {
-      await clerkClient.users.updateUser(userId, {
-        publicMetadata: {
-          roles: roles,
-        },
-      });
-    } catch (clerkError) {
-      console.error('Error updating Clerk metadata:', clerkError);
-      // Don't fail the request if Clerk update fails
-      // MongoDB is already updated
-    }
+    const Clinic = (await import('../models/clinic.js')).default;
     
-    res.json(user);
+    // Find clinics where user is in staff but not accepted
+    // Use $elemMatch to ensure both conditions apply to the same array element
+    const pendingClinics = await Clinic.find({
+      staff: {
+        $elemMatch: {
+          user: user._id,
+          accepted: false,
+        },
+      },
+    }).populate('owner');
+    
+    const invitations = pendingClinics.map(clinic => {
+      const staffEntry = clinic.staff.find(
+        s => s.user.toString() === user._id.toString() && !s.accepted
+      );
+      
+      return {
+        _id: clinic._id,
+        clinic: {
+          _id: clinic._id,
+          name: clinic.name,
+          address: clinic.address,
+          owner: clinic.owner,
+        },
+        role: staffEntry.role,
+        invitedAt: staffEntry.invitedAt,
+      };
+    });
+    
+    res.json({ 
+      invitations,
+      total: invitations.length 
+    });
   } catch (error) {
-    console.error('Error updating role:', error);
+    console.error('Error fetching pending invitations:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
