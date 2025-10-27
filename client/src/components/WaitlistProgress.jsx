@@ -3,15 +3,17 @@
  * Shows current waitlist signup progress
  */
 
-import { Users, TrendingUp } from 'lucide-react';
-import { launchConfig } from '../config/launchConfig';
+import { Users, TrendingUp } from "lucide-react";
+import { launchConfig } from "../config/launchConfig";
 
-export function WaitlistProgress({ className = '' }) {
-  const { current, goal, percentage } = launchConfig.waitlist;
-  const progressPercentage = percentage();
+export function WaitlistProgress({ className = "" }) {
+  const { current, goal } = launchConfig.waitlist;
+  const progressPercentage = launchConfig.waitlist.percentage;
 
   return (
-    <div className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 p-6 ${className}`}>
+    <div
+      className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 p-6 ${className}`}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-blue-600" />
