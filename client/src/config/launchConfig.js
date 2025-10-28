@@ -4,6 +4,8 @@
  * All environment variables accessed through this file
  */
 
+import { fetchWaitlistCount } from "../utils/waitlistApi";
+
 export const launchConfig = {
   // Core launch settings
   mode: import.meta.env.VITE_LAUNCH_MODE || "prelaunch",
@@ -15,16 +17,9 @@ export const launchConfig = {
 
   // Waitlist settings
   waitlist: {
-    goal: import.meta.env.VITE_WAITLIST_GOAL
-      ? parseInt(import.meta.env.VITE_WAITLIST_GOAL, 10)
-      : 500,
-    current: import.meta.env.VITE_WAITLIST_CURRENT
-      ? parseInt(import.meta.env.VITE_WAITLIST_CURRENT, 10)
-      : 0,
+    goal: parseInt(import.meta.env.VITE_WAITLIST_GOAL) || 500,
+    current: parseInt(import.meta.env.VITE_WAITLIST_CURRENT) || 0, // Fallback
     apiUrl: import.meta.env.VITE_WAITLIST_API_URL || "",
-    get percentage() {
-      return Math.min(Math.round((this.current / this.goal) * 100), 100);
-    },
   },
 
   // Feature flags
@@ -99,3 +94,11 @@ export const getTimeUntilLaunch = () => {
 };
 
 export default launchConfig;
+
+// Function to update waitlist count dynamically
+export const updateWaitlistCount = async () => {
+  const data = await fetchWaitlistCount();
+  launchConfig.waitlist.current = data.count;
+  launchConfig.waitlist.goal = data.goal;
+  return data;
+};

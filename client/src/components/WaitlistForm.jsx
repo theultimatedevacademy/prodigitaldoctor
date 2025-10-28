@@ -3,19 +3,23 @@
  * Collects user information for pre-launch waitlist
  */
 
-import { useState } from 'react';
-import { Mail, User, Phone, Building2, Check, Loader2 } from 'lucide-react';
-import { Button } from './ui/Button';
-import { submitToWaitlist, isValidEmail, isValidPhone } from '../utils/waitlist';
+import { useState } from "react";
+import { Mail, User, Phone, Building2, Check, Loader2 } from "lucide-react";
+import { Button } from "./ui/Button";
+import {
+  submitToWaitlist,
+  isValidEmail,
+  isValidPhone,
+} from "../utils/waitlist";
 
 export function WaitlistForm({ onSuccess }) {
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    phone: '',
-    clinicName: '',
+    email: "",
+    name: "",
+    phone: "",
+    clinicName: "",
   });
-  
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -23,7 +27,7 @@ export function WaitlistForm({ onSuccess }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -32,48 +36,51 @@ export function WaitlistForm({ onSuccess }) {
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = "Please enter a valid email";
     }
-    
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
-    
+
     if (formData.phone && !isValidPhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
+      newErrors.phone = "Please enter a valid 10-digit phone number";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const result = await submitToWaitlist(formData);
-      
+
       if (result.success) {
         setSubmitSuccess(true);
-        
+        // Refresh count immediately
+        const data = await fetchWaitlistCount();
+        // Trigger a re-render or event
+        // updateWaitlistCount();
         // Reset form
         setFormData({
-          email: '',
-          name: '',
-          phone: '',
-          clinicName: '',
+          email: "",
+          name: "",
+          phone: "",
+          clinicName: "",
         });
-        
+
         // Call success callback if provided
         if (onSuccess) {
           onSuccess(formData);
@@ -82,7 +89,7 @@ export function WaitlistForm({ onSuccess }) {
         setErrors({ submit: result.message });
       }
     } catch (error) {
-      setErrors({ submit: 'Something went wrong. Please try again.' });
+      setErrors({ submit: "Something went wrong. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +105,8 @@ export function WaitlistForm({ onSuccess }) {
           You're on the list!
         </h3>
         <p className="text-green-700 mb-4">
-          We'll notify you as soon as we launch. Check your email for confirmation.
+          We'll notify you as soon as we launch. Check your email for
+          confirmation.
         </p>
         <p className="text-sm text-green-600">
           Early adopters get <strong>50% off first year</strong>
@@ -108,11 +116,17 @@ export function WaitlistForm({ onSuccess }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-6 sm:p-8">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-6 sm:p-8"
+    >
       <div className="space-y-4">
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Email Address <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -125,7 +139,7 @@ export function WaitlistForm({ onSuccess }) {
               onChange={handleChange}
               placeholder="you@yourclinic.com"
               className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
+                errors.email ? "border-red-500" : "border-gray-300"
               }`}
               disabled={isSubmitting}
             />
@@ -137,7 +151,10 @@ export function WaitlistForm({ onSuccess }) {
 
         {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Your Name <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -150,7 +167,7 @@ export function WaitlistForm({ onSuccess }) {
               onChange={handleChange}
               placeholder="Dr. Rajesh Kumar"
               className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
+                errors.name ? "border-red-500" : "border-gray-300"
               }`}
               disabled={isSubmitting}
             />
@@ -162,8 +179,14 @@ export function WaitlistForm({ onSuccess }) {
 
         {/* Phone (Optional) */}
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number <span className="text-gray-400 text-xs">(Optional - for launch SMS)</span>
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Phone Number{" "}
+            <span className="text-gray-400 text-xs">
+              (Optional - for launch SMS)
+            </span>
           </label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -175,7 +198,7 @@ export function WaitlistForm({ onSuccess }) {
               onChange={handleChange}
               placeholder="9876543210"
               className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
+                errors.phone ? "border-red-500" : "border-gray-300"
               }`}
               disabled={isSubmitting}
             />
@@ -187,8 +210,12 @@ export function WaitlistForm({ onSuccess }) {
 
         {/* Clinic Name (Optional) */}
         <div>
-          <label htmlFor="clinicName" className="block text-sm font-medium text-gray-700 mb-2">
-            Clinic Name <span className="text-gray-400 text-xs">(Optional)</span>
+          <label
+            htmlFor="clinicName"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Clinic Name{" "}
+            <span className="text-gray-400 text-xs">(Optional)</span>
           </label>
           <div className="relative">
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -225,9 +252,7 @@ export function WaitlistForm({ onSuccess }) {
               Joining...
             </>
           ) : (
-            <>
-              Join the Waitlist
-            </>
+            <>Join the Waitlist</>
           )}
         </Button>
 
