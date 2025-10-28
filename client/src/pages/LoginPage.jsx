@@ -7,6 +7,7 @@ import { SignIn, SignUp } from "@clerk/clerk-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { ArrowLeft, TestTube, Users, Shield } from "lucide-react";
+import logo from "../assets/logo.svg";
 
 function LoginPage() {
   const [mode, setMode] = useState("signin"); // 'signin' or 'signup'
@@ -25,10 +26,7 @@ function LoginPage() {
               <span className="font-medium">Back to Home</span>
             </Link>
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">O</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Ocura360</span>
+              <img src={logo} alt="Ocura360" className="h-8 w-auto" />
             </div>
           </div>
         </div>

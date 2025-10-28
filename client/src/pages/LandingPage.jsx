@@ -36,6 +36,8 @@ import { trackCTAClick, trackVideoPlay } from "../utils/analytics";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { updateWaitlistCount } from "../config/launchConfig";
+import logo from "../assets/logo.svg";
+import logoDark from "../assets/logo-full-darkmode.svg";
 
 // Animation variants
 const fadeInUp = {
@@ -109,12 +111,7 @@ const LandingPage = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-xl text-gray-900 tracking-tight">
-                Ocura360
-              </span>
+              <img src={logo} alt="Ocura360" className="h-8 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -1364,37 +1361,37 @@ const LandingPage = () => {
 
       {/* Testimonials Section - Only show after launch */}
       {launchConfig.isLaunched && (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Trusted by Healthcare Professionals
-          </h2>
-          <p className="text-lg text-gray-600">
-            See what doctors are saying about Ocura360
-          </p>
-        </div>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+              Trusted by Healthcare Professionals
+            </h2>
+            <p className="text-lg text-gray-600">
+              See what doctors are saying about Ocura360
+            </p>
+          </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <TestimonialCard
-            quote="Ocura360 has transformed how I manage my practice. The prescription system is intuitive and the DDI checking gives me peace of mind."
-            author="Dr. Priya Sharma"
-            role="General Physician, Mumbai"
-            rating={5}
-          />
-          <TestimonialCard
-            quote="The ABDM integration is seamless. My patients love being able to access their records digitally. Highly recommend for any modern practice."
-            author="Dr. Rajesh Kumar"
-            role="Cardiologist, Delhi"
-            rating={5}
-          />
-          <TestimonialCard
-            quote="Best EMR solution I've used. Clean interface, powerful features, and excellent support. It's made my clinic operations so much more efficient."
-            author="Dr. Anjali Patel"
-            role="Pediatrician, Bangalore"
-            rating={5}
-          />
-        </div>
-      </section>
+          <div className="grid md:grid-cols-3 gap-8">
+            <TestimonialCard
+              quote="Ocura360 has transformed how I manage my practice. The prescription system is intuitive and the DDI checking gives me peace of mind."
+              author="Dr. Priya Sharma"
+              role="General Physician, Mumbai"
+              rating={5}
+            />
+            <TestimonialCard
+              quote="The ABDM integration is seamless. My patients love being able to access their records digitally. Highly recommend for any modern practice."
+              author="Dr. Rajesh Kumar"
+              role="Cardiologist, Delhi"
+              rating={5}
+            />
+            <TestimonialCard
+              quote="Best EMR solution I've used. Clean interface, powerful features, and excellent support. It's made my clinic operations so much more efficient."
+              author="Dr. Anjali Patel"
+              role="Pediatrician, Bangalore"
+              rating={5}
+            />
+          </div>
+        </section>
       )}
 
       {/* CTA Section */}
@@ -1420,7 +1417,9 @@ const LandingPage = () => {
                   variant="secondary"
                   className="shadow-xl hover:shadow-2xl transition-shadow bg-white hover:bg-gray-50"
                   onClick={() => {
-                    document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' });
+                    document
+                      .getElementById("waitlist")
+                      ?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
                   Join the Waitlist
@@ -1450,10 +1449,7 @@ const LandingPage = () => {
             {/* Company */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white font-bold text-lg">Ocura360</span>
+                <img src={logoDark} alt="Ocura360" className="h-8 w-auto" />
               </div>
               <p className="text-sm text-gray-400 mb-4">
                 India's first ABDM-native clinic management suite built for solo

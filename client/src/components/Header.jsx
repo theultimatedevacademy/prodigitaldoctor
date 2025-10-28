@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import logo from '../assets/logo.svg';
 import {
   SignedIn,
   SignedOut,
@@ -16,12 +17,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo & Brand */}
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="bg-blue-600 text-white p-2 rounded-lg">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 hidden sm:block">
-              ProDigitalDoctor
-            </h1>
+            <img src={logo} alt="Ocura360" className="h-8 w-auto" />
           </Link>
 
           {/* Center - Navigation (only when signed in) */}
