@@ -73,6 +73,9 @@ const LandingPage = () => {
   );
 
   useEffect(() => {
+    // Reset scroll position when page loads
+    window.scrollTo(0, 0);
+
     // Fetch live count on mount
     const loadCount = async () => {
       const data = await updateWaitlistCount();
@@ -404,9 +407,8 @@ const LandingPage = () => {
               {/* YouTube Embed - Replace VIDEO_ID with your actual video ID */}
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                src="https://www.youtube.com/embed/QL9bwHw0nkQ?si=PO56eAtU1aNJnZMm"
                 title="Ocura360 Promo Video"
-                frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               ></iframe>
@@ -1684,7 +1686,7 @@ function PricingCard({
       {/* Early Bird Badge - Centered */}
       {showEarlyBird && earlyBirdPrice && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse">
+          <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg animate-pulse whitespace-nowrap">
             🎉 {launchConfig.earlyAdopter.label}
           </span>
         </div>

@@ -4,7 +4,7 @@
  */
 
 import { SignIn, SignUp } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { ArrowLeft, TestTube, Users, Shield } from "lucide-react";
 import logo from "../assets/logo.svg";
@@ -12,8 +12,13 @@ import logo from "../assets/logo.svg";
 function LoginPage() {
   const [mode, setMode] = useState("signin"); // 'signin' or 'signup'
 
+  // Reset scroll position when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-x-hidden">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -23,7 +28,7 @@ function LoginPage() {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
+              <span className="font-medium">Back<span className="hidden sm:inline"> to Home</span></span>
             </Link>
             <div className="flex items-center gap-2">
               <img src={logo} alt="Ocura360" className="h-8 w-auto" />
@@ -33,8 +38,8 @@ function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
           {/* Left Side - Information */}
           <div className="space-y-8">
             {/* Beta Tester Badge */}
@@ -46,17 +51,17 @@ function LoginPage() {
             </div>
 
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                 Welcome, Early Adopter! 🎉
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
                 Thank you for being part of our exclusive beta testing program.
                 Your feedback will help shape the future of Ocura360.
               </p>
             </div>
 
             {/* What You Get */}
-            <div className="bg-white rounded-2xl border-2 border-blue-200 p-6 space-y-4">
+            <div className="bg-white rounded-2xl border-2 border-blue-200 p-4 sm:p-6 space-y-4">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
                 As a Beta Tester, You Get:
               </h3>
@@ -119,7 +124,7 @@ function LoginPage() {
             </div>
 
             {/* Important Notes */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6">
               <div className="flex items-start gap-3">
                 <Shield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                 <div>
@@ -157,7 +162,7 @@ function LoginPage() {
 
           {/* Right Side - Auth Forms */}
           <div className="lg:sticky lg:top-24">
-            <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-xl p-8">
+            <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-xl p-4 sm:p-6 md:p-8">
               {/* Toggle Buttons */}
               <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
                 <button
@@ -183,7 +188,7 @@ function LoginPage() {
               </div>
 
               {/* Clerk Auth Components */}
-              <div className="flex justify-center">
+              <div className="flex justify-center overflow-hidden">
                 {mode === "signin" ? (
                   <SignIn
                     routing="path"
@@ -192,8 +197,10 @@ function LoginPage() {
                     afterSignInUrl="/dashboard"
                     appearance={{
                       elements: {
-                        rootBox: "w-full",
+                        rootBox: "w-full max-w-full",
                         card: "shadow-none",
+                        formButtonPrimary: "text-sm sm:text-base",
+                        formFieldInput: "text-sm sm:text-base",
                       },
                     }}
                   />
@@ -205,8 +212,10 @@ function LoginPage() {
                     afterSignUpUrl="/dashboard"
                     appearance={{
                       elements: {
-                        rootBox: "w-full",
+                        rootBox: "w-full max-w-full",
                         card: "shadow-none",
+                        formButtonPrimary: "text-sm sm:text-base",
+                        formFieldInput: "text-sm sm:text-base",
                       },
                     }}
                   />
