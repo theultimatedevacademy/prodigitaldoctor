@@ -4,6 +4,7 @@
  */
 
 import { Outlet, useLocation } from "react-router";
+import logo from "../assets/logo.svg";
 import { Link } from "react-router";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -100,12 +101,7 @@ export function MainLayout() {
 
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-xl text-gray-900 hidden sm:block">
-                Ocura360
-              </span>
+              <img src={logo} alt="Ocura360" className="h-8 w-auto" />
             </Link>
           </div>
 

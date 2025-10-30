@@ -21,6 +21,7 @@ import { MainLayout } from './layouts/MainLayout';
 
 // Pages
 import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
 import DoctorDashboard from './pages/DoctorDashboard';
 import { PendingUserDashboard } from './pages/PendingUserDashboard';
 import { StartTrialPage } from './pages/StartTrialPage';
@@ -76,6 +77,7 @@ createRoot(document.getElementById('root')).render(
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
                 
                 {/* Protected Routes - All wrapped in ProtectedRoute and MainLayout */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
