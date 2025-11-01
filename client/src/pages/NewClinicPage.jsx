@@ -11,13 +11,13 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Alert } from '../components/ui/Alert';
 import { useCreateClinic } from '../api/hooks/useClinics';
-import { useSubscription } from '../api/hooks/useSubscription';
+import { useSubscriptionInfo } from '../api/hooks/useSubscription';
 import { toast } from 'react-toastify';
 
 const NewClinicPage = () => {
   const navigate = useNavigate();
   const { mutate: createClinic, isPending } = useCreateClinic();
-  const { data: subscriptionData } = useSubscription();
+  const { data: subscriptionData } = useSubscriptionInfo();
 
   const [formData, setFormData] = useState({
     name: '',

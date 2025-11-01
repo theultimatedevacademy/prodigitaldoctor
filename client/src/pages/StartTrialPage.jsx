@@ -7,12 +7,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { useStartTrial, useSubscription } from "../api/hooks/useSubscription";
+import { useStartTrial, useSubscriptionInfo } from "../api/hooks/useSubscription";
 
 export function StartTrialPage() {
   const navigate = useNavigate();
   const startTrialMutation = useStartTrial();
-  const { data: subscriptionData, isLoading } = useSubscription();
+  const { data: subscriptionData, isLoading } = useSubscriptionInfo();
   const [agreed, setAgreed] = useState(false);
 
   // Redirect to clinic creation if trial is already active

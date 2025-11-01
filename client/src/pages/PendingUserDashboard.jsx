@@ -8,13 +8,13 @@ import { Building2, Mail, Zap } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { usePendingInvitations } from "../api/hooks/useInvitations";
 import { useAuth } from "../hooks/useAuth";
-import { useSubscription } from "../api/hooks/useSubscription";
+import { useSubscriptionInfo } from "../api/hooks/useSubscription";
 
 export function PendingUserDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: invitationsData } = usePendingInvitations();
-  const { data: subscriptionData } = useSubscription();
+  const { data: subscriptionData } = useSubscriptionInfo();
 
   const pendingCount = invitationsData?.total || 0;
   const hasActiveTrial = subscriptionData?.subscription?.status === 'trial';
