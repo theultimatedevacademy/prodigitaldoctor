@@ -5,17 +5,19 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Building2, Plus, X } from 'lucide-react';
+import { Building2, Plus, X, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Alert } from '../components/ui/Alert';
 import { useCreateClinic } from '../api/hooks/useClinics';
+import { useSubscription } from '../api/hooks/useSubscription';
 import { toast } from 'react-toastify';
 
 const NewClinicPage = () => {
   const navigate = useNavigate();
   const { mutate: createClinic, isPending } = useCreateClinic();
+  const { data: subscriptionData } = useSubscription();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -93,6 +95,12 @@ const NewClinicPage = () => {
     });
   };
 
+  const hasActiveTrial = subscriptionData?.subscription?.status === 'trial';
+  const trialEndsAt = subscriptionData?.subscription?.trialEndsAt;
+  const daysRemaining = trialEndsAt 
+    ? Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24))
+    : 0;
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
@@ -104,6 +112,23 @@ const NewClinicPage = () => {
           Set up your clinic profile and working hours
         </p>
       </div>
+
+      {/* Trial Status Banner */}
+      {hasActiveTrial && (
+        <Alert variant="info" className="mb-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            <div>
+              <p className="font-semibold">Your free trial is active!</p>
+              <p className="text-sm">
+                {daysRemaining > 0 
+                  ? `${daysRemaining} days remaining. Complete your clinic setup to start managing patients.`
+                  : 'Complete your clinic setup to start managing patients.'}
+              </p>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* Basic Information */}

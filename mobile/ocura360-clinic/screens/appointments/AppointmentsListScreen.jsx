@@ -20,6 +20,7 @@ import { useClinicContext } from '../../contexts/ClinicContext';
 import { useMe } from '../../api/hooks/useAuth';
 import { useClinicDoctors } from '../../api/hooks/useClinics';
 import { formatDate, formatTime } from '../../utils/formatters';
+import { useDebounce } from '../../hooks/useDebounce';
 
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDate = () => {
@@ -48,6 +49,9 @@ export default function AppointmentsListScreen() {
     endDate: today,
   });
 
+  // Debounce search query for server-side search
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
   // Fetch clinic doctors for filter dropdown
   const { data: doctorsData } = useClinicDoctors(selectedClinicId);
   const doctorOptions = useMemo(() => {
@@ -58,13 +62,18 @@ export default function AppointmentsListScreen() {
     }));
   }, [doctorsData]);
 
-  // Build API filters based on user role
+  // Build API filters based on user role - includes server-side search
   const apiFilters = useMemo(() => {
     const baseFilters = {
       clinicId: selectedClinicId,
       startDate: filters.startDate,
       endDate: filters.endDate,
     };
+
+    // Add server-side search parameter
+    if (debouncedSearch && debouncedSearch.trim().length >= 2) {
+      baseFilters.search = debouncedSearch.trim();
+    }
 
     // Doctors only see their own appointments
     if (user?.role === 'doctor') {
@@ -77,7 +86,7 @@ export default function AppointmentsListScreen() {
     if (filters.doctorId && user?.role !== 'doctor') baseFilters.doctorId = filters.doctorId;
 
     return baseFilters;
-  }, [selectedClinicId, user, filters]);
+  }, [selectedClinicId, user, filters, debouncedSearch]);
 
   // Fetch appointments
   const {
@@ -89,7 +98,7 @@ export default function AppointmentsListScreen() {
     enabled: !!selectedClinicId,
   });
 
-  // Extract appointments array from response
+  // Extract appointments array from response (search is now server-side)
   const appointments = appointmentsResponse?.appointments || [];
 
   // Refetch appointments when screen comes into focus (e.g., after creating new appointment)
@@ -100,27 +109,6 @@ export default function AppointmentsListScreen() {
       }
     }, [selectedClinicId, refetch])
   );
-
-  // Client-side search filter
-  const filteredAppointments = useMemo(() => {
-    if (!searchQuery) return appointments;
-
-    const searchLower = searchQuery.toLowerCase();
-    return appointments.filter((apt) => {
-      const patientName = apt.patient?.name || apt.tempPatientData?.name || '';
-      const patientCode =
-        apt.patient?.patientCodes?.find(
-          (pc) => pc.clinic?._id === selectedClinicId || pc.clinic === selectedClinicId
-        )?.code || '';
-      const phoneNumber = apt.patient?.phone || apt.tempPatientData?.phone || '';
-
-      return (
-        patientName.toLowerCase().includes(searchLower) ||
-        patientCode.toLowerCase().includes(searchLower) ||
-        phoneNumber.includes(searchLower)
-      );
-    });
-  }, [appointments, searchQuery, selectedClinicId]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -146,9 +134,9 @@ export default function AppointmentsListScreen() {
   // Check if viewing today's appointments
   const isViewingToday = filters.startDate === today && filters.endDate === today;
 
-  // Generate subtitle message
-  const getSubtitle = () => {
-    const count = filteredAppointments.length;
+  // Generate subtitle message (memoized for performance)
+  const subtitle = useMemo(() => {
+    const count = appointments.length;
     if (isViewingToday) {
       return count === 0
         ? 'No appointments for today'
@@ -162,17 +150,18 @@ export default function AppointmentsListScreen() {
     return count === 0
       ? 'No appointments in date range'
       : `${count} appointment${count !== 1 ? 's' : ''} in selected range`;
-  };
+  }, [appointments.length, isViewingToday, filters.startDate, filters.endDate]);
 
   const renderAppointment = useCallback(({ item }) => {
     const patientName = item.patient?.name || item.tempPatientData?.name || 'Unknown Patient';
     const doctorName = item.doctor?.name || 'Unassigned';
     const visitType = item.visitType === 'first_visit' ? 'First Visit' : 'Follow-Up';
+    const subtitleText = `${formatDate(item.startAt)} at ${formatTime(item.startAt)}\n${doctorName} • ${visitType}`;
 
     return (
       <ListItem
         title={patientName}
-        subtitle={`${formatDate(item.startAt)} at ${formatTime(item.startAt)}\n${doctorName} • ${visitType}`}
+        subtitle={subtitleText}
         leftIcon={() => <Avatar name={patientName} size="md" />}
         rightContent={<StatusBadge status={item.status} />}
         showChevron
@@ -214,7 +203,7 @@ export default function AppointmentsListScreen() {
     <ScreenWrapper>
       <Header
         title="Appointments"
-        subtitle={getSubtitle()}
+        subtitle={subtitle}
         rightContent={
           <Button variant="ghost" size="sm" onPress={() => setShowFilters(true)}>
             <Filter size={20} color="#1F2937" />
@@ -232,11 +221,17 @@ export default function AppointmentsListScreen() {
       </View>
 
       <FlatList
-        data={filteredAppointments}
+        data={appointments}
         renderItem={renderAppointment}
         keyExtractor={(item) => item._id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 80 }}
+        // Performance optimizations
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
         ListEmptyComponent={
           <EmptyState
             icon={CalendarIcon}
@@ -244,7 +239,7 @@ export default function AppointmentsListScreen() {
             description={
               isViewingToday
                 ? 'Schedule a new appointment or adjust filters'
-                : 'Try adjusting your filters'
+                : 'Try adjusting your search or filters'
             }
             actionLabel="New Appointment"
             onAction={() => navigation.navigate('NewAppointment')}

@@ -484,7 +484,7 @@ export const updatePatient = async (req, res) => {
  */
 export const getClinicPatients = async (req, res) => {
   try {
-    const { clinicId, limit = 20, page = 1 } = req.query;
+    const { clinicId, search, limit = 20, page = 1 } = req.query;
     
     if (!clinicId || clinicId === 'null' || clinicId === 'undefined') {
       return res.json({
@@ -504,13 +504,26 @@ export const getClinicPatients = async (req, res) => {
       return res.status(400).json({ error: 'Invalid clinic ID' });
     }
 
+    // Build match stage with search support
+    const matchStage = {
+      'patientCodes.clinic': clinicObjectId
+    };
+
+    // Add search filter if provided
+    if (search && search.trim().length >= 2) {
+      const searchRegex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      matchStage.$or = [
+        { name: searchRegex },
+        { phone: searchRegex },
+        { 'patientCodes.code': searchRegex }
+      ];
+    }
+
     // Use aggregation to include visit statistics
     const patientsWithStats = await Patient.aggregate([
-      // Match patients for this clinic
+      // Match patients for this clinic with optional search
       {
-        $match: {
-          'patientCodes.clinic': clinicObjectId
-        }
+        $match: matchStage
       },
       // Lookup appointments and calculate stats
       {
@@ -569,10 +582,8 @@ export const getClinicPatients = async (req, res) => {
       }
     ]);
 
-    // Count total
-    const total = await Patient.countDocuments({
-      'patientCodes.clinic': clinicObjectId
-    });
+    // Count total using the same match stage
+    const total = await Patient.countDocuments(matchStage);
 
     // Populate clinic and doctor references - use Mongoose's populate on hydrated documents
     const patientIds = patientsWithStats.map(p => p._id);

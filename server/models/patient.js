@@ -57,5 +57,10 @@ PatientSchema.index({ "patientCodes.code": 1 }, { unique: true, sparse: true });
 PatientSchema.index({ abhaNumber: 1 }, { unique: true, sparse: true });
 // Index on phone for fast patient matching lookups
 PatientSchema.index({ phone: 1 });
+// Text index for name search
+PatientSchema.index({ name: 'text' });
+// Compound index for clinic-based queries with search
+PatientSchema.index({ 'patientCodes.clinic': 1, name: 1 });
+PatientSchema.index({ 'patientCodes.clinic': 1, phone: 1 });
 
 export default mongoose.model("Patient", PatientSchema);

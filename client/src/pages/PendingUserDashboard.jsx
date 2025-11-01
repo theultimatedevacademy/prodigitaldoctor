@@ -8,13 +8,17 @@ import { Building2, Mail, Zap } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { usePendingInvitations } from "../api/hooks/useInvitations";
 import { useAuth } from "../hooks/useAuth";
+import { useSubscription } from "../api/hooks/useSubscription";
 
 export function PendingUserDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: invitationsData } = usePendingInvitations();
+  const { data: subscriptionData } = useSubscription();
 
   const pendingCount = invitationsData?.total || 0;
+  const hasActiveTrial = subscriptionData?.subscription?.status === 'trial';
+  const canCreateClinic = subscriptionData?.canCreateClinic || false;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -40,12 +44,20 @@ export function PendingUserDashboard() {
               <Zap className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Start Your Free Trial
+              {hasActiveTrial ? "Complete Your Setup" : "Start Your Free Trial"}
             </h2>
             <p className="text-gray-600 mb-6">
-              Create your own clinic and start managing patients. Get 30 days
-              free trial with full access to all features.
+              {hasActiveTrial 
+                ? "Your trial is active! Complete your setup by creating your clinic."
+                : "Create your own clinic and start managing patients. Get 30 days free trial with full access to all features."}
             </p>
+            {hasActiveTrial && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-green-900 font-semibold text-sm">
+                  ✅ Trial Active - {subscriptionData?.subscription?.maxClinics || 1} clinic slot available
+                </p>
+              </div>
+            )}
             <ul className="space-y-2 mb-6">
               <li className="flex items-center text-sm text-gray-700">
                 <svg
@@ -91,11 +103,18 @@ export function PendingUserDashboard() {
               </li>
             </ul>
             <Button
-              onClick={() => navigate("/start-trial")}
+              onClick={() => {
+                // If user already has active trial, go directly to clinic creation
+                if (hasActiveTrial && canCreateClinic) {
+                  navigate("/clinics/new");
+                } else {
+                  navigate("/start-trial");
+                }
+              }}
               className="w-full"
               size="lg"
             >
-              Start Free Trial
+              {hasActiveTrial && canCreateClinic ? "Create Your Clinic" : "Start Free Trial"}
             </Button>
           </div>
 

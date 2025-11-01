@@ -80,6 +80,7 @@ const AppointmentsPage = () => {
       visitType: visitTypeFilter !== "all" ? visitTypeFilter : undefined,
       startDate,
       endDate,
+      search: searchTerm, // Add search parameter for server-side search
       page,
       limit: pageSize,
     },
@@ -91,7 +92,7 @@ const AppointmentsPage = () => {
   const appointments = appointmentsData?.appointments || [];
   const pagination = appointmentsData?.pagination || { total: 0, page: 1, pages: 1 };
   
-  // Fetch all appointments for counts (without pagination)
+  // Fetch all appointments for counts (without pagination and search)
   const { data: allAppointmentsData } = useAppointments(
     {
       clinic: selectedClinicId,
@@ -143,23 +144,6 @@ const AppointmentsPage = () => {
     
     return counts;
   }, [allAppointments]);
-
-  // Filter appointments by search term (client-side for current page)
-  const filteredAppointments = appointments.filter((apt) => {
-    const searchLower = searchTerm.toLowerCase();
-    
-    // Get patient code
-    const patientCode = apt.patient?.patientCodes?.[0]?.code || '';
-    
-    // Get phone number
-    const phoneNumber = apt.patient?.phone || '';
-    
-    return (
-      apt.patient?.name?.toLowerCase().includes(searchLower) ||
-      patientCode.toLowerCase().includes(searchLower) ||
-      phoneNumber.includes(searchLower)
-    );
-  });
   
   // Clear all filters - remove all URL params
   const handleClearFilters = () => {
@@ -317,21 +301,21 @@ const AppointmentsPage = () => {
           <Spinner size="lg" />
           <p className="text-gray-600 mt-4">Loading appointments...</p>
         </div>
-      ) : filteredAppointments.length === 0 ? (
+      ) : appointments.length === 0 ? (
         <div>
           <div className="text-center py-12">
             <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {appointments.length === 0
-                ? "No Appointments Yet"
-                : "No Matching Appointments"}
+              {searchTerm || statusFilter !== 'all' || visitTypeFilter !== 'all'
+                ? "No Matching Appointments"
+                : "No Appointments Yet"}
             </h2>
             <p className="text-gray-600 mb-6">
-              {appointments.length === 0
-                ? "Create your first appointment to get started"
-                : "Try adjusting your search or filters"}
+              {searchTerm || statusFilter !== 'all' || visitTypeFilter !== 'all'
+                ? "Try adjusting your search or filters"
+                : "Create your first appointment to get started"}
             </p>
-            {appointments.length === 0 && (
+            {!searchTerm && statusFilter === 'all' && visitTypeFilter === 'all' && (
               <Link to="/appointments/new">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -343,7 +327,7 @@ const AppointmentsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filteredAppointments.map((appointment) => (
+          {appointments.map((appointment) => (
             <Link key={appointment._id} to={`/appointments/${appointment._id}`}>
               <AppointmentCard appointment={appointment} />
             </Link>

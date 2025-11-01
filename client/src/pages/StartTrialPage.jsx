@@ -3,16 +3,30 @@
  * Shows plan features and activates trial on confirmation
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { useStartTrial } from "../api/hooks/useSubscription";
+import { useStartTrial, useSubscription } from "../api/hooks/useSubscription";
 
 export function StartTrialPage() {
   const navigate = useNavigate();
   const startTrialMutation = useStartTrial();
+  const { data: subscriptionData, isLoading } = useSubscription();
   const [agreed, setAgreed] = useState(false);
+
+  // Redirect to clinic creation if trial is already active
+  useEffect(() => {
+    if (!isLoading && subscriptionData) {
+      const hasActiveTrial = subscriptionData.subscription?.status === 'trial';
+      const canCreateClinic = subscriptionData.canCreateClinic;
+      
+      if (hasActiveTrial && canCreateClinic) {
+        // User already has active trial, redirect to clinic creation
+        navigate("/clinics/new", { replace: true });
+      }
+    }
+  }, [subscriptionData, isLoading, navigate]);
 
   const handleStartTrial = async () => {
     if (!agreed) return;

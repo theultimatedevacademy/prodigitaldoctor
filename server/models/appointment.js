@@ -77,5 +77,9 @@ const AppointmentSchema = new Schema(
 
 AppointmentSchema.index({ clinic: 1, startAt: 1 });
 AppointmentSchema.index({ doctor: 1, startAt: 1 });
+// Index for patient-based queries (used in search aggregation)
+AppointmentSchema.index({ patient: 1, clinic: 1, startAt: -1 });
+// Index for status filtering
+AppointmentSchema.index({ clinic: 1, status: 1, startAt: 1 });
 
 export default mongoose.model("Appointment", AppointmentSchema);

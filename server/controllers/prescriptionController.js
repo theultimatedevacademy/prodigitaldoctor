@@ -14,6 +14,7 @@ import { mapPrescriptionToFHIR } from '../utils/fhir.js';
 import { getUserClinicRole, canCreatePrescription } from '../utils/rbacHelpers.js';
 import logger from '../utils/logger.js';
 import { logPrescriptionCreate, logDDIOverride } from '../utils/auditLogger.js';
+import mongoose from 'mongoose';
 
 /**
  * Create new prescription with DDI checking
@@ -482,15 +483,109 @@ export const getClinicPrescriptions = async (req, res) => {
     const { userId } = req.auth;
     // Get clinicId from either params (direct route) or query (filter route)
     const clinicId = req.params.clinicId || req.query.clinicId;
-    const { limit = 20, page = 1, startDate, endDate } = req.query;
+    const { search, limit = 20, page = 1, startDate, endDate } = req.query;
 
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get user for role-based filtering
+    const user = await User.findOne({ clerkId: userId });
+    const userRole = await getUserClinicRole(user._id, clinicId);
+
+    // If search is provided, use aggregation pipeline
+    if (search && search.trim().length >= 2) {
+      const searchRegex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      
+      // Build match stage
+      const matchStage = { 
+        clinic: new mongoose.Types.ObjectId(clinicId) 
+      };
+
+      // Role-based filtering
+      if (userRole === 'doctor') {
+        matchStage.doctor = user._id;
+        logger.info({ userId: user._id, role: userRole }, 'Doctor viewing only their prescriptions');
+      }
+
+      // Date range filtering
+      if (startDate && endDate) {
+        const rangeStart = new Date(startDate);
+        rangeStart.setHours(0, 0, 0, 0);
+        
+        const rangeEnd = new Date(endDate);
+        rangeEnd.setHours(23, 59, 59, 999);
+        
+        matchStage.createdAt = {
+          $gte: rangeStart,
+          $lte: rangeEnd,
+        };
+      }
+
+      // Aggregation pipeline with search
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $lookup: {
+            from: 'patients',
+            localField: 'patient',
+            foreignField: '_id',
+            as: 'patientData'
+          }
+        },
+        { $unwind: { path: '$patientData', preserveNullAndEmptyArrays: true } },
+        {
+          $match: {
+            $or: [
+              { 'patientData.name': searchRegex },
+              { 'patientData.phone': searchRegex },
+              { 'patientData.patientCodes.code': searchRegex }
+            ]
+          }
+        },
+        { $sort: { createdAt: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [{ $skip: skip }, { $limit: parseInt(limit) }]
+          }
+        }
+      ];
+
+      const result = await Prescription.aggregate(pipeline);
+      const total = result[0]?.metadata[0]?.total || 0;
+      const prescriptionIds = result[0]?.data.map(p => p._id) || [];
+
+      // Populate the prescriptions
+      const prescriptions = await Prescription.find({ _id: { $in: prescriptionIds } })
+        .populate('doctor')
+        .populate('patient')
+        .populate('appointment')
+        .populate('meds.medication')
+        .sort({ createdAt: -1 });
+
+      logger.info({ 
+        search,
+        prescriptionsFound: prescriptions.length, 
+        total,
+        page, 
+        limit 
+      }, 'Prescriptions fetched with search');
+
+      return res.json({
+        data: prescriptions,
+        prescriptions,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    }
+
+    // Original logic without search
     const filter = { clinic: clinicId };
 
     // Role-based filtering
-    const user = await User.findOne({ clerkId: userId });
-    const userRole = await getUserClinicRole(user._id, clinicId);
-    
-    // If user is a doctor (not owner, not staff), only show their prescriptions
     if (userRole === 'doctor') {
       filter.doctor = user._id;
       logger.info({ userId: user._id, role: userRole }, 'Doctor viewing only their prescriptions');
@@ -510,8 +605,6 @@ export const getClinicPrescriptions = async (req, res) => {
         $lte: rangeEnd,
       };
     }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const prescriptions = await Prescription.find(filter)
       .populate('doctor')

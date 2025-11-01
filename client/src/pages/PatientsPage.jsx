@@ -71,10 +71,11 @@ export default function PatientsPage() {
     setSearchParams(newParams);
   };
   
-  // Fetch data
+  // Fetch data with server-side search
   const { data: patientsData, isLoading } = usePatients(selectedClinicId, {
     page,
     limit: pageSize,
+    search: searchTerm, // Add search parameter for server-side search
   });
   
   const patients = patientsData?.patients || [];
@@ -100,23 +101,10 @@ export default function PatientsPage() {
     return date >= start && date <= end;
   };
   
-  // Apply client-side filters
+  // Apply client-side filters for additional filters not supported by backend
+  // (gender, bloodGroup, ageRange, dateRange remain client-side for now)
   const filteredPatients = useMemo(() => {
     return patients.filter((patient) => {
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const patientCode = patient.patientCodes?.[0]?.code || '';
-        const phoneNumber = patient.phone || '';
-        
-        const matchesSearch = 
-          patient.name?.toLowerCase().includes(searchLower) ||
-          patientCode.toLowerCase().includes(searchLower) ||
-          phoneNumber.includes(searchLower);
-        
-        if (!matchesSearch) return false;
-      }
-      
       // Gender filter
       if (genderFilter !== 'all' && patient.gender !== genderFilter) {
         return false;
@@ -143,7 +131,7 @@ export default function PatientsPage() {
       
       return true;
     });
-  }, [patients, searchTerm, genderFilter, bloodGroupFilter, ageRangeFilter, startDate, endDate]);
+  }, [patients, genderFilter, bloodGroupFilter, ageRangeFilter, startDate, endDate]);
   
   // Clear all filters
   const handleClearFilters = () => {
