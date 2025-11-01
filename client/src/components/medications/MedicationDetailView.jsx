@@ -45,26 +45,26 @@ export function MedicationDetailView({ medication }) {
     <div className="space-y-6">
       {/* Header Card */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4 mt-4">
-            <div className="w-16 h-16 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <Pill className="w-8 h-8 text-blue-600" />
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <Pill className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="flex-1 w-full">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 break-words">
                 {capitalizeFirst(medication.brandName)}
               </h2>
-              <p className="text-lg text-gray-600 mb-4">
+              <p className="text-base sm:text-lg text-gray-600 mb-4 break-words">
                 {capitalizeFirst(medication.genericName)}
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                 {medication.form && (
                   <div>
                     <span className="text-sm font-medium text-gray-500">
                       Form:
                     </span>
-                    <p className="text-gray-900">{capitalizeFirst(medication.form)}</p>
+                    <p className="text-gray-900 break-words">{capitalizeFirst(medication.form)}</p>
                   </div>
                 )}
                 {medication.manufacturer && (
@@ -72,7 +72,7 @@ export function MedicationDetailView({ medication }) {
                     <span className="text-sm font-medium text-gray-500">
                       Manufacturer:
                     </span>
-                    <p className="text-gray-900">{capitalizeFirst(medication.manufacturer)}</p>
+                    <p className="text-gray-900 break-words">{capitalizeFirst(medication.manufacturer)}</p>
                   </div>
                 )}
               </div>
@@ -112,26 +112,26 @@ export function MedicationDetailView({ medication }) {
                 {medication.substitutes.map((substitute, index) => (
                   <div
                     key={substitute._id || index}
-                    className="p-4 bg-purple-50 rounded-lg border border-purple-100 hover:border-purple-200 transition-colors"
+                    className="p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-100 hover:border-purple-200 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 mb-1">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
+                      <div className="flex-1 w-full">
+                        <h4 className="font-semibold text-gray-900 mb-1 break-words">
                           {substitute.brandName || "Unknown"}
                         </h4>
                         {substitute.genericName && (
-                          <p className="text-sm text-gray-600 mb-1">
+                          <p className="text-sm text-gray-600 mb-1 break-words">
                             {substitute.genericName}
                           </p>
                         )}
                         {substitute.exact_composition && (
-                          <p className="text-xs text-gray-500 font-mono">
+                          <p className="text-xs text-gray-500 font-mono break-words">
                             {substitute.exact_composition}
                           </p>
                         )}
                       </div>
                       {substitute.manufacturer && (
-                        <span className="text-xs text-gray-500 ml-4 flex-shrink-0">
+                        <span className="text-xs text-gray-500 sm:ml-4 break-words">
                           {substitute.manufacturer}
                         </span>
                       )}
@@ -162,7 +162,7 @@ export function MedicationDetailView({ medication }) {
                   .filter((comp) => comp.trim())
                   .map((component, index) => (
                     <div key={index} className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-gray-900 font-mono text-sm">
+                      <p className="text-gray-900 font-mono text-sm break-words">
                         {component.trim()}
                       </p>
                     </div>
@@ -180,11 +180,11 @@ export function MedicationDetailView({ medication }) {
                 <div className="space-y-3">
                   {medication.unique_composition.map((comp, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <h4 className="font-semibold text-gray-900 mb-1">
+                      <h4 className="font-semibold text-gray-900 mb-1 break-words">
                         {comp.name}
                       </h4>
                       {comp.description && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 break-words">
                           {comp.description}
                         </p>
                       )}
@@ -216,7 +216,7 @@ export function MedicationDetailView({ medication }) {
                   .filter((item) => item.trim())
                   .map((item, index) => (
                     <div key={index} className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-gray-700 text-sm">{item.trim()}</p>
+                      <p className="text-gray-700 text-sm break-words">{item.trim()}</p>
                     </div>
                   ))}
               </div>
@@ -244,7 +244,7 @@ export function MedicationDetailView({ medication }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 pt-4 border-t">
             {medication.chemicalClass && (
               <div>
                 <span className="text-sm font-medium text-gray-500">

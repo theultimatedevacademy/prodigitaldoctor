@@ -35,7 +35,7 @@ export function SubscriptionBanner() {
 
   return (
     <div
-      className={`${
+      className={`no-print ${
         isUrgent
           ? "bg-gradient-to-r from-orange-500 to-red-500"
           : "bg-gradient-to-r from-blue-600 to-purple-600"

@@ -76,15 +76,15 @@ export function StaffManagementPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Users className="w-8 h-8 mr-3 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
             Staff Management
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Manage your clinic's team members
           </p>
         </div>
@@ -95,15 +95,15 @@ export function StaffManagementPage() {
       </div>
 
       {/* Clinic Owner Card */}
-      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 rounded-xl p-6 mb-8">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 w-16 h-16 bg-yellow-200 rounded-full flex items-center justify-center">
-            <Crown className="w-8 h-8 text-yellow-700" />
+      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 rounded-xl p-4 sm:p-6 mb-8">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 bg-yellow-200 rounded-full flex items-center justify-center">
+            <Crown className="w-7 h-7 sm:w-8 sm:h-8 text-yellow-700" />
           </div>
-          <div className="ml-4">
-            <h3 className="text-lg font-semibold text-yellow-900">Clinic Owner</h3>
-            <p className="text-yellow-800">{clinic?.owner?.name}</p>
-            <p className="text-sm text-yellow-700">{clinic?.owner?.email}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold text-yellow-900">Clinic Owner</h3>
+            <p className="text-yellow-800 truncate">{clinic?.owner?.name}</p>
+            <p className="text-xs sm:text-sm text-yellow-700 break-words">{clinic?.owner?.email}</p>
           </div>
         </div>
       </div>
@@ -127,26 +127,26 @@ export function StaffManagementPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {acceptedStaff.map((member) => (
               <div
                 key={member.user?._id}
-                className="bg-white rounded-xl border border-gray-200 p-6"
+                className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start flex-1 min-w-0">
+                    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       {member.role === 'doctor' ? (
-                        <Stethoscope className="w-6 h-6 text-blue-600" />
+                        <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                       ) : (
-                        <Users className="w-6 h-6 text-gray-600" />
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                       )}
                     </div>
-                    <div className="ml-4">
-                      <h3 className="font-semibold text-gray-900">
+                    <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">
                         {member.user?.name}
                       </h3>
-                      <p className="text-sm text-gray-600">{member.user?.email}</p>
+                      <p className="text-sm text-gray-600 break-words">{member.user?.email}</p>
                       <span
                         className={`inline-block mt-2 px-2 py-1 rounded text-xs font-medium ${
                           member.role === 'doctor'
@@ -160,7 +160,7 @@ export function StaffManagementPage() {
                   </div>
                   <button
                     onClick={() => handleRemoveClick(member)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Remove staff member"
                   >
                     <UserX className="w-5 h-5" />
@@ -182,22 +182,22 @@ export function StaffManagementPage() {
             {pendingStaff.map((member) => (
               <div
                 key={member.user?._id}
-                className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between"
+                className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
               >
-                <div className="flex items-center">
+                <div className="flex items-center flex-1 min-w-0">
                   <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                     <Users className="w-5 h-5 text-yellow-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="font-medium text-gray-900">{member.user?.name}</p>
-                    <p className="text-sm text-gray-600">{member.user?.email}</p>
+                  <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{member.user?.name}</p>
+                    <p className="text-sm text-gray-600 break-words">{member.user?.email}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Invited as {member.role === 'doctor' ? 'Doctor' : 'Staff'} •{' '}
                       {new Date(member.invitedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-yellow-700 font-medium">
+                <span className="text-sm text-yellow-700 font-medium text-center sm:text-left">
                   Awaiting acceptance
                 </span>
               </div>

@@ -21,13 +21,13 @@ const PatientCodeSchema = new Schema(
 );
 
 const AddressSchema = new Schema(
-  { 
-    line1: String, 
+  {
+    line1: String,
     line2: String,
-    city: String, 
-    state: String, 
+    city: String,
+    state: String,
     pin: String,
-    country: { type: String, default: 'India' }
+    country: { type: String, default: "India" },
   },
   { _id: false }
 );
@@ -37,7 +37,7 @@ const PatientSchema = new Schema(
     name: { type: String, required: true },
     age: Number,
     gender: { type: String, enum: ["M", "F", "O", "U"] },
-    phone: { type: String, index: true },
+    phone: { type: String },
     email: String,
     addresses: [AddressSchema],
     bloodGroup: String,

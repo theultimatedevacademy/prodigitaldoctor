@@ -81,14 +81,16 @@ export const GENDER_OPTIONS = [
   { value: 'U', label: 'Prefer not to say' },
 ];
 
-// Medication Frequencies
+// Medication Frequencies (Indian Standards)
 export const MEDICATION_FREQUENCIES = [
   { value: 'OD', label: 'Once Daily (OD)' },
-  { value: 'BID', label: 'Twice Daily (BID)' },
-  { value: 'TID', label: 'Three Times Daily (TID)' },
+  { value: 'BD', label: 'Twice Daily (BD)' },
+  { value: 'TDS', label: 'Three Times Daily (TDS)' },
   { value: 'QID', label: 'Four Times Daily (QID)' },
-  { value: 'PRN', label: 'As Needed (PRN)' },
+  { value: 'SOS', label: 'If Needed (SOS)' },
   { value: 'STAT', label: 'Immediately (STAT)' },
+  { value: 'HS', label: 'At Bedtime (HS)' },
+  { value: 'QOD', label: 'Alternate Days (QOD)' },
 ];
 
 // Dosage Units

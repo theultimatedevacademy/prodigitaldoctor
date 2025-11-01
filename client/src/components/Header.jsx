@@ -1,5 +1,5 @@
-import { Link } from 'react-router';
-import logo from '../assets/logo.svg';
+import { Link } from "react-router";
+import logo from "../assets/logo.svg";
 import {
   SignedIn,
   SignedOut,
@@ -29,10 +29,16 @@ const Header = () => {
               <NavLink to="/patients" icon={<Users className="w-4 h-4" />}>
                 Patients
               </NavLink>
-              <NavLink to="/appointments" icon={<Calendar className="w-4 h-4" />}>
+              <NavLink
+                to="/appointments"
+                icon={<Calendar className="w-4 h-4" />}
+              >
                 Appointments
               </NavLink>
-              <NavLink to="/prescriptions" icon={<FileText className="w-4 h-4" />}>
+              <NavLink
+                to="/prescriptions"
+                icon={<FileText className="w-4 h-4" />}
+              >
                 Prescriptions
               </NavLink>
               <NavLink to="/clinics" icon={<Building2 className="w-4 h-4" />}>
@@ -57,7 +63,7 @@ const Header = () => {
             </SignedOut>
             <SignedIn>
               <ClinicSelector />
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </SignedIn>
           </div>
         </div>

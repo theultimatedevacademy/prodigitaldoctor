@@ -152,11 +152,11 @@ const PrescriptionsPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-blue-600" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
           Prescriptions
         </h1>
-        <p className="text-gray-600 mt-1">Manage all clinic prescriptions</p>
+        <p className="text-sm sm:text-base text-gray-600 mt-1">Manage all clinic prescriptions</p>
       </div>
 
       {/* Filters Section */}
@@ -223,8 +223,8 @@ const PrescriptionsPage = () => {
       
       {/* Pagination */}
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between border-t pt-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={pageSize}
@@ -241,7 +241,7 @@ const PrescriptionsPage = () => {
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"

@@ -41,59 +41,60 @@ const DoctorDashboard = () => {
   const getTodayDateString = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-  
+
   const today = getTodayDateString();
-  
+
   // Get current month date range
   const getMonthDateRange = () => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     const formatDate = (date) => {
       const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
       return `${y}-${m}-${d}`;
     };
-    
+
     return {
       startDate: formatDate(firstDay),
-      endDate: formatDate(lastDay)
+      endDate: formatDate(lastDay),
     };
   };
-  
+
   // Get last month date range for comparison
   const getLastMonthDateRange = () => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
+
     const firstDay = new Date(year, month - 1, 1);
     const lastDay = new Date(year, month, 0);
-    
+
     const formatDate = (date) => {
       const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
       return `${y}-${m}-${d}`;
     };
-    
+
     return {
       startDate: formatDate(firstDay),
-      endDate: formatDate(lastDay)
+      endDate: formatDate(lastDay),
     };
   };
-  
+
   const { startDate: monthStart, endDate: monthEnd } = getMonthDateRange();
-  const { startDate: lastMonthStart, endDate: lastMonthEnd } = getLastMonthDateRange();
+  const { startDate: lastMonthStart, endDate: lastMonthEnd } =
+    getLastMonthDateRange();
 
   const { data: appointmentsData, isLoading: loadingAppointments } =
     useAppointments(
@@ -106,7 +107,7 @@ const DoctorDashboard = () => {
         enabled: !!selectedClinicId, // Only fetch when clinic is selected
       }
     );
-  
+
   // Fetch all appointments for the month to calculate stats
   const { data: monthAppointmentsData } = useAppointments(
     {
@@ -127,15 +128,12 @@ const DoctorDashboard = () => {
       enabled: !!selectedClinicId, // Only fetch when clinic is selected
     }
   );
-  
+
   // Fetch all patients count for stats
-  const { data: allPatientsData } = usePatients(
-    selectedClinicId,
-    {
-      limit: 1,
-      enabled: !!selectedClinicId,
-    }
-  );
+  const { data: allPatientsData } = usePatients(selectedClinicId, {
+    limit: 1,
+    enabled: !!selectedClinicId,
+  });
 
   const { data: prescriptionsData } = usePrescriptions(
     {
@@ -148,7 +146,7 @@ const DoctorDashboard = () => {
       enabled: !!selectedClinicId, // Only fetch when clinic is selected
     }
   );
-  
+
   // Fetch recent prescriptions for display
   const { data: recentPrescriptionsData } = usePrescriptions(
     {
@@ -159,60 +157,67 @@ const DoctorDashboard = () => {
       enabled: !!selectedClinicId,
     }
   );
-  
+
   // Fetch last month's patients for growth calculation
-  const { data: lastMonthPatientsData } = usePatients(
-    selectedClinicId,
-    {
-      limit: 1,
-      enabled: !!selectedClinicId,
-    }
-  );
+  const { data: lastMonthPatientsData } = usePatients(selectedClinicId, {
+    limit: 1,
+    enabled: !!selectedClinicId,
+  });
 
   const todayAppointments = appointmentsData?.appointments || [];
   const recentPatients = patientsData?.patients || [];
   const monthAppointments = monthAppointmentsData?.appointments || [];
   const monthPrescriptions = prescriptionsData?.data || [];
-  
+
   // Calculate Patient Growth Rate
   const calculatePatientGrowth = () => {
     const currentTotal = allPatientsData?.total || 0;
     // For simplicity, we'll show the new patients this month
     // In a real scenario, you'd fetch last month's total and compare
-    const newPatientsThisMonth = monthAppointments.filter(apt => apt.visitType === 'first_visit').length;
+    const newPatientsThisMonth = monthAppointments.filter(
+      (apt) => apt.visitType === "first_visit"
+    ).length;
     return newPatientsThisMonth;
   };
-  
+
   // Calculate Follow-up Rate
   const calculateFollowUpRate = () => {
     if (monthAppointments.length === 0) return 0;
-    const followUps = monthAppointments.filter(apt => apt.visitType === 'follow_up').length;
+    const followUps = monthAppointments.filter(
+      (apt) => apt.visitType === "follow_up"
+    ).length;
     return Math.round((followUps / monthAppointments.length) * 100);
   };
-  
+
   // Calculate Average Appointments Per Day
   const calculateAvgAppointmentsPerDay = () => {
     if (monthAppointments.length === 0) return 0;
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const daysPassed = Math.ceil((today - firstDayOfMonth) / (1000 * 60 * 60 * 24)) + 1;
+    const daysPassed =
+      Math.ceil((today - firstDayOfMonth) / (1000 * 60 * 60 * 24)) + 1;
     return (monthAppointments.length / daysPassed).toFixed(1);
   };
-  
+
   // Calculate Cancelled/NoShow Rate
   const calculateCancelledRate = () => {
     if (monthAppointments.length === 0) return 0;
-    const cancelled = monthAppointments.filter(apt => apt.status === 'cancelled').length;
+    const cancelled = monthAppointments.filter(
+      (apt) => apt.status === "cancelled"
+    ).length;
     return Math.round((cancelled / monthAppointments.length) * 100);
   };
-  
+
   // Calculate Average Medications Per Prescription
   const calculateAvgMedications = () => {
     if (monthPrescriptions.length === 0) return 0;
-    const totalMeds = monthPrescriptions.reduce((sum, rx) => sum + (rx.meds?.length || 0), 0);
+    const totalMeds = monthPrescriptions.reduce(
+      (sum, rx) => sum + (rx.meds?.length || 0),
+      0
+    );
     return (totalMeds / monthPrescriptions.length).toFixed(1);
   };
-  
+
   const patientGrowth = calculatePatientGrowth();
   const followUpRate = calculateFollowUpRate();
   const avgAppointmentsPerDay = calculateAvgAppointmentsPerDay();
@@ -249,8 +254,11 @@ const DoctorDashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             {formatDate(new Date(), "EEEE, MMMM dd, yyyy")}
           </p>
         </div>

@@ -88,6 +88,11 @@ export function useUpdatePatient() {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PATIENTS,
       });
+      // Refetch all appointment-related queries (list and individual appointments)
+      queryClient.refetchQueries({
+        predicate: (query) => 
+          query.queryKey[0] === 'appointments' || query.queryKey[0] === 'appointment'
+      });
     },
   });
 }
