@@ -138,10 +138,139 @@ export const getAppointments = async (req, res) => {
       endDate,
       status,
       visitType,
+      search,
       limit = 50,
       page = 1 
     } = req.query;
 
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // If search is provided, use aggregation pipeline to search across patient data
+    if (search && search.trim().length >= 2) {
+      const searchRegex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      
+      // Build match stage for aggregation
+      const matchStage = {};
+      
+      // Filter out 'null' string values and null/undefined
+      if (clinic && clinic !== 'null' && clinic !== 'undefined') {
+        matchStage.clinic = new mongoose.Types.ObjectId(clinic);
+      }
+      if (doctor && doctor !== 'null' && doctor !== 'undefined') {
+        matchStage.doctor = new mongoose.Types.ObjectId(doctor);
+      }
+      if (patient && patient !== 'null' && patient !== 'undefined') {
+        matchStage.patient = new mongoose.Types.ObjectId(patient);
+      }
+      if (status && status !== 'null' && status !== 'undefined') {
+        matchStage.status = status;
+      }
+      if (visitType && visitType !== 'null' && visitType !== 'undefined') {
+        matchStage.visitType = visitType;
+      }
+
+      // Role-based filtering
+      if (clinic) {
+        const user = await User.findOne({ clerkId: userId });
+        const userRole = await getUserClinicRole(user._id, clinic);
+        
+        if (userRole === 'doctor') {
+          matchStage.doctor = user._id;
+          logger.info({ userId: user._id, role: userRole }, 'Doctor viewing only their appointments');
+        }
+      }
+
+      // Date filtering
+      if (date) {
+        const dateStr = date.includes('T') ? date.split('T')[0] : date;
+        const [year, month, day] = dateStr.split('-').map(Number);
+        
+        const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+        const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+        
+        matchStage.startAt = {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        };
+      } else if (startDate && endDate) {
+        const startStr = startDate.includes('T') ? startDate.split('T')[0] : startDate;
+        const endStr = endDate.includes('T') ? endDate.split('T')[0] : endDate;
+        
+        const [startYear, startMonth, startDay] = startStr.split('-').map(Number);
+        const [endYear, endMonth, endDay] = endStr.split('-').map(Number);
+        
+        const rangeStart = new Date(Date.UTC(startYear, startMonth - 1, startDay, 0, 0, 0, 0));
+        const rangeEnd = new Date(Date.UTC(endYear, endMonth - 1, endDay, 23, 59, 59, 999));
+        
+        matchStage.startAt = {
+          $gte: rangeStart,
+          $lte: rangeEnd,
+        };
+      }
+
+      // Aggregation pipeline with search
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $lookup: {
+            from: 'patients',
+            localField: 'patient',
+            foreignField: '_id',
+            as: 'patientData'
+          }
+        },
+        { $unwind: { path: '$patientData', preserveNullAndEmptyArrays: true } },
+        {
+          $match: {
+            $or: [
+              { 'patientData.name': searchRegex },
+              { 'patientData.phone': searchRegex },
+              { 'patientData.patientCodes.code': searchRegex }
+            ]
+          }
+        },
+        { $sort: { startAt: 1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [{ $skip: skip }, { $limit: parseInt(limit) }]
+          }
+        }
+      ];
+
+      const result = await Appointment.aggregate(pipeline);
+      const total = result[0]?.metadata[0]?.total || 0;
+      const appointmentIds = result[0]?.data.map(a => a._id) || [];
+
+      // Populate the appointments
+      const appointments = await Appointment.find({ _id: { $in: appointmentIds } })
+        .populate('clinic')
+        .populate('doctor')
+        .populate('patient')
+        .populate('createdBy')
+        .populate('prescriptions')
+        .sort({ startAt: 1 });
+
+      logger.info({ 
+        search,
+        appointmentsFound: appointments.length, 
+        total,
+        page, 
+        limit 
+      }, 'Appointments fetched with search');
+
+      return res.json({
+        appointments,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    }
+
+    // Original logic without search
     const filter = {};
 
     // Filter out 'null' string values and null/undefined
@@ -207,8 +336,6 @@ export const getAppointments = async (req, res) => {
         $lte: rangeEnd,
       };
     }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
 
     logger.info({ 
       filter, 

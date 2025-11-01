@@ -52,8 +52,11 @@ export default function MedicationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Medications Database</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <Pill className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
+          Medications
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1">
           Search and view detailed medication information
         </p>
       </div>
@@ -74,7 +77,7 @@ export default function MedicationsPage() {
               }}
               onFocus={() => setIsDropdownOpen(true)}
               placeholder="Search medications by brand name, generic name, or composition..."
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="block w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {isSearching && (
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">

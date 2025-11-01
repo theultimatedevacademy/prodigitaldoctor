@@ -282,16 +282,16 @@ export default function AppointmentDetailPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate("/appointments")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Appointment Details
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
               {appointment.patient?.name || "Unknown Patient"} with Dr.{" "}
               {appointment.doctor?.name || "Unknown"}
             </p>
@@ -299,13 +299,13 @@ export default function AppointmentDetailPage() {
         </div>
 
         {/* Status Badge with Edit */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 self-end sm:self-auto">
           {editingStatus ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 border rounded-lg text-sm"
               >
                 <option value="scheduled">Scheduled</option>
                 <option value="in-progress">In Progress</option>
@@ -348,7 +348,7 @@ export default function AppointmentDetailPage() {
       </div>
 
       {/* Main Content Grid - 2 Columns */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column - Patient Info & Appointment Details */}
         <div className="space-y-6">
           {/* Patient Summary Card */}
@@ -389,7 +389,7 @@ export default function AppointmentDetailPage() {
 
               {/* Age and Gender on same line */}
               {editingPatientInfo ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 block mb-1">
                       Age (years)
@@ -1103,7 +1103,7 @@ export default function AppointmentDetailPage() {
                 <div className="space-y-4">
                   {/* Prescription Info */}
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-start sm:justify-between gap-4">
                       <div className="flex-1">
                         <p className="font-medium text-green-900">
                           Prescription Created
@@ -1130,7 +1130,7 @@ export default function AppointmentDetailPage() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         <Button
                           size="sm"
                           variant="outline"

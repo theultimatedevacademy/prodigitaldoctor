@@ -21,13 +21,13 @@ const PatientCodeSchema = new Schema(
 );
 
 const AddressSchema = new Schema(
-  { 
-    line1: String, 
+  {
+    line1: String,
     line2: String,
-    city: String, 
-    state: String, 
+    city: String,
+    state: String,
     pin: String,
-    country: { type: String, default: 'India' }
+    country: { type: String, default: "India" },
   },
   { _id: false }
 );
@@ -37,7 +37,7 @@ const PatientSchema = new Schema(
     name: { type: String, required: true },
     age: Number,
     gender: { type: String, enum: ["M", "F", "O", "U"] },
-    phone: { type: String, index: true },
+    phone: { type: String },
     email: String,
     addresses: [AddressSchema],
     bloodGroup: String,
@@ -57,5 +57,10 @@ PatientSchema.index({ "patientCodes.code": 1 }, { unique: true, sparse: true });
 PatientSchema.index({ abhaNumber: 1 }, { unique: true, sparse: true });
 // Index on phone for fast patient matching lookups
 PatientSchema.index({ phone: 1 });
+// Text index for name search
+PatientSchema.index({ name: 'text' });
+// Compound index for clinic-based queries with search
+PatientSchema.index({ 'patientCodes.clinic': 1, name: 1 });
+PatientSchema.index({ 'patientCodes.clinic': 1, phone: 1 });
 
 export default mongoose.model("Patient", PatientSchema);

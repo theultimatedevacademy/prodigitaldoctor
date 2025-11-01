@@ -29,36 +29,20 @@ export default function PatientsListScreen() {
     maxAge: '',
   });
 
-  // Debounce search query
+  // Debounce search query for server-side search
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Fetch ALL patients for the clinic (no filters in API call)
+  // Fetch patients with server-side search
   const { data: patientsData, isLoading, error, refetch } = usePatients({
     clinicId: selectedClinicId,
+    search: debouncedSearch && debouncedSearch.trim().length >= 2 ? debouncedSearch.trim() : undefined,
   });
 
   const allPatients = patientsData?.patients || [];
 
-  // Apply client-side search and filters (like web version)
+  // Apply client-side filters for gender and age (not yet supported by backend)
   const patients = useMemo(() => {
     let filtered = [...allPatients];
-
-    // Search filter - search by name, phone, or patient code
-    if (debouncedSearch) {
-      const searchLower = debouncedSearch.toLowerCase();
-      filtered = filtered.filter((patient) => {
-        const patientCode = patient.patientCodes?.find(
-          pc => pc.clinic?._id === selectedClinicId || pc.clinic === selectedClinicId
-        )?.code || '';
-        const phoneNumber = patient.phone || '';
-        
-        return (
-          patient.name?.toLowerCase().includes(searchLower) ||
-          patientCode.toLowerCase().includes(searchLower) ||
-          phoneNumber.includes(searchLower)
-        );
-      });
-    }
 
     // Gender filter
     if (filters.gender) {
@@ -77,7 +61,7 @@ export default function PatientsListScreen() {
 
     // Sort by name
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [allPatients, debouncedSearch, filters, selectedClinicId]);
+  }, [allPatients, filters]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -131,11 +115,12 @@ export default function PatientsListScreen() {
     const patientCode = item.patientCodes?.find(
       pc => pc.clinic?._id === selectedClinicId || pc.clinic === selectedClinicId
     )?.code || 'N/A';
+    const subtitleText = `${item.phone || 'No phone'} • ${patientCode}`;
 
     return (
       <ListItem
         title={item.name}
-        subtitle={`${item.phone || 'No phone'} • ${patientCode}`}
+        subtitle={subtitleText}
         leftIcon={() => <Avatar name={item.name} size="md" />}
         rightContent={
           <View className="items-end">
@@ -175,6 +160,12 @@ export default function PatientsListScreen() {
         renderItem={renderPatient}
         keyExtractor={(item) => item._id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        // Performance optimizations
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
         ListEmptyComponent={
           <EmptyState
             icon={Users}

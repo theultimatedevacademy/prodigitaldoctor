@@ -46,7 +46,7 @@ const iconMap = {
   Settings,
 };
 
-export function MainLayout() {
+export function MainLayout({ children }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -63,7 +63,9 @@ export function MainLayout() {
 
   // Get filtered nav items based on user's role in current clinic
   // Handle loading state - show basic nav items during load
-  const navItemsConfig = isClinicLoading ? [] : getFilteredNavItems(userClinicRole);
+  const navItemsConfig = isClinicLoading
+    ? []
+    : getFilteredNavItems(userClinicRole);
 
   // Map icons to nav items
   const navItems = navItemsConfig.map((item) => ({
@@ -83,7 +85,7 @@ export function MainLayout() {
       <SubscriptionBanner />
 
       {/* Top Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className="no-print bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
             {/* Mobile menu toggle */}
@@ -99,8 +101,8 @@ export function MainLayout() {
               )}
             </button>
 
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-2">
+            {/* Logo - Hidden on mobile */}
+            <Link to="/dashboard" className="hidden sm:flex items-center gap-2">
               <img src={logo} alt="Ocura360" className="h-8 w-auto" />
             </Link>
           </div>
@@ -119,32 +121,32 @@ export function MainLayout() {
       </header>
 
       <div className="flex">
+        {/* Collapse Toggle Button (Desktop only) - Outside sidebar for proper z-index */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className={`hidden lg:flex fixed top-[81px] w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center hover:bg-gray-50 shadow-sm z-40 transition-all duration-200 ${
+            sidebarCollapsed ? "left-[68px]" : "left-[244px]"
+          }`}
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          ) : (
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          )}
+        </button>
+
         {/* Sidebar */}
         <aside
-          className={`
+          className={`no-print
             fixed lg:sticky top-[57px] left-0 h-[calc(100vh-57px)] bg-white border-r border-gray-200 
-            transform transition-all duration-200 ease-in-out z-30
+            transform transition-all duration-200 ease-in-out z-30 overflow-y-auto
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             ${sidebarCollapsed ? "lg:w-20" : "lg:w-64"}
             w-64
           `}
         >
-          {/* Collapse Toggle Button (Desktop only) */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-4 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center hover:bg-gray-50 shadow-sm"
-            aria-label={
-              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-            }
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-gray-600" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
-
-          <nav className="p-4 space-y-1" aria-label="Main navigation">
+          <nav className="p-4 pt-6 space-y-1" aria-label="Main navigation">
             {navItems.map((item) => {
               const active = isActive(item.path);
 
@@ -181,14 +183,14 @@ export function MainLayout() {
         {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-20 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Main Content */}
-        <main id="main-content" className="flex-1 p-6">
-          <Outlet />
+        <main id="main-content" className="flex-1 p-6 overflow-x-hidden">
+          {children || <Outlet />}
         </main>
       </div>
     </div>

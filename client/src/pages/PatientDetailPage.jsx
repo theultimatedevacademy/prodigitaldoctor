@@ -163,15 +163,84 @@ export default function PatientDetailPage() {
       </div>
       
       {/* Patient Info - Modern Design without Card */}
-      <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-lg">
-        <div className="flex items-start gap-8">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0 shadow-sm">
-            <User className="w-12 h-12 text-indigo-600" />
+      <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 md:p-8 rounded-lg">
+        {/* Mobile Layout - Centered */}
+        <div className="sm:hidden">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center shadow-sm mb-4">
+              <User className="w-10 h-10 text-indigo-600" />
+            </div>
+            <h1 className="text-xl font-semibold text-slate-800 mb-2">{patient.name}</h1>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm text-slate-500">
+                ID: <span className="font-medium text-slate-700">{patient.patientCodes?.[0]?.code || 'N/A'}</span>
+              </span>
+              {(patient.abhaId || patient.abhaNumber) && (
+                <Badge variant="success" className="text-xs">ABHA Linked</Badge>
+              )}
+            </div>
+            <Button 
+              size="sm" 
+              onClick={() => navigate(`/patients/${id}/edit`)}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mb-6"
+            >
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Patient
+            </Button>
+          </div>
+          
+          {/* Mobile Info Grid - Age/Gender on one line, Phone on another */}
+          <div className="space-y-3">
+            <div className="flex gap-6">
+              <InfoItem
+                icon={<Calendar className="w-4 h-4 text-indigo-500" />}
+                label="Age"
+                value={age ? `${age} years` : 'N/A'}
+              />
+              <InfoItem
+                icon={<Activity className="w-4 h-4 text-indigo-500" />}
+                label="Gender"
+                value={patient.gender === 'M' ? 'Male' : patient.gender === 'F' ? 'Female' : 'Other'}
+              />
+            </div>
+            <InfoItem
+              icon={<Phone className="w-4 h-4 text-indigo-500" />}
+              label="Phone"
+              value={formatPhone(patient.phone)}
+            />
+            {patient.email && (
+              <InfoItem
+                icon={<Mail className="w-4 h-4 text-indigo-500" />}
+                label="Email"
+                value={patient.email}
+              />
+            )}
+            {patient.bloodGroup && (
+              <InfoItem
+                icon={<Activity className="w-4 h-4 text-indigo-500" />}
+                label="Blood Group"
+                value={patient.bloodGroup}
+              />
+            )}
+            {patient.addresses && patient.addresses.length > 0 && (
+              <InfoItem
+                icon={<MapPin className="w-4 h-4 text-indigo-500" />}
+                label="Address"
+                value={formatAddress(patient.addresses[0])}
+              />
+            )}
+          </div>
+        </div>
+        
+        {/* Tablet & Desktop Layout */}
+        <div className="hidden sm:flex items-start gap-6 md:gap-8">
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <User className="w-10 h-10 md:w-12 md:h-12 text-indigo-600" />
           </div>
           <div className="flex-1">
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-3xl font-semibold text-slate-800 mb-2">{patient.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 mb-2">{patient.name}</h1>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-slate-500">
                     ID: <span className="font-medium text-slate-700">{patient.patientCodes?.[0]?.code || 'N/A'}</span>
@@ -191,7 +260,7 @@ export default function PatientDetailPage() {
               </Button>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <InfoItem
                 icon={<Calendar className="w-4 h-4 text-indigo-500" />}
                 label="Age"
@@ -234,8 +303,8 @@ export default function PatientDetailPage() {
       </div>
       
       {/* Tabs - Modern Design */}
-      <div className="border-b border-slate-200">
-        <div className="flex gap-1 bg-slate-50 p-1 rounded-lg inline-flex">
+      <div className="border-b border-slate-200 overflow-x-auto">
+        <div className="flex gap-1 bg-slate-50 p-1 rounded-lg inline-flex min-w-max">
           <TabButton
             active={activeTab === 'overview'}
             onClick={() => setActiveTab('overview')}
@@ -270,7 +339,7 @@ export default function PatientDetailPage() {
       {/* Tab Content */}
       <div>
         {activeTab === 'overview' && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Visit Summary */}
             <Card className="border-slate-200 shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50">
@@ -489,7 +558,7 @@ export default function PatientDetailPage() {
                 <div className="space-y-3">
                   {completedPrescriptions.map((rx) => (
                     <div key={rx._id} className="p-4 border border-slate-200 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all">
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                         <div className="flex items-start gap-3 flex-1">
                           <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
                             <FileText className="w-5 h-5 text-indigo-600" />
@@ -523,7 +592,7 @@ export default function PatientDetailPage() {
                           size="sm" 
                           variant="outline"
                           onClick={() => navigate(`/prescriptions/${rx._id}`)}
-                          className="ml-3"
+                          className="w-full sm:w-auto sm:ml-3"
                         >
                           View
                         </Button>
@@ -563,7 +632,7 @@ export default function PatientDetailPage() {
                             Visit on {formatDate(file.date)}
                           </div>
                           {file.vitals && (
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs">
                               {file.vitals.height && (
                                 <div className="bg-slate-50 px-2 py-1 rounded">
                                   <span className="text-slate-500">Height:</span>{' '}
@@ -627,7 +696,7 @@ function TabButton({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-md font-medium transition-all flex items-center ${
+      className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center whitespace-nowrap ${
         active
           ? 'bg-white text-indigo-600 shadow-sm'
           : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'

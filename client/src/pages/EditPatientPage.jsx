@@ -301,19 +301,19 @@ export default function EditPatientPage() {
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => navigate(`/patients/${id}`)}
-            className="flex-1"
+            className="flex-1 py-3"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             loading={updatePatientMutation.isPending}
-            className="flex-1"
+            className="flex-1 py-3"
           >
             Update Patient
           </Button>

@@ -11,6 +11,7 @@ import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Spinner } from "../components/ui/Spinner";
 import { DateRangePicker } from "../components/ui/DateRangePicker";
+import { CustomSelect } from "../components/ui/CustomSelect";
 import { AppointmentCard } from "../features/appointments/AppointmentCard";
 import { useAppointments } from "../api/hooks/useAppointments";
 import { useClinicContext } from '../contexts/ClinicContext';
@@ -79,6 +80,7 @@ const AppointmentsPage = () => {
       visitType: visitTypeFilter !== "all" ? visitTypeFilter : undefined,
       startDate,
       endDate,
+      search: searchTerm, // Add search parameter for server-side search
       page,
       limit: pageSize,
     },
@@ -90,7 +92,7 @@ const AppointmentsPage = () => {
   const appointments = appointmentsData?.appointments || [];
   const pagination = appointmentsData?.pagination || { total: 0, page: 1, pages: 1 };
   
-  // Fetch all appointments for counts (without pagination)
+  // Fetch all appointments for counts (without pagination and search)
   const { data: allAppointmentsData } = useAppointments(
     {
       clinic: selectedClinicId,
@@ -142,23 +144,6 @@ const AppointmentsPage = () => {
     
     return counts;
   }, [allAppointments]);
-
-  // Filter appointments by search term (client-side for current page)
-  const filteredAppointments = appointments.filter((apt) => {
-    const searchLower = searchTerm.toLowerCase();
-    
-    // Get patient code
-    const patientCode = apt.patient?.patientCodes?.[0]?.code || '';
-    
-    // Get phone number
-    const phoneNumber = apt.patient?.phone || '';
-    
-    return (
-      apt.patient?.name?.toLowerCase().includes(searchLower) ||
-      patientCode.toLowerCase().includes(searchLower) ||
-      phoneNumber.includes(searchLower)
-    );
-  });
   
   // Clear all filters - remove all URL params
   const handleClearFilters = () => {
@@ -192,16 +177,16 @@ const AppointmentsPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Calendar className="w-8 h-8 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
             Appointments
           </h1>
-          <p className="text-gray-600 mt-1">Manage all clinic appointments</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage all clinic appointments</p>
         </div>
-        <Link to="/appointments/new">
-          <Button>
+        <Link to="/appointments/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             New Appointment
           </Button>
@@ -229,21 +214,24 @@ const AppointmentsPage = () => {
           />
           
           {/* Visit Type Filter */}
-          <select
+          <CustomSelect
+            id="visit-type-filter"
+            name="visitType"
             value={visitTypeFilter}
             onChange={(e) => updateFilters({ visitType: e.target.value, page: 1 })}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-medium text-gray-700 min-w-[150px]"
-          >
-            <option value="all">All Visits ({visitTypeCounts.all})</option>
-            <option value="first_visit">First Visit ({visitTypeCounts.first_visit})</option>
-            <option value="follow_up">Follow Up ({visitTypeCounts.follow_up})</option>
-          </select>
+            ariaLabel="Filter by visit type"
+            options={[
+              { value: 'all', label: `All Visits (${visitTypeCounts.all})` },
+              { value: 'first_visit', label: `First Visit (${visitTypeCounts.first_visit})` },
+              { value: 'follow_up', label: `Follow Up (${visitTypeCounts.follow_up})` },
+            ]}
+          />
           
           {/* Clear Filters Button */}
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium whitespace-nowrap"
+              className="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium whitespace-nowrap"
               title="Clear all filters"
             >
               <X className="w-4 h-4" />
@@ -313,21 +301,21 @@ const AppointmentsPage = () => {
           <Spinner size="lg" />
           <p className="text-gray-600 mt-4">Loading appointments...</p>
         </div>
-      ) : filteredAppointments.length === 0 ? (
+      ) : appointments.length === 0 ? (
         <div>
           <div className="text-center py-12">
             <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {appointments.length === 0
-                ? "No Appointments Yet"
-                : "No Matching Appointments"}
+              {searchTerm || statusFilter !== 'all' || visitTypeFilter !== 'all'
+                ? "No Matching Appointments"
+                : "No Appointments Yet"}
             </h2>
             <p className="text-gray-600 mb-6">
-              {appointments.length === 0
-                ? "Create your first appointment to get started"
-                : "Try adjusting your search or filters"}
+              {searchTerm || statusFilter !== 'all' || visitTypeFilter !== 'all'
+                ? "Try adjusting your search or filters"
+                : "Create your first appointment to get started"}
             </p>
-            {appointments.length === 0 && (
+            {!searchTerm && statusFilter === 'all' && visitTypeFilter === 'all' && (
               <Link to="/appointments/new">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -338,8 +326,8 @@ const AppointmentsPage = () => {
           </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAppointments.map((appointment) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {appointments.map((appointment) => (
             <Link key={appointment._id} to={`/appointments/${appointment._id}`}>
               <AppointmentCard appointment={appointment} />
             </Link>
@@ -349,8 +337,8 @@ const AppointmentsPage = () => {
 
       {/* Pagination */}
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between border-t pt-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={pageSize}
@@ -364,7 +352,7 @@ const AppointmentsPage = () => {
             </select>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"

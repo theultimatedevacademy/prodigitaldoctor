@@ -14,7 +14,7 @@ import {
   Calendar,
   ArrowLeft,
   Plus,
-  Printer,
+  Eye,
   Edit,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -71,7 +71,7 @@ export function PrescriptionBuilder({
   const [stagingMedication, setStagingMedication] = useState(null);
   const [stagingData, setStagingData] = useState({
     dosage: "",
-    frequency: "BID",
+    frequency: "BD",
     duration: "",
     instructions: "",
   });
@@ -148,6 +148,15 @@ export function PrescriptionBuilder({
     name: "medications",
   });
 
+  // Reset state when switching modes or prescription changes
+  useEffect(() => {
+    // Clear saved prescription when entering edit mode or when prescriptionId changes
+    if (isEditMode && prescriptionId) {
+      setSavedPrescription(null);
+      setIsFormInitialized(false);
+    }
+  }, [isEditMode, prescriptionId]);
+
   // Load existing prescription data in edit mode
   useEffect(() => {
     if (isEditMode && existingPrescription && !isFormInitialized) {
@@ -180,7 +189,7 @@ export function PrescriptionBuilder({
     setStagingMedication(medication);
     setStagingData({
       dosage: "",
-      frequency: "BID",
+      frequency: "BD",
       duration: "",
       instructions: "",
     });
@@ -214,7 +223,7 @@ export function PrescriptionBuilder({
     setStagingMedication(null);
     setStagingData({
       dosage: "",
-      frequency: "BID",
+      frequency: "BD",
       duration: "",
       instructions: "",
     });
@@ -225,7 +234,7 @@ export function PrescriptionBuilder({
     setStagingMedication(null);
     setStagingData({
       dosage: "",
-      frequency: "BID",
+      frequency: "BD",
       duration: "",
       instructions: "",
     });
@@ -398,10 +407,14 @@ export function PrescriptionBuilder({
     return <div className="text-center py-8 text-gray-600">Loading...</div>;
   }
 
-  // Show success state after prescription is saved
-  if (savedPrescription) {
-    const handlePrint = () => {
-      window.print();
+  // Show success state after prescription is saved (but not in edit mode)
+  if (savedPrescription && !isEditMode) {
+    // Navigate to prescription preview page
+    const handlePreviewPrescription = () => {
+      // Small delay to ensure prescription is fully saved and available
+      setTimeout(() => {
+        navigate(`/prescriptions/${savedPrescription._id}`);
+      }, 300);
     };
 
     // Navigate back to appointment
@@ -423,6 +436,9 @@ export function PrescriptionBuilder({
           timestamp: Date.now(),
         })
       );
+
+      // Clear saved prescription state to show form in edit mode
+      setSavedPrescription(null);
 
       // Navigate to edit mode
       navigate(
@@ -472,329 +488,134 @@ export function PrescriptionBuilder({
               width: 100%;
               height: 100%;
             }
+            .prescription-page-wrapper {
+              background: white !important;
+              padding: 0 !important;
+            }
             * {
               box-shadow: none !important;
             }
           }
         `}</style>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Success Message - Hidden on print */}
-          <div className="no-print bg-green-50 border-2 border-green-500 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {isEditMode
-                      ? "Prescription Updated Successfully!"
-                      : "Prescription Created Successfully!"}
-                  </h2>
+          <div className="px-4 sm:px-0">
+            <div className="no-print bg-green-50 border-2 border-green-500 rounded-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {isEditMode
+                        ? "Prescription Updated Successfully!"
+                        : "Prescription Created Successfully!"}
+                    </h2>
+                  </div>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 no-print">
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  className="no-print text-nowrap"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Print
-                </Button>
-                {appointmentId && (
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2 sm:gap-3 no-print w-full sm:w-auto">
                   <Button
-                    onClick={backToAppointment}
+                    onClick={handlePreviewPrescription}
                     variant="outline"
-                    className="no-print text-nowrap"
+                    size="sm"
+                    className="no-print text-nowrap flex-1 sm:flex-initial"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Appointment
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview Prescription
                   </Button>
-                )}
-                <Button
-                  onClick={editPrescription}
-                  className="no-print text-nowrap"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Prescription
-                </Button>
+                  {appointmentId && (
+                    <Button
+                      onClick={backToAppointment}
+                      variant="outline"
+                      size="sm"
+                      className="no-print text-nowrap flex-1 sm:flex-initial"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back
+                    </Button>
+                  )}
+                  <Button
+                    onClick={editPrescription}
+                    size="sm"
+                    className="no-print text-nowrap flex-1 sm:flex-initial"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Full Prescription Preview */}
-          <div
-            className="print-container max-w-5xl mx-auto bg-white p-12 shadow-lg border border-gray-300"
-            style={{ fontFamily: "Arial, sans-serif" }}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between border-b-2 border-gray-300 pb-4 mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  PRESCRIPTION
-                </h1>
-              </div>
-              {appointment?.clinic && (
-                <div className="text-right">
-                  <p className="text-lg font-semibold">
-                    {appointment.clinic.name}
-                  </p>
-                  {appointment.clinic.address && (
-                    <p className="text-sm text-gray-600">
-                      {[
-                        appointment.clinic.address.line1,
-                        appointment.clinic.address.line2,
-                        appointment.clinic.address.city,
-                        appointment.clinic.address.state,
-                        appointment.clinic.address.pin,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </p>
-                  )}
-                  {appointment.clinic.phone && (
-                    <p className="text-sm text-gray-600">
-                      Phone: {appointment.clinic.phone}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Doctor Info and Date */}
-            <div className="flex justify-between items-start mb-4">
-              {appointment?.doctor && (
+          {/* Full Prescription Preview - Horizontally scrollable on mobile */}
+          <div className="prescription-page-wrapper bg-gray-100 p-4 sm:p-6 overflow-x-auto">
+            <div
+              className="print-container max-w-5xl mx-auto bg-white shadow-lg"
+              style={{
+                fontFamily: "Arial, sans-serif",
+                padding: "24px",
+                minWidth: "210mm",
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between border-b-2 border-gray-300 pb-4 mb-6">
                 <div>
-                  <p className="text-base font-semibold">
-                    Dr. {appointment.doctor.name}
-                  </p>
-                  {appointment.doctor.specialization && (
-                    <p className="text-sm text-gray-600">
-                      {appointment.doctor.specialization}
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    PRESCRIPTION
+                  </h1>
+                </div>
+                {appointment?.clinic && (
+                  <div className="text-right">
+                    <p className="text-lg font-semibold">
+                      {appointment.clinic.name}
                     </p>
-                  )}
-                  {appointment.doctor.registrationNumber && (
-                    <p className="text-sm text-gray-600">
-                      Reg. No.: {appointment.doctor.registrationNumber}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="text-right">
-                <p className="text-sm">
-                  <span className="font-semibold">Date:</span>{" "}
-                  {(() => {
-                    const dateStr = savedPrescription.createdAt;
-                    const date = new Date(dateStr);
-                    const isoStr =
-                      typeof dateStr === "string"
-                        ? dateStr
-                        : date.toISOString();
-                    const [datePart] = isoStr.split("T");
-                    const [year, month, day] = datePart.split("-");
-                    const monthNames = [
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ];
-                    return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
-                  })()}
-                </p>
-              </div>
-            </div>
-
-            {/* Patient Information */}
-            <div className="border border-gray-300 rounded p-4 mb-6">
-              <h2 className="text-sm font-semibold mb-3 text-gray-700">
-                PATIENT INFORMATION
-              </h2>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p>
-                    <span className="font-semibold">Name:</span>{" "}
-                    {patient?.name || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Age/Gender:</span>{" "}
-                    {patient?.age || "N/A"} years / {patient?.gender || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <span className="font-semibold">Patient ID:</span>{" "}
-                    {patient?.patientCodes?.[0]?.code || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Phone:</span>{" "}
-                    {patient?.phone || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Vitals */}
-            {appointment?.vitals && (
-              <div className="border border-gray-300 rounded p-4 mb-6">
-                <h2 className="text-sm font-semibold mb-3 text-gray-700">
-                  VITALS
-                </h2>
-                <div className="grid grid-cols-4 gap-3 text-sm">
-                  {appointment.vitals.bloodPressureSystolic && (
-                    <div>
-                      <p className="font-semibold">BP:</p>
-                      <p>
-                        {appointment.vitals.bloodPressureSystolic}/
-                        {appointment.vitals.bloodPressureDiastolic} mmHg
+                    {appointment.clinic.address && (
+                      <p className="text-sm text-gray-600">
+                        {[
+                          appointment.clinic.address.line1,
+                          appointment.clinic.address.line2,
+                          appointment.clinic.address.city,
+                          appointment.clinic.address.state,
+                          appointment.clinic.address.pin,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
                       </p>
-                    </div>
-                  )}
-                  {appointment.vitals.pulse && (
-                    <div>
-                      <p className="font-semibold">Pulse:</p>
-                      <p>{appointment.vitals.pulse} bpm</p>
-                    </div>
-                  )}
-                  {appointment.vitals.temperature && (
-                    <div>
-                      <p className="font-semibold">Temp:</p>
-                      <p>{appointment.vitals.temperature}°F</p>
-                    </div>
-                  )}
-                  {appointment.vitals.spo2 && (
-                    <div>
-                      <p className="font-semibold">SpO2:</p>
-                      <p>{appointment.vitals.spo2}%</p>
-                    </div>
-                  )}
-                  {appointment.vitals.weight && (
-                    <div>
-                      <p className="font-semibold">Weight:</p>
-                      <p>{appointment.vitals.weight} kg</p>
-                    </div>
-                  )}
-                  {appointment.vitals.height && (
-                    <div>
-                      <p className="font-semibold">Height:</p>
-                      <p>{appointment.vitals.height} cm</p>
-                    </div>
-                  )}
-                  {bmi && (
-                    <div>
-                      <p className="font-semibold">BMI:</p>
-                      <p>{bmi}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Clinical Notes */}
-            {appointment?.clinicalNotes && (
-              <div className="border border-gray-300 rounded p-4 mb-6">
-                <h2 className="text-sm font-semibold mb-3 text-gray-700">
-                  CLINICAL NOTES
-                </h2>
-                <div className="space-y-2 text-sm">
-                  {appointment.clinicalNotes.chiefComplaint && (
-                    <p>
-                      <span className="font-semibold">Chief Complaint:</span>{" "}
-                      {appointment.clinicalNotes.chiefComplaint}
-                    </p>
-                  )}
-                  {appointment.clinicalNotes.symptoms && (
-                    <p>
-                      <span className="font-semibold">Symptoms:</span>{" "}
-                      {appointment.clinicalNotes.symptoms}
-                    </p>
-                  )}
-                  {appointment.clinicalNotes.examination && (
-                    <p>
-                      <span className="font-semibold">Examination:</span>{" "}
-                      {appointment.clinicalNotes.examination}
-                    </p>
-                  )}
-                  {appointment.clinicalNotes.diagnosis && (
-                    <p>
-                      <span className="font-semibold">Diagnosis:</span>{" "}
-                      {appointment.clinicalNotes.diagnosis}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Medications */}
-            <div className="mb-6">
-              <h2 className="text-base font-semibold mb-4 pb-2 border-b-2 border-gray-300">
-                Rx
-              </h2>
-              <div className="space-y-4">
-                {savedPrescription.meds?.map((med, index) => (
-                  <div key={index} className="border-b border-gray-200 pb-3">
-                    <div className="flex items-start">
-                      <span className="font-semibold mr-2">{index + 1}.</span>
-                      <div className="flex-1">
-                        <p className="font-semibold text-base">
-                          {med.medication?.brandName ||
-                            med.medication?.genericName ||
-                            "Medication"}
-                        </p>
-                        {med.medication?.exact_composition && (
-                          <p className="text-xs italic text-gray-600 mt-1">
-                            {med.medication.exact_composition}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-800 mt-2">
-                          <span className="font-semibold">Dosage:</span>{" "}
-                          {med.dosage} |{" "}
-                          <span className="font-semibold">Frequency:</span>{" "}
-                          {med.frequency} |{" "}
-                          <span className="font-semibold">Duration:</span>{" "}
-                          {med.duration}
-                        </p>
-                        {med.notes && (
-                          <p className="text-sm text-gray-600 mt-1 italic">
-                            {med.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    )}
+                    {(appointment.clinic.contact?.phone || appointment.clinic.phone) && (
+                      <p className="text-sm text-gray-600">
+                        Phone: {appointment.clinic.contact?.phone || appointment.clinic.phone}
+                      </p>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
 
-            {/* Additional Notes */}
-            {savedPrescription.notes && (
-              <div className="mb-6">
-                <h2 className="text-sm font-semibold mb-2 text-gray-700">
-                  ADDITIONAL NOTES
-                </h2>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {savedPrescription.notes}
-                </p>
-              </div>
-            )}
+              {/* Doctor Info and Date */}
+              <div className="flex justify-between items-start mb-4">
+                {appointment?.doctor && (
+                  <div>
+                    <p className="text-base font-semibold">
+                      Dr. {appointment.doctor.name}
+                    </p>
+                    {appointment.doctor.specialization && (
+                      <p className="text-sm text-gray-600">
+                        {appointment.doctor.specialization}
+                      </p>
+                    )}
+                    {appointment.doctor.registrationNumber && (
+                      <p className="text-sm text-gray-600">
+                        Reg. No.: {appointment.doctor.registrationNumber}
+                      </p>
+                    )}
+                  </div>
+                )}
 
-            {/* Footer */}
-            <div className="mt-12 pt-6 border-t border-gray-300">
-              <div className="flex justify-between items-end">
-                <div className="text-xs text-gray-600">
-                  <p>Electronically generated by Ocura360</p>
-                  <p className="mt-1">
-                    Generated on:{" "}
+                <div className="text-right">
+                  <p className="text-sm">
+                    <span className="font-semibold">Date:</span>{" "}
                     {(() => {
                       const dateStr = savedPrescription.createdAt;
                       const date = new Date(dateStr);
@@ -802,9 +623,8 @@ export function PrescriptionBuilder({
                         typeof dateStr === "string"
                           ? dateStr
                           : date.toISOString();
-                      const [datePart, timePart] = isoStr.split("T");
+                      const [datePart] = isoStr.split("T");
                       const [year, month, day] = datePart.split("-");
-                      const [hour, minute] = timePart.split(":");
                       const monthNames = [
                         "Jan",
                         "Feb",
@@ -819,27 +639,231 @@ export function PrescriptionBuilder({
                         "Nov",
                         "Dec",
                       ];
-                      const formattedDate = `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
-                      let hourNum = parseInt(hour);
-                      const ampm = hourNum >= 12 ? "PM" : "AM";
-                      hourNum = hourNum % 12 || 12;
-                      const formattedTime = `${hourNum.toString().padStart(2, "0")}:${minute} ${ampm}`;
-                      return `${formattedDate} at ${formattedTime}`;
+                      return `${parseInt(day)} ${monthNames[parseInt(month) - 1]} ${year}`;
                     })()}
                   </p>
                 </div>
-                <div className="text-center">
-                  <div
-                    className="border-t-2 border-gray-800 pt-2 mt-8"
-                    style={{ minWidth: "200px" }}
-                  >
-                    <p className="text-sm font-semibold">
-                      Dr. {appointment?.doctor?.name}
+              </div>
+
+              {/* Patient Information */}
+              <div className="border border-gray-300 rounded p-4 mb-6">
+                <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                  PATIENT INFORMATION
+                </h2>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p>
+                      <span className="font-semibold">Name:</span>{" "}
+                      {patient?.name || "N/A"}
                     </p>
-                    <p className="text-xs text-gray-600">
-                      Authorized Signature
+                    <p>
+                      <span className="font-semibold">Age/Gender:</span>{" "}
+                      {patient?.age || "N/A"} years / {patient?.gender || "N/A"}
                     </p>
                   </div>
+                  <div>
+                    <p>
+                      <span className="font-semibold">Patient ID:</span>{" "}
+                      {patient?.patientCodes?.[0]?.code || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {patient?.phone || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vitals */}
+              {appointment?.vitals && (
+                <div className="border border-gray-300 rounded p-4 mb-6">
+                  <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                    VITALS
+                  </h2>
+                  <div className="grid grid-cols-4 gap-3 text-sm">
+                    {appointment.vitals.bloodPressureSystolic && (
+                      <div>
+                        <p className="font-semibold">BP:</p>
+                        <p>
+                          {appointment.vitals.bloodPressureSystolic}/
+                          {appointment.vitals.bloodPressureDiastolic} mmHg
+                        </p>
+                      </div>
+                    )}
+                    {appointment.vitals.pulse && (
+                      <div>
+                        <p className="font-semibold">Pulse:</p>
+                        <p>{appointment.vitals.pulse} bpm</p>
+                      </div>
+                    )}
+                    {appointment.vitals.temperature && (
+                      <div>
+                        <p className="font-semibold">Temp:</p>
+                        <p>{Number(appointment.vitals.temperature).toFixed(1)}°F</p>
+                      </div>
+                    )}
+                    {appointment.vitals.spo2 && (
+                      <div>
+                        <p className="font-semibold">SpO2:</p>
+                        <p>{appointment.vitals.spo2}%</p>
+                      </div>
+                    )}
+                    {appointment.vitals.weight && (
+                      <div>
+                        <p className="font-semibold">Weight:</p>
+                        <p>{appointment.vitals.weight} kg</p>
+                      </div>
+                    )}
+                    {appointment.vitals.height && (
+                      <div>
+                        <p className="font-semibold">Height:</p>
+                        <p>{appointment.vitals.height} cm</p>
+                      </div>
+                    )}
+                    {bmi && (
+                      <div>
+                        <p className="font-semibold">BMI:</p>
+                        <p>{bmi}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Clinical Notes */}
+              {appointment?.clinicalNotes && (
+                <div className="border border-gray-300 rounded p-4 mb-6">
+                  <h2 className="text-sm font-semibold mb-3 text-gray-700">
+                    CLINICAL NOTES
+                  </h2>
+                  <div className="space-y-2 text-sm">
+                    {appointment.clinicalNotes.chiefComplaint && (
+                      <p className="leading-none">
+                        <span className="font-semibold">Chief Complaint:</span>{" "}
+                        <span className="whitespace-pre-wrap">
+                          {appointment.clinicalNotes.chiefComplaint}
+                        </span>
+                      </p>
+                    )}
+                    {appointment.clinicalNotes.symptoms && (
+                      <p className="leading-none">
+                        <span className="font-semibold">Symptoms:</span>{" "}
+                        <span className="whitespace-pre-wrap">
+                          {appointment.clinicalNotes.symptoms}
+                        </span>
+                      </p>
+                    )}
+                    {appointment.clinicalNotes.examination && (
+                      <p className="leading-none">
+                        <span className="font-semibold">Examination:</span>{" "}
+                        <span className="whitespace-pre-wrap">
+                          {appointment.clinicalNotes.examination}
+                        </span>
+                      </p>
+                    )}
+                    {appointment.clinicalNotes.diagnosis && (
+                      <p className="leading-none">
+                        <span className="font-semibold">Diagnosis:</span>{" "}
+                        <span className="whitespace-pre-wrap">
+                          {appointment.clinicalNotes.diagnosis}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Medications */}
+              <div className="mb-6">
+                <h2 className="text-base font-semibold mb-4 pb-2 border-b-2 border-gray-300">
+                  Rx
+                </h2>
+                <div className="space-y-4">
+                  {savedPrescription.meds?.map((med, index) => (
+                    <div key={index} className="border-b border-gray-200 pb-3">
+                      <div className="flex items-start">
+                        <span className="font-semibold mr-2">{index + 1}.</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-base">
+                            {med.medication?.brandName ||
+                              med.medication?.genericName ||
+                              "Medication"}
+                          </p>
+                          {med.medication?.exact_composition && (
+                            <p className="text-xs italic text-gray-600 mt-1">
+                              {med.medication.exact_composition}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-800 mt-2">
+                            <span className="font-semibold">Dosage:</span>{" "}
+                            {med.dosage} |{" "}
+                            <span className="font-semibold">Frequency:</span>{" "}
+                            {med.frequency} |{" "}
+                            <span className="font-semibold">Duration:</span>{" "}
+                            {med.duration}
+                          </p>
+                          {med.notes && (
+                            <p className="text-sm text-gray-600 mt-1 italic">
+                              {med.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Additional Notes */}
+              {savedPrescription.notes && (
+                <div className="mb-6">
+                  <h2 className="text-sm font-semibold mb-2 text-gray-700">
+                    ADDITIONAL NOTES
+                  </h2>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {savedPrescription.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="mt-12 pt-6 border-t border-gray-300">
+                <div className="text-xs text-gray-600">
+                  <p>Electronically generated by Ocura360</p>
+                  <p className="mt-1">
+                    Generated on:{" "}
+                    {(() => {
+                      const now = new Date();
+                      const day = now.getDate();
+                      const monthNames = [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                      ];
+                      const month = monthNames[now.getMonth()];
+                      const year = now.getFullYear();
+                      const hours = now.getHours().toString().padStart(2, "0");
+                      const minutes = now
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0");
+                      return `${day} ${month} ${year} at ${hours}:${minutes}`;
+                    })()}
+                  </p>
+                  {appointment?.doctor?.name && (
+                    <p className="mt-1">
+                      Digitally signed by Dr. {appointment.doctor.name}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -907,9 +931,9 @@ export function PrescriptionBuilder({
                     .join(", ")}
                 </p>
               )}
-              {appointment.clinic.phone && (
+              {(appointment.clinic.contact?.phone || appointment.clinic.phone) && (
                 <p className="text-xs text-gray-600">
-                  Phone: {appointment.clinic.phone}
+                  Phone: {appointment.clinic.contact?.phone || appointment.clinic.phone}
                 </p>
               )}
             </div>
@@ -1056,7 +1080,7 @@ export function PrescriptionBuilder({
               {appointment.vitals.temperature && (
                 <div>
                   <p className="font-semibold">Temp:</p>
-                  <p>{appointment.vitals.temperature}°F</p>
+                  <p>{Number(appointment.vitals.temperature).toFixed(1)}°F</p>
                 </div>
               )}
               {appointment.vitals.spo2 && (
@@ -1095,27 +1119,35 @@ export function PrescriptionBuilder({
             </h3>
             <div className="space-y-1 text-xs">
               {appointment.clinicalNotes.chiefComplaint && (
-                <p>
+                <p className="leading-none">
                   <span className="font-semibold">Chief Complaint:</span>{" "}
-                  {appointment.clinicalNotes.chiefComplaint}
+                  <span className="whitespace-pre-wrap">
+                    {appointment.clinicalNotes.chiefComplaint}
+                  </span>
                 </p>
               )}
               {appointment.clinicalNotes.symptoms && (
-                <p>
+                <p className="leading-none">
                   <span className="font-semibold">Symptoms:</span>{" "}
-                  {appointment.clinicalNotes.symptoms}
+                  <span className="whitespace-pre-wrap">
+                    {appointment.clinicalNotes.symptoms}
+                  </span>
                 </p>
               )}
               {appointment.clinicalNotes.examination && (
-                <p>
+                <p className="leading-none">
                   <span className="font-semibold">Examination:</span>{" "}
-                  {appointment.clinicalNotes.examination}
+                  <span className="whitespace-pre-wrap">
+                    {appointment.clinicalNotes.examination}
+                  </span>
                 </p>
               )}
               {appointment.clinicalNotes.diagnosis && (
-                <p>
+                <p className="leading-none">
                   <span className="font-semibold">Diagnosis:</span>{" "}
-                  {appointment.clinicalNotes.diagnosis}
+                  <span className="whitespace-pre-wrap">
+                    {appointment.clinicalNotes.diagnosis}
+                  </span>
                 </p>
               )}
             </div>
@@ -1215,15 +1247,383 @@ export function PrescriptionBuilder({
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Dosage *"
-                placeholder="e.g., 500 mg"
-                value={stagingData.dosage}
-                onChange={(e) =>
-                  setStagingData({ ...stagingData, dosage: e.target.value })
-                }
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {/* Dosage Field */}
+              <div>
+                <Input
+                  label="Dosage *"
+                  placeholder="e.g., 500 mg"
+                  value={stagingData.dosage}
+                  onChange={(e) =>
+                    setStagingData({ ...stagingData, dosage: e.target.value })
+                  }
+                />
+                {/* Quick Dosage Selectors based on medication form */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/tablet|tab\b/) ||
+                    stagingMedication?.form === "Tablet") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 Tablet" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 Tablet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "1/2 Tablets",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1/2 Tablets
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "1/4 Tablet",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1/4 Tablet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/capsule|cap\b/) ||
+                    stagingMedication?.form === "Capsule") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "1 Capsule",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 Capsule
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "2 Capsules",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        2 Capsules
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/syrup|suspension|liquid|bottle/) ||
+                    stagingMedication?.form === "Syrup") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "5 ml" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        5 ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "10 ml" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        10 ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "15 ml" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        15 ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/injection|inj\b|vial|ampoule/) ||
+                    stagingMedication?.form === "Injection") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 ml" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "2 ml" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        2 ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/cream|ointment|gel|lotion/) ||
+                    ["Cream", "Ointment", "Gel", "Lotion"].includes(
+                      stagingMedication?.form
+                    )) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Apply thin layer",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        Thin layer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/drop|drops/) ||
+                    stagingMedication?.form === "/Drop/") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 drop" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 drop
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "2 drops" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        2 drops
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "3 drops" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        3 drops
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/powder|sachet/) ||
+                    ["Powder", "Sachet"].includes(stagingMedication?.form)) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 sachet" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 sachet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "1 teaspoon",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 tsp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form?.toLowerCase().match(/patch/) ||
+                    stagingMedication?.form === "Patch") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 patch" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 patch
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                  {(stagingMedication?.form
+                    ?.toLowerCase()
+                    .match(/inhaler|puff/) ||
+                    stagingMedication?.form === "Inhaler") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "1 puff" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        1 puff
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({ ...stagingData, dosage: "2 puffs" })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        2 puffs
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStagingData({
+                            ...stagingData,
+                            dosage: "Use as directed",
+                          })
+                        }
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                      >
+                        As directed
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Frequency Field */}
               <Select
                 label="Frequency"
                 options={MEDICATION_FREQUENCIES}
@@ -1232,14 +1632,77 @@ export function PrescriptionBuilder({
                   setStagingData({ ...stagingData, frequency: e.target.value })
                 }
               />
-              <Input
-                label="Duration *"
-                placeholder="e.g., 5 days"
-                value={stagingData.duration}
-                onChange={(e) =>
-                  setStagingData({ ...stagingData, duration: e.target.value })
-                }
-              />
+
+              {/* Duration Field */}
+              <div>
+                <Input
+                  label="Duration *"
+                  placeholder="e.g., 5 days"
+                  value={stagingData.duration}
+                  onChange={(e) =>
+                    setStagingData({ ...stagingData, duration: e.target.value })
+                  }
+                />
+                {/* Quick Duration Selectors */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "1 day" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    1 day
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "3 days" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    3 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "5 days" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    5 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "7 days" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    7 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "15 days" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    15 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStagingData({ ...stagingData, duration: "30 days" })
+                    }
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                  >
+                    30 days
+                  </button>
+                </div>
+              </div>
+
+              {/* Instructions Field */}
               <Textarea
                 label="Instructions"
                 placeholder="e.g., Take with food"
@@ -1254,8 +1717,12 @@ export function PrescriptionBuilder({
               />
             </div>
 
-            <div className="flex gap-2 mt-4">
-              <Button type="button" onClick={handleAddMedication}>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+              <Button
+                type="button"
+                onClick={handleAddMedication}
+                className="w-full sm:w-auto px-4 py-2.5 sm:px-4 sm:py-2"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add to Prescription
               </Button>
@@ -1263,6 +1730,7 @@ export function PrescriptionBuilder({
                 type="button"
                 variant="outline"
                 onClick={handleCancelStaging}
+                className="w-full sm:w-auto px-4 py-2.5 sm:px-4 sm:py-2"
               >
                 Cancel
               </Button>
@@ -1283,47 +1751,55 @@ export function PrescriptionBuilder({
                 return (
                   <div
                     key={field.id}
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+                    className="border border-gray-300 rounded-lg p-3 sm:p-4 bg-gray-50"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* Medication Name - Mobile: Stack, Desktop: Inline */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <h4 className="font-medium text-sm sm:text-base break-words">
                             {medication?.brandName || "Medication"}
                           </h4>
-                          <span className="text-xs text-gray-500">
-                            ({medication?.genericName})
-                          </span>
+                          {medication?.exact_composition && (
+                            <span className="text-xs text-gray-500 break-words">
+                              ({medication.exact_composition})
+                            </span>
+                          )}
                         </div>
-                        <div className="mt-2 text-sm text-gray-700 space-y-1">
-                          <p>
+                        {/* Medication Details */}
+                        <div className="mt-2 text-xs sm:text-sm text-gray-700 space-y-1">
+                          <p className="break-words">
                             <span className="font-medium">Dosage:</span>{" "}
                             {medData.dosage}
                           </p>
-                          <p>
+                          <p className="break-words">
                             <span className="font-medium">Frequency:</span>{" "}
                             {medData.frequency}
                           </p>
-                          <p>
+                          <p className="break-words">
                             <span className="font-medium">Duration:</span>{" "}
                             {medData.duration}
                           </p>
                           {medData.instructions && (
-                            <p>
+                            <p className="break-words">
                               <span className="font-medium">Instructions:</span>{" "}
                               {medData.instructions}
                             </p>
                           )}
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMedication(index)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
+                      {/* Delete Button - Mobile: Full width at bottom, Desktop: Right side */}
+                      <div className="flex sm:block justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveMedication(index)}
+                          className="sm:ml-2"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );

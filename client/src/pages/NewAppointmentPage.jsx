@@ -259,11 +259,11 @@ const NewAppointmentPage = () => {
           Back to Appointments
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <Calendar className="w-8 h-8 text-blue-600" />
           New Appointment
         </h1>
-        <p className="text-gray-600 mt-2">Book a new appointment for patient</p>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">Book a new appointment for patient</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -334,16 +334,16 @@ const NewAppointmentPage = () => {
 
         {/* Actions */}
         {!isLoadingDoctors && doctors.length > 0 && (
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate('/appointments')}
-              className="flex-1"
+              className="flex-1 py-3"
             >
               Cancel
             </Button>
-            <Button type="submit" loading={isPending} className="flex-1">
+            <Button type="submit" loading={isPending} className="flex-1 py-3">
               <Calendar className="w-4 h-4 mr-2" />
               Create Appointment
             </Button>

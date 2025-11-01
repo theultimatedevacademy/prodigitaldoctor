@@ -45,10 +45,10 @@ export function NotificationBell() {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         aria-label="Notifications"
       >
-        <Bell className="w-6 h-6" />
+        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
         {pendingCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {pendingCount > 9 ? "9+" : pendingCount}
@@ -58,7 +58,7 @@ export function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <div className="fixed sm:absolute top-[60px] sm:top-full right-0 left-0 sm:left-auto mt-0 sm:mt-2 mx-4 sm:mx-0 w-auto sm:w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h3 className="text-sm font-semibold text-gray-900">

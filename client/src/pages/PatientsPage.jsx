@@ -13,6 +13,7 @@ import { Spinner } from '../components/ui/Spinner';
 import { Alert } from '../components/ui/Alert';
 import { SearchInput } from '../components/ui/SearchInput';
 import { DateRangePicker } from '../components/ui/DateRangePicker';
+import { CustomSelect } from '../components/ui/CustomSelect';
 import { usePatients } from '../api/hooks/usePatients';
 import { useClinicContext } from '../contexts/ClinicContext';
 import { formatDate, formatPhone } from '../utils/formatters';
@@ -70,10 +71,11 @@ export default function PatientsPage() {
     setSearchParams(newParams);
   };
   
-  // Fetch data
+  // Fetch data with server-side search
   const { data: patientsData, isLoading } = usePatients(selectedClinicId, {
     page,
     limit: pageSize,
+    search: searchTerm, // Add search parameter for server-side search
   });
   
   const patients = patientsData?.patients || [];
@@ -99,23 +101,10 @@ export default function PatientsPage() {
     return date >= start && date <= end;
   };
   
-  // Apply client-side filters
+  // Apply client-side filters for additional filters not supported by backend
+  // (gender, bloodGroup, ageRange, dateRange remain client-side for now)
   const filteredPatients = useMemo(() => {
     return patients.filter((patient) => {
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const patientCode = patient.patientCodes?.[0]?.code || '';
-        const phoneNumber = patient.phone || '';
-        
-        const matchesSearch = 
-          patient.name?.toLowerCase().includes(searchLower) ||
-          patientCode.toLowerCase().includes(searchLower) ||
-          phoneNumber.includes(searchLower);
-        
-        if (!matchesSearch) return false;
-      }
-      
       // Gender filter
       if (genderFilter !== 'all' && patient.gender !== genderFilter) {
         return false;
@@ -142,7 +131,7 @@ export default function PatientsPage() {
       
       return true;
     });
-  }, [patients, searchTerm, genderFilter, bloodGroupFilter, ageRangeFilter, startDate, endDate]);
+  }, [patients, genderFilter, bloodGroupFilter, ageRangeFilter, startDate, endDate]);
   
   // Clear all filters
   const handleClearFilters = () => {
@@ -166,13 +155,13 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
             Patients
           </h1>
-          <p className="text-gray-600 mt-1">Manage all clinic patients</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage all clinic patients</p>
         </div>
       </div>
       
@@ -197,54 +186,63 @@ export default function PatientsPage() {
           />
           
           {/* Gender Filter */}
-          <select
+          <CustomSelect
+            id="gender-filter"
+            name="gender"
             value={genderFilter}
             onChange={(e) => updateFilters({ gender: e.target.value, page: 1 })}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-medium text-gray-700 min-w-[140px]"
-          >
-            <option value="all">All Genders</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-            <option value="O">Other</option>
-            <option value="U">Not Specified</option>
-          </select>
+            ariaLabel="Filter by gender"
+            options={[
+              { value: 'all', label: 'All Genders' },
+              { value: 'M', label: 'Male' },
+              { value: 'F', label: 'Female' },
+              { value: 'O', label: 'Other' },
+              { value: 'U', label: 'Not Specified' },
+            ]}
+          />
           
           {/* Blood Group Filter */}
-          <select
+          <CustomSelect
+            id="blood-group-filter"
+            name="bloodGroup"
             value={bloodGroupFilter}
             onChange={(e) => updateFilters({ bloodGroup: e.target.value, page: 1 })}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-medium text-gray-700 min-w-[140px]"
-          >
-            <option value="all">All Blood Groups</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-          </select>
+            ariaLabel="Filter by blood group"
+            options={[
+              { value: 'all', label: 'All Blood Groups' },
+              { value: 'A+', label: 'A+' },
+              { value: 'A-', label: 'A-' },
+              { value: 'B+', label: 'B+' },
+              { value: 'B-', label: 'B-' },
+              { value: 'O+', label: 'O+' },
+              { value: 'O-', label: 'O-' },
+              { value: 'AB+', label: 'AB+' },
+              { value: 'AB-', label: 'AB-' },
+            ]}
+          />
           
           {/* Age Range Filter */}
-          <select
+          <CustomSelect
+            id="age-range-filter"
+            name="ageRange"
             value={ageRangeFilter}
             onChange={(e) => updateFilters({ ageRange: e.target.value, page: 1 })}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-medium text-gray-700 min-w-[140px]"
-          >
-            <option value="all">All Ages</option>
-            <option value="0-18">0-18 years</option>
-            <option value="19-30">19-30 years</option>
-            <option value="31-45">31-45 years</option>
-            <option value="46-60">46-60 years</option>
-            <option value="60+">60+ years</option>
-          </select>
+            ariaLabel="Filter by age range"
+            options={[
+              { value: 'all', label: 'All Ages' },
+              { value: '0-18', label: '0-18 years' },
+              { value: '19-30', label: '19-30 years' },
+              { value: '31-45', label: '31-45 years' },
+              { value: '46-60', label: '46-60 years' },
+              { value: '60+', label: '60+ years' },
+            ]}
+          />
           
           {/* Clear Filters Button */}
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium whitespace-nowrap"
+              className="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium whitespace-nowrap"
               title="Clear all filters"
             >
               <X className="w-4 h-4" />
@@ -261,9 +259,9 @@ export default function PatientsPage() {
           <p className="mt-4 text-gray-600">Loading patients...</p>
         </div>
       ) : filteredPatients.length > 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+        <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full divide-y divide-gray-200" style={{ minWidth: '800px' }}>
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -389,8 +387,8 @@ export default function PatientsPage() {
       
       {/* Pagination */}
       {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-between border-t pt-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={pageSize}
@@ -407,7 +405,7 @@ export default function PatientsPage() {
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"

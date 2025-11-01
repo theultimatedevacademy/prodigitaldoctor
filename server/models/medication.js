@@ -11,7 +11,7 @@ import mongoose, { Schema } from "mongoose";
 const MedicationSchema = new Schema({
   brandName: { type: String, index: true },
   genericName: { type: String, index: true },
-  unique_composition: [{ type: Schema.Types.ObjectId, ref: "Composition", index: true }],
+  unique_composition: [{ type: Schema.Types.ObjectId, ref: "Composition" }],
   exact_composition: String, // Raw composition string (e.g., "Paracetamol 500mg + Caffeine 50mg")
   form: String, // Tablet, Capsule, Syrup, Injection, etc.
   manufacturer: String,

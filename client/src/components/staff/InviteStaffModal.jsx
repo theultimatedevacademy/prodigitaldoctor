@@ -2,24 +2,24 @@
  * InviteStaffModal - Modal to invite staff members to clinic
  */
 
-import { useState } from 'react';
-import { X, UserPlus } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { post } from '../../api/apiClient';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState } from "react";
+import { X, UserPlus } from "lucide-react";
+import { Button } from "../ui/Button";
+import { post } from "../../api/apiClient";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function InviteStaffModal({ clinicId, onClose }) {
   const queryClient = useQueryClient();
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('doctor');
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("doctor");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error('Please enter an email address');
+      toast.error("Please enter an email address");
       return;
     }
 
@@ -27,42 +27,48 @@ export function InviteStaffModal({ clinicId, onClose }) {
 
     try {
       await post(`/clinics/${clinicId}/invite`, { email, role });
-      
-      toast.success('Invitation sent successfully!');
-      
+
+      toast.success("Invitation sent successfully!");
+
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['clinics'] });
-      queryClient.invalidateQueries({ queryKey: ['clinic', clinicId] });
-      
+      queryClient.invalidateQueries({ queryKey: ["clinics"] });
+      queryClient.invalidateQueries({ queryKey: ["clinic", clinicId] });
+
       onClose();
     } catch (error) {
-      console.error('Error inviting staff:', error);
-      
+      console.error("Error inviting staff:", error);
+
       // Check if user not found (404 error or error message contains "not found")
-      const isUserNotFound = 
-        error.status === 404 || 
-        error.data?.error?.includes('not found') ||
-        error.message?.includes('not found on platform');
-      
+      const isUserNotFound =
+        error.status === 404 ||
+        error.data?.error?.includes("not found") ||
+        error.message?.includes("not found on platform");
+
       if (isUserNotFound) {
         toast.warning(
-          'User not found! The email address may be incorrect, or the user has not signed up on the platform yet. Please verify the email or ask them to create an account first.',
+          "User not found! The email address may be incorrect, or the user has not signed up on the platform yet. Please verify the email or ask them to create an account first.",
           { autoClose: 6000 }
         );
-      } else if (error.data?.error === 'Cannot invite clinic owner as staff') {
-        toast.error('Cannot invite the clinic owner as a staff member.');
-      } else if (error.data?.error === 'User already invited or is a staff member') {
-        toast.error('This user has already been invited or is already a staff member.');
+      } else if (error.data?.error === "Cannot invite clinic owner as staff") {
+        toast.error("Cannot invite the clinic owner as a staff member.");
+      } else if (
+        error.data?.error === "User already invited or is a staff member"
+      ) {
+        toast.error(
+          "This user has already been invited or is already a staff member."
+        );
       } else {
-        toast.error(error.data?.error || error.message || 'Failed to send invitation');
+        toast.error(
+          error.data?.error || error.message || "Failed to send invitation"
+        );
       }
-      
+
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -70,7 +76,9 @@ export function InviteStaffModal({ clinicId, onClose }) {
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
               <UserPlus className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Invite Staff Member</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Invite Staff Member
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -113,14 +121,15 @@ export function InviteStaffModal({ clinicId, onClose }) {
                   type="radio"
                   name="role"
                   value="doctor"
-                  checked={role === 'doctor'}
+                  checked={role === "doctor"}
                   onChange={(e) => setRole(e.target.value)}
                   className="mr-3"
                 />
                 <div>
                   <div className="font-medium text-gray-900">Doctor</div>
                   <div className="text-xs text-gray-600">
-                    Can manage patients, create prescriptions, view own appointments
+                    Can manage patients, create prescriptions, view own
+                    appointments
                   </div>
                 </div>
               </label>
@@ -130,14 +139,15 @@ export function InviteStaffModal({ clinicId, onClose }) {
                   type="radio"
                   name="role"
                   value="staff"
-                  checked={role === 'staff'}
+                  checked={role === "staff"}
                   onChange={(e) => setRole(e.target.value)}
                   className="mr-3"
                 />
                 <div>
                   <div className="font-medium text-gray-900">Staff</div>
                   <div className="text-xs text-gray-600">
-                    Can manage appointments, view patients, cannot create prescriptions
+                    Can manage appointments, view patients, cannot create
+                    prescriptions
                   </div>
                 </div>
               </label>
@@ -155,12 +165,8 @@ export function InviteStaffModal({ clinicId, onClose }) {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Sending...' : 'Send Invitation'}
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Sending..." : "Send Invitation"}
             </Button>
           </div>
         </form>

@@ -3,6 +3,7 @@
  * Dropdown to select active clinic with role badges
  */
 
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import {
   Building2,
@@ -62,9 +63,26 @@ export function ClinicSelector() {
     switchClinic,
     isLoading: isContextLoading,
   } = useClinicContext();
+  
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const clinics = user?.clinics || [];
   const isLoading = isContextLoading;
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
   if (isLoading) {
     return (
@@ -85,24 +103,21 @@ export function ClinicSelector() {
   const RoleIcon = roleBadge?.icon;
 
   return (
-    <div className="relative">
+    <div ref={dropdownRef} className="relative w-full sm:w-auto">
       <button
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors border-2 border-transparent"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors border-2 border-transparent w-full sm:w-auto"
         aria-label="Select clinic"
-        onClick={(e) => {
-          const dropdown = e.currentTarget.nextElementSibling;
-          dropdown.classList.toggle("hidden");
-        }}
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <Building2 className="w-5 h-5 text-blue-600" />
-        <div className="text-left flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-900">
+        <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+        <div className="text-left flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-xs sm:text-sm font-medium text-gray-900 truncate">
               {selectedClinic?.name || "Select Clinic"}
             </span>
             {roleBadge && RoleIcon && (
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${roleBadge.bgColor} ${roleBadge.textColor}`}
+                className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${roleBadge.bgColor} ${roleBadge.textColor} flex-shrink-0`}
               >
                 <RoleIcon className="w-3 h-3 mr-1" />
                 {roleBadge.label}
@@ -110,16 +125,18 @@ export function ClinicSelector() {
             )}
           </div>
           {selectedClinic?.address?.city && (
-            <div className="text-xs text-gray-500 truncate max-w-[200px]">
+            <div className="hidden sm:block text-xs text-gray-500 truncate max-w-[200px]">
               {selectedClinic.address.city}
             </div>
           )}
         </div>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
       </button>
 
       {/* Dropdown menu */}
-      <div className="hidden absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+      <div className={`${
+        isOpen ? 'block' : 'hidden'
+      } fixed sm:absolute top-[60px] sm:top-full left-0 right-0 sm:left-auto sm:right-0 mt-0 sm:mt-2 mx-4 sm:mx-0 w-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50`}>
         <div className="p-2 max-h-96 overflow-y-auto">
           {clinics.map((clinic) => {
             const clinicBadge = getRoleBadge(clinic.userRole);
@@ -130,10 +147,7 @@ export function ClinicSelector() {
                 key={clinic._id}
                 onClick={() => {
                   switchClinic(clinic);
-                  // Close dropdown
-                  document
-                    .querySelector(".relative button")
-                    .nextElementSibling.classList.add("hidden");
+                  setIsOpen(false);
                 }}
                 className={`w-full text-left px-3 py-2 rounded-md transition-colors border-2 ${
                   clinic._id === selectedClinic?._id

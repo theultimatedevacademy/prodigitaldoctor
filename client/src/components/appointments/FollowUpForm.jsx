@@ -522,7 +522,7 @@ const FollowUpForm = ({
           )}
 
           {/* Quick Date Selector */}
-          <div className="mt-3 grid grid-cols-6 gap-2">
+          <div className="mt-3 grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-6 gap-2">
             {quickDates.map((quickDate) => (
               <button
                 key={quickDate.value}
@@ -530,7 +530,7 @@ const FollowUpForm = ({
                 onClick={() =>
                   onChange({ target: { name: "date", value: quickDate.value } })
                 }
-                className={`col-span-2 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                className={`px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                   formData.date === quickDate.value
                     ? "bg-blue-500 text-white border-blue-500"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50"
@@ -548,12 +548,12 @@ const FollowUpForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Time *
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {/* Hour */}
             <select
               value={timeHour}
               onChange={(e) => handleTimeChange("hour", e.target.value)}
-              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`flex-1 px-2 sm:px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                 errors.time ? "border-red-500" : "border-gray-300"
               }`}
             >
@@ -573,7 +573,7 @@ const FollowUpForm = ({
             <select
               value={timeMinute}
               onChange={(e) => handleTimeChange("minute", e.target.value)}
-              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`flex-1 px-2 sm:px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                 errors.time ? "border-red-500" : "border-gray-300"
               }`}
             >
@@ -589,7 +589,7 @@ const FollowUpForm = ({
             <select
               value={timePeriod}
               onChange={(e) => handleTimeChange("period", e.target.value)}
-              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`flex-1 px-2 sm:px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                 errors.time ? "border-red-500" : "border-gray-300"
               }`}
             >
@@ -602,7 +602,7 @@ const FollowUpForm = ({
           )}
 
           {/* Quick Time Selector */}
-          <div className="mt-3 grid grid-cols-6 gap-2">
+          <div className="mt-3 grid grid-cols-3 sm:grid-cols-6 gap-2">
             {quickTimes.map((quickTime) => (
               <button
                 key={quickTime.value}

@@ -74,5 +74,9 @@ PrescriptionSchema.index({ patient: 1, createdAt: -1 });
 PrescriptionSchema.index({ clinic: 1, createdAt: -1 });
 // Unique sparse index: only one prescription per appointment (sparse allows null for prescriptions without appointments)
 PrescriptionSchema.index({ appointment: 1 }, { unique: true, sparse: true });
+// Index for doctor-based queries (role-based filtering)
+PrescriptionSchema.index({ doctor: 1, clinic: 1, createdAt: -1 });
+// Compound index for patient-based search aggregation
+PrescriptionSchema.index({ patient: 1, clinic: 1 });
 
 export default mongoose.model("Prescription", PrescriptionSchema);

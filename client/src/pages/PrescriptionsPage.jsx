@@ -71,6 +71,7 @@ const PrescriptionsPage = () => {
   // Build query params - only include dates if they have values
   const queryParams = {
     clinicId: selectedClinicId,
+    search: searchTerm, // Add search parameter for server-side search
     page,
     limit: pageSize,
   };
@@ -90,23 +91,6 @@ const PrescriptionsPage = () => {
 
   const prescriptions = prescriptionsData?.data || [];
   const pagination = prescriptionsData?.pagination || { total: 0, page: 1, pages: 1 };
-
-  // Filter prescriptions by search term (client-side)
-  const filteredPrescriptions = prescriptions.filter((rx) => {
-    const searchLower = searchTerm.toLowerCase();
-    
-    // Get patient code
-    const patientCode = rx.patient?.patientCodes?.[0]?.code || '';
-    
-    // Get phone number
-    const phoneNumber = rx.patient?.phone || '';
-    
-    return (
-      rx.patient?.name?.toLowerCase().includes(searchLower) ||
-      patientCode.toLowerCase().includes(searchLower) ||
-      phoneNumber.includes(searchLower)
-    );
-  });
   
   // Clear all filters - remove all URL params
   const handleClearFilters = () => {
@@ -137,26 +121,15 @@ const PrescriptionsPage = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <Spinner size="lg" />
-          <p className="text-gray-600 mt-4">Loading prescriptions...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-blue-600" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
           Prescriptions
         </h1>
-        <p className="text-gray-600 mt-1">Manage all clinic prescriptions</p>
+        <p className="text-sm sm:text-base text-gray-600 mt-1">Manage all clinic prescriptions</p>
       </div>
 
       {/* Filters Section */}
@@ -194,37 +167,42 @@ const PrescriptionsPage = () => {
       </div>
 
       {/* Prescriptions Table */}
-      {filteredPrescriptions.length === 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <Spinner size="lg" />
+          <p className="text-gray-600 mt-4">Loading prescriptions...</p>
+        </div>
+      ) : prescriptions.length === 0 ? (
         <div>
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {prescriptions.length === 0
-                ? "No Prescriptions Yet"
-                : "No Matching Prescriptions"}
+              {searchTerm || (startDate !== today) || (endDate !== today)
+                ? "No Matching Prescriptions"
+                : "No Prescriptions Yet"}
             </h2>
             <p className="text-gray-600">
-              {prescriptions.length === 0
-                ? "Prescriptions will appear here once created from appointments"
-                : "Try adjusting your search"}
+              {searchTerm || (startDate !== today) || (endDate !== today)
+                ? "Try adjusting your search or filters"
+                : "Prescriptions will appear here once created"}
             </p>
           </div>
         </div>
       ) : (
-        <PrescriptionsTable prescriptions={filteredPrescriptions} />
+        <PrescriptionsTable prescriptions={prescriptions} />
       )}
 
       {/* Helper Text - Show record count */}
-      {!isLoading && filteredPrescriptions.length > 0 && (
+      {!isLoading && prescriptions.length > 0 && (
         <div className="text-sm text-gray-600">
-          Showing {filteredPrescriptions.length} of {pagination.total} total prescriptions
+          Showing {prescriptions.length} of {pagination.total} total prescriptions
         </div>
       )}
       
       {/* Pagination */}
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between border-t pt-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={pageSize}
@@ -241,7 +219,7 @@ const PrescriptionsPage = () => {
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"

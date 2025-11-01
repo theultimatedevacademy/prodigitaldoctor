@@ -18,6 +18,7 @@ import { useClinicContext } from '../../contexts/ClinicContext';
 import { useMe } from '../../api/hooks/useAuth';
 import { useClinicDoctors } from '../../api/hooks/useClinics';
 import { formatDate } from '../../utils/formatters';
+import { useDebounce } from '../../hooks/useDebounce';
 
 // Helper to get today's date in YYYY-MM-DD format
 const getTodayDate = () => {
@@ -44,6 +45,9 @@ export default function PrescriptionsListScreen() {
     endDate: today,
   });
 
+  // Debounce search query for server-side search
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
   // Fetch clinic doctors for filter dropdown
   const { data: doctorsData } = useClinicDoctors(selectedClinicId);
   const doctorOptions = useMemo(() => {
@@ -54,13 +58,18 @@ export default function PrescriptionsListScreen() {
     }));
   }, [doctorsData]);
 
-  // Build API filters based on user role
+  // Build API filters based on user role - includes server-side search
   const apiFilters = useMemo(() => {
     const baseFilters = {
       clinicId: selectedClinicId,
       startDate: filters.startDate,
       endDate: filters.endDate,
     };
+
+    // Add server-side search parameter
+    if (debouncedSearch && debouncedSearch.trim().length >= 2) {
+      baseFilters.search = debouncedSearch.trim();
+    }
 
     // Doctors only see their own prescriptions
     if (userClinicRole === 'doctor') {
@@ -73,7 +82,7 @@ export default function PrescriptionsListScreen() {
     }
 
     return baseFilters;
-  }, [selectedClinicId, userClinicRole, user, filters]);
+  }, [selectedClinicId, userClinicRole, user, filters, debouncedSearch]);
 
   // Fetch prescriptions
   const {
@@ -85,7 +94,7 @@ export default function PrescriptionsListScreen() {
     enabled: !!selectedClinicId,
   });
 
-  // Extract prescriptions array from response
+  // Extract prescriptions array from response (search is now server-side)
   const prescriptions = prescriptionsResponse?.data || [];
 
   // Refetch prescriptions when screen comes into focus
@@ -97,30 +106,9 @@ export default function PrescriptionsListScreen() {
     }, [selectedClinicId, refetch])
   );
 
-  // Client-side search filter
-  const filteredPrescriptions = useMemo(() => {
-    if (!searchQuery) return prescriptions;
-
-    const searchLower = searchQuery.toLowerCase();
-    return prescriptions.filter((prescription) => {
-      const patientName = prescription.patient?.name || '';
-      const patientCode =
-        prescription.patient?.patientCodes?.find(
-          (pc) => pc.clinic?._id === selectedClinicId || pc.clinic === selectedClinicId
-        )?.code || '';
-      const doctorName = prescription.doctor?.name || '';
-
-      return (
-        patientName.toLowerCase().includes(searchLower) ||
-        patientCode.toLowerCase().includes(searchLower) ||
-        doctorName.toLowerCase().includes(searchLower)
-      );
-    });
-  }, [prescriptions, searchQuery, selectedClinicId]);
-
-  // Generate subtitle message based on filters and results
-  const getSubtitleMessage = () => {
-    const count = filteredPrescriptions.length;
+  // Generate subtitle message based on filters and results (memoized for performance)
+  const subtitle = useMemo(() => {
+    const count = prescriptions.length;
     const isToday = filters.startDate === today && filters.endDate === today;
     const hasDateFilter = filters.startDate || filters.endDate;
     
@@ -137,7 +125,7 @@ export default function PrescriptionsListScreen() {
     }
     
     return `${count} prescription${count !== 1 ? 's' : ''}`;
-  };
+  }, [prescriptions.length, filters.startDate, filters.endDate, today, searchQuery]);
 
   // Generate empty state message
   const getEmptyStateMessage = () => {
@@ -176,6 +164,10 @@ export default function PrescriptionsListScreen() {
       item.patient?.patientCodes?.find(
         (pc) => pc.clinic?._id === selectedClinicId || pc.clinic === selectedClinicId
       )?.code || 'N/A';
+    const patientName = item.patient?.name || 'Unknown Patient';
+    const doctorName = item.doctor?.name || 'Unknown Doctor';
+    const medsCount = item.meds?.length || 0;
+    const patientInfo = `${patientCode} • ${formatDate(item.createdAt)}`;
 
     return (
       <Card
@@ -186,18 +178,18 @@ export default function PrescriptionsListScreen() {
           <View className="flex-row items-start justify-between mb-2">
             <View className="flex-1">
               <Text className="text-lg font-semibold text-gray-900">
-                {item.patient?.name || 'Unknown Patient'}
+                {patientName}
               </Text>
               <Text className="text-sm text-gray-600 mt-1">
-                {patientCode} • {formatDate(item.createdAt)}
+                {patientInfo}
               </Text>
             </View>
-            <Badge variant="primary">{item.meds?.length || 0} meds</Badge>
+            <Badge variant="primary">{medsCount} meds</Badge>
           </View>
           <View className="flex-row items-center mt-2">
             <FileText size={16} color="#6B7280" className="mr-2" />
             <Text className="text-sm text-gray-600">
-              {item.doctor?.name || 'Unknown Doctor'}
+              {doctorName}
             </Text>
           </View>
           {item.diagnosis && item.diagnosis.length > 0 && (
@@ -244,7 +236,7 @@ export default function PrescriptionsListScreen() {
     <ScreenWrapper>
       <Header
         title="Prescriptions"
-        subtitle={getSubtitleMessage()}
+        subtitle={subtitle}
         rightContent={
           <Button
             variant="ghost"
@@ -265,13 +257,19 @@ export default function PrescriptionsListScreen() {
       </View>
 
       <FlatList
-        data={filteredPrescriptions}
+        data={prescriptions}
         renderItem={renderPrescription}
         keyExtractor={(item) => item._id}
         contentContainerClassName="pt-4"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        // Performance optimizations
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
         ListEmptyComponent={
           <EmptyState
             icon={FileText}

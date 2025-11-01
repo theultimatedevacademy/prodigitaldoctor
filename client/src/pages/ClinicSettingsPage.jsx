@@ -282,32 +282,22 @@ export function ClinicSettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </button>
-        
-        <div className="flex items-center">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-            <Settings className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Clinic Settings</h1>
-            <p className="text-gray-600 mt-1">Manage your clinic information</p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Settings className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
+            Clinic Settings
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your clinic information</p>
         </div>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center mb-4">
             <Building2 className="w-5 h-5 text-gray-600 mr-2" />
             <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
@@ -354,7 +344,7 @@ export function ClinicSettingsPage() {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center mb-4">
             <Phone className="w-5 h-5 text-gray-600 mr-2" />
             <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
@@ -406,7 +396,7 @@ export function ClinicSettingsPage() {
         </div>
 
         {/* Address */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center mb-4">
             <MapPin className="w-5 h-5 text-gray-600 mr-2" />
             <h2 className="text-xl font-semibold text-gray-900">Address</h2>
@@ -514,7 +504,7 @@ export function ClinicSettingsPage() {
         </div>
 
         {/* OPD Timings */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center mb-4">
             <Clock className="w-5 h-5 text-gray-600 mr-2" />
             <h2 className="text-xl font-semibold text-gray-900">OPD Timings</h2>
@@ -529,14 +519,14 @@ export function ClinicSettingsPage() {
               const isOpen = formData.workingHours[day].length > 0;
               
               return (
-                <div key={day} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div key={day} className="border border-gray-200 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">
-                      <span className="font-medium text-gray-900 w-24">{dayName}</span>
+                      <span className="font-medium text-gray-900 w-20 xs:w-24 text-sm sm:text-base">{dayName}</span>
                       <button
                         type="button"
                         onClick={() => toggleDayClosed(day)}
-                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        className={`px-3 py-1 text-xs sm:text-sm rounded-md transition-colors ${
                           isOpen
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -549,7 +539,7 @@ export function ClinicSettingsPage() {
                       <button
                         type="button"
                         onClick={() => addTimeSlot(day)}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium self-start xs:self-auto"
                       >
                         + Add Slot
                       </button>
@@ -559,25 +549,25 @@ export function ClinicSettingsPage() {
                   {isOpen && (
                     <div className="space-y-2">
                       {formData.workingHours[day].map((slot, index) => (
-                        <div key={index} className="flex items-center gap-2">
+                        <div key={index} className="flex flex-wrap items-center gap-2">
                           <input
                             type="time"
                             value={slot.start}
                             onChange={(e) => handleTimeSlotChange(day, index, 'start', e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="flex-1 min-w-[120px] px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
-                          <span className="text-gray-500">to</span>
+                          <span className="text-gray-500 text-sm">to</span>
                           <input
                             type="time"
                             value={slot.end}
                             onChange={(e) => handleTimeSlotChange(day, index, 'end', e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="flex-1 min-w-[120px] px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                           {formData.workingHours[day].length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeTimeSlot(day, index)}
-                              className="text-red-600 hover:text-red-700 px-2"
+                              className="text-red-600 hover:text-red-700 px-2 text-lg"
                               title="Remove this slot"
                             >
                               ×
@@ -594,18 +584,20 @@ export function ClinicSettingsPage() {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-4">
           <Button
             type="button"
             onClick={() => navigate('/dashboard')}
-            variant="secondary"
+            variant="outline"
             disabled={updateClinicMutation.isPending}
+            className="flex-1 sm:flex-initial py-3"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={updateClinicMutation.isPending}
+            className="flex-1 sm:flex-initial py-3"
           >
             {updateClinicMutation.isPending ? (
               <>Saving...</>

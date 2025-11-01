@@ -132,10 +132,10 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full sm:w-auto" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+        className="w-full sm:w-auto flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       >
         <Calendar className="w-5 h-5 text-gray-600" />
         <span className="text-sm font-medium text-gray-700">{formatDateRange()}</span>
@@ -150,11 +150,11 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 min-w-[320px]">
+        <div className="absolute top-full mt-2 left-0 sm:right-0 sm:left-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 sm:p-4 w-full sm:w-auto sm:min-w-[320px] max-w-[calc(100vw-2rem)]">
           {/* Quick Select Buttons */}
           <div className="mb-4">
             <p className="text-xs font-semibold text-gray-700 mb-2">Quick Select</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               <button
                 onClick={() => setQuickRange('today')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${

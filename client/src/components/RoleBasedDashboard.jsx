@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useClinicContext } from "../contexts/ClinicContext";
 import { LoadingOverlay } from "./ui/Spinner";
 import { PendingUserDashboard } from "../pages/PendingUserDashboard";
+import { MainLayout } from "../layouts/MainLayout";
 import DoctorDashboard from "../pages/DoctorDashboard";
 
 export function RoleBasedDashboard() {
@@ -29,7 +30,11 @@ export function RoleBasedDashboard() {
     return <PendingUserDashboard />;
   }
 
-  // User has clinic access - show main dashboard
+  // User has clinic access - show main dashboard with MainLayout
   // All roles (owner, doctor, staff) use same dashboard with different permissions
-  return <DoctorDashboard />;
+  return (
+    <MainLayout>
+      <DoctorDashboard />
+    </MainLayout>
+  );
 }
