@@ -46,6 +46,10 @@ import ClinicsPage from "./pages/ClinicsPage";
 import NewClinicPage from "./pages/NewClinicPage";
 import ClinicDetailPage from "./pages/ClinicDetailPage";
 import { ClinicSettingsPage } from "./pages/ClinicSettingsPage";
+import HelpPage from "./pages/HelpPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
+import ABDMCompliancePage from "./pages/ABDMCompliancePage";
 
 // Analytics
 import { initializeAnalytics } from "./utils/analytics";
@@ -83,6 +87,10 @@ createRoot(document.getElementById("root")).render(
                 {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                <Route path="/abdm-compliance" element={<ABDMCompliancePage />} />
 
                 {/* Clerk SSO Callback Routes */}
                 <Route

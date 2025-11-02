@@ -17,7 +17,7 @@ export function PendingUserDashboard() {
   const { data: subscriptionData } = useSubscriptionInfo();
 
   const pendingCount = invitationsData?.total || 0;
-  const hasActiveTrial = subscriptionData?.subscription?.status === 'trial';
+  const hasActiveTrial = subscriptionData?.subscription?.status === "trial";
   const canCreateClinic = subscriptionData?.canCreateClinic || false;
 
   return (
@@ -47,14 +47,16 @@ export function PendingUserDashboard() {
               {hasActiveTrial ? "Complete Your Setup" : "Start Your Free Trial"}
             </h2>
             <p className="text-gray-600 mb-6">
-              {hasActiveTrial 
+              {hasActiveTrial
                 ? "Your trial is active! Complete your setup by creating your clinic."
                 : "Create your own clinic and start managing patients. Get 30 days free trial with full access to all features."}
             </p>
             {hasActiveTrial && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <p className="text-green-900 font-semibold text-sm">
-                  ✅ Trial Active - {subscriptionData?.subscription?.maxClinics || 1} clinic slot available
+                  ✅ Trial Active -{" "}
+                  {subscriptionData?.subscription?.maxClinics || 1} clinic slot
+                  available
                 </p>
               </div>
             )}
@@ -114,7 +116,9 @@ export function PendingUserDashboard() {
               className="w-full"
               size="lg"
             >
-              {hasActiveTrial && canCreateClinic ? "Create Your Clinic" : "Start Free Trial"}
+              {hasActiveTrial && canCreateClinic
+                ? "Create Your Clinic"
+                : "Start Free Trial"}
             </Button>
           </div>
 
@@ -164,10 +168,10 @@ export function PendingUserDashboard() {
           <p>
             Need help? Contact our support team at{" "}
             <a
-              href="mailto:support@ocura360.com"
+              href="mailto:hello@ocura360.com"
               className="text-blue-600 hover:underline"
             >
-              support@ocura360.com
+              hello@ocura360.com
             </a>
           </p>
         </div>

@@ -367,7 +367,7 @@ const LandingPage = () => {
             >
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-blue-600" />
-                <span className="font-medium">Government Approved</span>
+                <span className="font-medium">Government Compliant</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-green-600" />
@@ -986,10 +986,13 @@ const LandingPage = () => {
             period="per month"
             description="Perfect for individual practitioners"
             features={[
-              "Up to 50 patients",
-              "Basic prescription management",
-              "Appointment scheduling",
-              "Email support",
+              "Manage up to 1 Clinic",
+              "Up to 1000 patient records",
+              "Up to 1000 appointments per month",
+              "Up to 750 prescriptions per month",
+              "Up to 5 staff/doctor accounts",
+              "DDI Checking",
+              "Basic Analytics dashboard",
               "ABDM integration",
             ]}
             popular={false}
@@ -1002,13 +1005,15 @@ const LandingPage = () => {
             period="per month"
             description="For growing clinics and practices"
             features={[
-              "Unlimited patients",
-              "Advanced prescription features",
-              "Multi-doctor support",
+              "Manage up to 3 Clinics",
+              "Unlimited patient records",
+              "Unlimited appointments per month",
+              "Unlimited prescriptions",
+              "Up to 20 staff/doctor accounts",
               "DDI checking",
-              "Priority support",
-              "Custom branding",
-              "Analytics dashboard",
+              "Advanced Analytics dashboard",
+              "WhatsApp & Email integration",
+              "Training & onboarding",
             ]}
             popular={true}
             showEarlyBird={launchConfig.isPreLaunch}
@@ -1022,7 +1027,7 @@ const LandingPage = () => {
             features={[
               "Everything in Professional",
               "Multi-location support",
-              "Custom integrations",
+              "WhatsApp & Email integration",
               "Dedicated account manager",
               "SLA guarantee",
               "Training & onboarding",
@@ -1136,19 +1141,19 @@ const LandingPage = () => {
               />
               <FeatureRow
                 feature="Patient Records"
-                starter="Unlimited"
+                starter="1000"
                 professional="Unlimited"
                 enterprise="Unlimited"
               />
               <FeatureRow
                 feature="Appointments per Month"
-                starter="100"
+                starter="1000"
                 professional="Unlimited"
                 enterprise="Unlimited"
               />
               <FeatureRow
                 feature="Prescriptions"
-                starter="Unlimited"
+                starter="750"
                 professional="Unlimited"
                 enterprise="Unlimited"
               />
@@ -1160,6 +1165,12 @@ const LandingPage = () => {
               />
               <FeatureRow
                 feature="PDF Generation"
+                starter="✓"
+                professional="✓"
+                enterprise="✓"
+              />
+              <FeatureRow
+                feature="Database Security"
                 starter="✓"
                 professional="✓"
                 enterprise="✓"
@@ -1186,7 +1197,7 @@ const LandingPage = () => {
               />
               <FeatureRow
                 feature="HFR Mapping"
-                starter="—"
+                starter="✓"
                 professional="✓"
                 enterprise="✓"
               />
@@ -1200,8 +1211,8 @@ const LandingPage = () => {
               />
               <FeatureRow
                 feature="Staff Accounts"
-                starter="2"
-                professional="10"
+                starter="5"
+                professional="20"
                 enterprise="Unlimited"
               />
               <FeatureRow
@@ -1216,6 +1227,12 @@ const LandingPage = () => {
                 professional="—"
                 enterprise="✓"
               />
+              <FeatureRow
+                feature="Multi-Department Support"
+                starter="—"
+                professional="-"
+                enterprise="✓"
+              />
 
               <FeatureRow
                 category="Advanced Features"
@@ -1226,7 +1243,7 @@ const LandingPage = () => {
               />
               <FeatureRow
                 feature="Custom Branding"
-                starter="—"
+                starter="✓"
                 professional="✓"
                 enterprise="✓"
               />
@@ -1236,6 +1253,19 @@ const LandingPage = () => {
                 professional="Advanced"
                 enterprise="Advanced"
               />
+
+              <FeatureRow
+                feature="WhatsApp Integration"
+                starter="—"
+                professional="✓"
+                enterprise="✓"
+              />
+              <FeatureRow
+                feature="Email Integration"
+                starter="—"
+                professional="✓"
+                enterprise="✓"
+              />
               <FeatureRow
                 feature="API Access"
                 starter="—"
@@ -1243,13 +1273,13 @@ const LandingPage = () => {
                 enterprise="✓"
               />
               <FeatureRow
-                feature="Custom Integrations"
+                feature="White Label"
                 starter="—"
                 professional="—"
                 enterprise="✓"
               />
               <FeatureRow
-                feature="White Label"
+                feature="Offline Access (LAN)"
                 starter="—"
                 professional="—"
                 enterprise="✓"
@@ -1269,7 +1299,7 @@ const LandingPage = () => {
                 enterprise="✓"
               />
               <FeatureRow
-                feature="Priority Support"
+                feature="Whatsapp Support"
                 starter="—"
                 professional="✓"
                 enterprise="✓"
@@ -1280,14 +1310,15 @@ const LandingPage = () => {
                 professional="✓"
                 enterprise="✓"
               />
+
               <FeatureRow
-                feature="Dedicated Account Manager"
+                feature="Training & Onboarding"
                 starter="—"
-                professional="—"
+                professional="✓"
                 enterprise="✓"
               />
               <FeatureRow
-                feature="Training & Onboarding"
+                feature="Dedicated Account Manager"
                 starter="—"
                 professional="—"
                 enterprise="✓"
@@ -1309,16 +1340,21 @@ const LandingPage = () => {
             price="₹999/month"
             features={[
               { label: "Number of Clinics", value: "1" },
-              { label: "Appointments per Month", value: "100" },
-              { label: "Patient Records", value: "Unlimited" },
-              { label: "Staff Accounts", value: "2" },
+              { label: "Appointments per Month", value: "1000" },
+              { label: "Patient Records", value: "1000" },
+              { label: "Prescriptions", value: "750" },
+              { label: "Staff Accounts", value: "5" },
               { label: "Drug Interaction Checks", value: "✓" },
               { label: "ABHA Integration", value: "✓" },
+              { label: "HFR Mapping", value: "✓" },
               { label: "Analytics Dashboard", value: "Basic" },
               { label: "Email Support", value: "✓" },
-              { label: "HFR Mapping", value: "—" },
               { label: "Custom Branding", value: "—" },
               { label: "Priority Support", value: "—" },
+              { label: "WhatsApp Integration", value: "—" },
+              { label: "Email Integration", value: "—" },
+              { label: "Multi-Department Support", value: "—" },
+              { label: "Training & Onboarding", value: "—" },
             ]}
           />
           <MobileFeatureCard
@@ -1329,7 +1365,8 @@ const LandingPage = () => {
               { label: "Number of Clinics", value: "3" },
               { label: "Appointments per Month", value: "Unlimited" },
               { label: "Patient Records", value: "Unlimited" },
-              { label: "Staff Accounts", value: "10" },
+              { label: "Staff Accounts", value: "20" },
+              { label: "Prescriptions", value: "Unlimited" },
               { label: "Drug Interaction Checks", value: "✓" },
               { label: "ABHA Integration", value: "✓" },
               { label: "HFR Mapping", value: "✓" },
@@ -1338,6 +1375,10 @@ const LandingPage = () => {
               { label: "Email Support", value: "✓" },
               { label: "Priority Support", value: "✓" },
               { label: "Phone Support", value: "✓" },
+              { label: "WhatsApp Integration", value: "✓" },
+              { label: "Email Integration", value: "✓" },
+              { label: "Multi-Department Support", value: "✓" },
+              { label: "Training & Onboarding", value: "✓" },
             ]}
           />
           <MobileFeatureCard
@@ -1351,7 +1392,8 @@ const LandingPage = () => {
               { label: "Multi-Location Support", value: "✓" },
               { label: "All Professional Features", value: "✓" },
               { label: "API Access", value: "✓" },
-              { label: "Custom Integrations", value: "✓" },
+              { label: "WhatsApp Integration", value: "✓" },
+              { label: "Email Integration", value: "✓" },
               { label: "White Label", value: "✓" },
               { label: "Dedicated Account Manager", value: "✓" },
               { label: "Training & Onboarding", value: "✓" },
@@ -1526,24 +1568,24 @@ const LandingPage = () => {
               <h3 className="text-white font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <Link to="/help" className="hover:text-white transition-colors">
                     Help Center
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <Link to="/privacy" className="hover:text-white transition-colors">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <Link to="/terms" className="hover:text-white transition-colors">
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <Link to="/abdm-compliance" className="hover:text-white transition-colors">
                     ABDM Compliance
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -1602,7 +1644,7 @@ const LandingPage = () => {
               <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 text-xs">
                 <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-800 rounded-full">
                   <Shield className="w-3 h-3 text-blue-500" />
-                  Government Approved
+                  Government Compliant
                 </span>
                 <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-800 rounded-full">
                   <Shield className="w-3 h-3 text-green-500" />

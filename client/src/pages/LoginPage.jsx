@@ -28,7 +28,9 @@ function LoginPage() {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back<span className="hidden sm:inline"> to Home</span></span>
+              <span className="font-medium">
+                Back<span className="hidden sm:inline"> to Home</span>
+              </span>
             </Link>
             <div className="flex items-center gap-2">
               <img src={logo} alt="Ocura360" className="h-8 w-auto" />
@@ -151,10 +153,10 @@ function LoginPage() {
               <p>
                 <strong>Need help?</strong> Contact us at{" "}
                 <a
-                  href="mailto:beta@ocura360.com"
+                  href="mailto:hello@ocura360.com"
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  beta@ocura360.com
+                  hello@ocura360.com
                 </a>
               </p>
             </div>

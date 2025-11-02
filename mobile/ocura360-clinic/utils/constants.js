@@ -12,12 +12,12 @@ export const API_ENDPOINTS = {
   // Auth
   ME: '/auth/me',
   UPDATE_MY_ROLE: '/auth/my-role',
-  
+
   // Patients
   PATIENTS: '/patients',
   PATIENT_BY_ID: (id) => `/patients/${id}`,
   SEARCH_PATIENTS_FOR_APPOINTMENT: '/appointments/search-patients',
-  
+
   // Clinics
   CLINICS: '/clinics',
   CLINIC_BY_ID: (id) => `/clinics/${id}`,
@@ -26,7 +26,7 @@ export const API_ENDPOINTS = {
   REJECT_INVITATION: (clinicId) => `/clinics/${clinicId}/reject-invite`,
   REMOVE_STAFF: (clinicId, userId) => `/clinics/${clinicId}/staff/${userId}`,
   PENDING_INVITATIONS: `/auth/invitations/pending`, // Get all pending invitations for current user
-  
+
   // Appointments
   APPOINTMENTS: '/appointments',
   APPOINTMENT_BY_ID: (id) => `/appointments/${id}`,
@@ -39,39 +39,39 @@ export const API_ENDPOINTS = {
   APPOINTMENT_CANCEL: (id) => `/appointments/${id}/cancel`,
   APPOINTMENT_COMPLETE: (id) => `/appointments/${id}/complete`,
   APPOINTMENT_CALENDAR: '/appointments/calendar',
-  
+
   // Prescriptions
   PRESCRIPTIONS: '/prescriptions',
   PRESCRIPTION_BY_ID: (id) => `/prescriptions/${id}`,
   PRESCRIPTION_PDF_DATA: (id) => `/prescriptions/${id}/pdf-data`,
   PRESCRIPTION_PDF: (id) => `/prescriptions/${id}/pdf`,
   PRESCRIPTION_STATS: '/prescriptions/stats',
-  
+
   // Medications
   MEDICATIONS: '/medications',
   MEDICATIONS_SEARCH: '/medications/search',
   MEDICATION_BY_ID: (id) => `/medications/${id}`,
-  
+
   // DDI (Drug-Drug Interactions)
   DDI_CHECK_MEDICATIONS: '/medications/check-ddi',
   DDI_CHECK_COMPOSITIONS: '/compositions/check-ddi',
-  
+
   // Uploads
   UPLOAD_PRESIGN: '/uploads/presign',
-  
+
   // ABDM
   ABDM_SHARE: '/abdm/share',
-  
+
   // Analytics
   ANALYTICS_DASHBOARD: '/analytics/dashboard',
   ANALYTICS_APPOINTMENTS: '/analytics/appointments',
   ANALYTICS_PRESCRIPTIONS: '/analytics/prescriptions',
-  
+
   // Subscription
   SUBSCRIPTION: '/subscription',
   SUBSCRIPTION_UPGRADE: '/subscription/upgrade',
   SUBSCRIPTION_CANCEL: '/subscription/cancel',
-  
+
   // Admin
   ADMIN_SEED: '/admin/seed',
   ADMIN_USERS: '/admin/users',
@@ -262,39 +262,39 @@ export const TOAST_DURATION = {
 export const QUERY_KEYS = {
   // Auth
   ME: ['me'],
-  
+
   // Patients
   PATIENTS: (clinicId, filters = {}) => ['patients', clinicId, filters],
   PATIENT: (id) => ['patient', id],
   PATIENT_HISTORY: (id) => ['patient-history', id],
   SEARCH_PATIENTS: (query, clinicId) => ['search-patients', query, clinicId],
-  
+
   // Clinics
   CLINICS: ['clinics'],
   CLINIC: (id) => ['clinic', id],
   PENDING_INVITATIONS: ['pending-invitations'], // All pending invitations for current user
-  
+
   // Appointments
   APPOINTMENTS: ['appointments'],
   APPOINTMENT: (id) => ['appointment', id],
   APPOINTMENT_CALENDAR: ['appointment-calendar'],
-  
+
   // Prescriptions
   PRESCRIPTIONS: ['prescriptions'],
   PRESCRIPTION: (id) => ['prescription', id],
   PRESCRIPTION_PDF_DATA: (id) => ['prescription-pdf-data', id],
   PRESCRIPTION_STATS: ['prescription-stats'],
-  
+
   // Medications
   MEDICATIONS: ['medications'],
   MEDICATION: (id) => ['medication', id],
   MEDICATIONS_SEARCH: ['medications-search'],
-  
+
   // Analytics
   DASHBOARD_STATS: ['dashboard-stats'],
   ANALYTICS_APPOINTMENTS: ['analytics-appointments'],
   ANALYTICS_PRESCRIPTIONS: ['analytics-prescriptions'],
-  
+
   // Subscription
   SUBSCRIPTION: ['subscription'],
 };
@@ -435,8 +435,8 @@ export const VALIDATION_RULES = {
 export const APP_CONFIG = {
   APP_NAME: 'Ocura360 Clinic',
   APP_VERSION: '1.0.0',
-  SUPPORT_EMAIL: 'support@ocura360.com',
-  SUPPORT_PHONE: '+91-1234567890',
+  SUPPORT_EMAIL: 'hello@ocura360.com',
+  SUPPORT_PHONE: '+91',
   TERMS_URL: 'https://ocura360.com/terms',
   PRIVACY_URL: 'https://ocura360.com/privacy',
 };
