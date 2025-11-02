@@ -79,10 +79,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Apply rate limiting to all API routes
-app.use("/api/", apiLimiter);
-
-// Health check
+// Health check endpoints (before rate limiting)
 app.get("/", (req, res) => {
   res.json({
     message: "ProDigitalDoctor API is running",
@@ -90,6 +87,17 @@ app.get("/", (req, res) => {
     environment: process.env.NODE_ENV || "development",
   });
 });
+
+// Simple health check for cron jobs (no rate limiting)
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Apply rate limiting to all API routes (except health check)
+app.use("/api/", apiLimiter);
 
 // API Routes
 app.use("/api/auth", authRoutes);
