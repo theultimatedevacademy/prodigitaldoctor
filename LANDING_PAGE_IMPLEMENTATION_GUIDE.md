@@ -23,6 +23,7 @@
 ## ✅ What Was Implemented
 
 ### **Phase 1: Core Infrastructure** ✅
+
 - ✅ Environment variable system for pre-launch/post-launch control
 - ✅ Launch configuration module (`launchConfig.js`)
 - ✅ Waitlist form component with validation
@@ -30,12 +31,14 @@
 - ✅ Waitlist progress tracker
 
 ### **Phase 2: Analytics & Tracking** ✅
+
 - ✅ Google Analytics 4 integration
-- ✅ Facebook Pixel integration  
+- ✅ Facebook Pixel integration
 - ✅ Microsoft Clarity integration
 - ✅ Event tracking functions (waitlist signup, CTA clicks, video plays)
 
 ### **Phase 3: Landing Page Enhancements** ✅
+
 - ✅ Updated hero section with dynamic CTAs
 - ✅ Launch status badges and countdown
 - ✅ Early adopter benefits showcase
@@ -46,6 +49,7 @@
 - ✅ Mobile-responsive design
 
 ### **Phase 4: Pre-Launch Features** ✅
+
 - ✅ Waitlist form with Google Sheets integration
 - ✅ Waitlist progress indicator
 - ✅ Early bird offer display
@@ -143,7 +147,7 @@ VITE_FB_PIXEL_ID=
 VITE_MS_CLARITY_ID=
 
 # Contact Information
-VITE_SUPPORT_EMAIL=support@ocura360.com
+VITE_SUPPORT_EMAIL=hello@ocura360.com
 VITE_SUPPORT_PHONE=+91-XXXXXXXXXX
 VITE_WHATSAPP_NUMBER=91XXXXXXXXXX  # Without + or spaces
 ```
@@ -161,16 +165,20 @@ VITE_EARLY_DISCOUNT_LABEL=50% OFF First Year
 ### **Step 3: Switching Between Pre-Launch and Post-Launch**
 
 **Pre-Launch Mode (Now):**
+
 ```env
 VITE_LAUNCH_MODE=prelaunch
 ```
+
 - Shows: Waitlist form, countdown, "Join Waitlist" CTAs
 - Hides: Trial signup, testimonials
 
 **Post-Launch Mode (Launch Day):**
+
 ```env
 VITE_LAUNCH_MODE=launched
 ```
+
 - Shows: "Start Free Trial" CTAs, trial signup flow
 - Hides: Waitlist form, countdown
 
@@ -181,6 +189,7 @@ VITE_LAUNCH_MODE=launched
 ## 📊 Google Sheets Waitlist Setup
 
 ### **Why Google Sheets?**
+
 - ✅ Free
 - ✅ Easy to use
 - ✅ Export to CSV for email campaigns
@@ -216,39 +225,38 @@ function doPost(e) {
   try {
     // Get the active spreadsheet
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    
+
     // Parse the incoming data
     const data = JSON.parse(e.postData.contents);
-    
+
     // Prepare row data
     const row = [
       data.timestamp || new Date().toISOString(),
-      data.email || '',
-      data.name || '',
-      data.phone || '',
-      data.clinicName || '',
-      data.source || 'Landing Page'
+      data.email || "",
+      data.name || "",
+      data.phone || "",
+      data.clinicName || "",
+      data.source || "Landing Page",
     ];
-    
+
     // Append to sheet
     sheet.appendRow(row);
-    
+
     // Optional: Send confirmation email
     // sendConfirmationEmail(data.email, data.name);
-    
+
     // Return success
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: true })
+    ).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     // Log error
-    Logger.log('Error: ' + error.toString());
-    
+    Logger.log("Error: " + error.toString());
+
     // Return error
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, error: error.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -267,11 +275,11 @@ Early adopters get 50% off the first year!
 Best regards,
 Ocura360 Team
   `;
-  
+
   try {
     MailApp.sendEmail(email, subject, body);
   } catch (e) {
-    Logger.log('Email error: ' + e.toString());
+    Logger.log("Email error: " + e.toString());
   }
 }
 ```
@@ -310,7 +318,8 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ### **Troubleshooting Google Sheets:**
 
 **Problem:** Form submits but no row added  
-**Solution:** 
+**Solution:**
+
 - Check Apps Script logs: Extensions → Apps Script → Executions
 - Ensure sheet is named correctly and has headers
 - Re-deploy the script
@@ -328,6 +337,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ### **1. Google Analytics 4**
 
 #### **Setup:**
+
 1. Go to [Google Analytics](https://analytics.google.com)
 2. Create account → Create property
 3. Select **"Web"** platform
@@ -338,6 +348,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
    ```
 
 #### **What's Tracked:**
+
 - ✅ Page views
 - ✅ Waitlist signups
 - ✅ CTA clicks
@@ -345,6 +356,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 - ✅ Scroll depth (configure in GA4)
 
 #### **Events Being Sent:**
+
 - `waitlist_signup`
 - `trial_start`
 - `cta_click`
@@ -354,6 +366,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ### **2. Facebook Pixel**
 
 #### **Setup:**
+
 1. Go to [Facebook Events Manager](https://business.facebook.com/events_manager)
 2. Create Pixel
 3. Copy **Pixel ID** (16-digit number)
@@ -363,6 +376,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
    ```
 
 #### **What's Tracked:**
+
 - ✅ PageView
 - ✅ Lead (waitlist signup)
 - ✅ ViewContent (pricing, features)
@@ -371,6 +385,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ### **3. Microsoft Clarity**
 
 #### **Setup:**
+
 1. Go to [Microsoft Clarity](https://clarity.microsoft.com)
 2. Create project
 3. Copy **Project ID** (short code)
@@ -380,6 +395,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
    ```
 
 #### **What You Get:**
+
 - ✅ Session recordings
 - ✅ Heatmaps
 - ✅ Rage click detection
@@ -402,6 +418,7 @@ VITE_WAITLIST_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 By default, analytics only run in production. To test in development:
 
 Add to `.env.local`:
+
 ```env
 VITE_ANALYTICS_ENABLED=true
 ```
@@ -416,18 +433,21 @@ VITE_ANALYTICS_ENABLED=true
 
 1. **Logo Files**
    - Create/export your logo in these formats:
+
    ```
    client/public/logo.svg (main logo)
    client/public/logo-192.png (PWA icon)
    client/public/logo-512.png (PWA icon)
    client/public/favicon.ico (browser tab icon)
    ```
+
    - Use [RealFaviconGenerator](https://realfavicongenerator.net/) to generate all sizes
 
 2. **Hero Screenshot** (Most visible)
    ```
    client/public/images/screenshots/dashboard-overview.png
    ```
+
    - Resolution: 1920x1080px
    - Content: Your dashboard with sample data
    - Use realistic dummy data (Dr. Rajesh Kumar, etc.)
@@ -438,9 +458,11 @@ VITE_ANALYTICS_ENABLED=true
 3. **Promo Video**
    - Upload to YouTube
    - Update video ID in `LandingPage.jsx` line 210:
+
    ```javascript
-   src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
+   src = "https://www.youtube.com/embed/YOUR_VIDEO_ID";
    ```
+
    - Current placeholder: `dQw4w9WgXcQ` (replace this!)
 
 4. **Trust Badges**
@@ -449,30 +471,36 @@ VITE_ANALYTICS_ENABLED=true
    client/public/images/badges/abdm.png
    client/public/images/badges/ssl.svg
    ```
+
    - Download ABDM logo from official site
    - Create simple badges in Canva (text + icon)
 
 #### **Priority: MEDIUM (Week 2-3)**
 
 5. **Feature Screenshots**
+
    ```
    client/public/images/screenshots/prescription-flow.png
    client/public/images/screenshots/patient-management.png
    client/public/images/screenshots/appointments.png
    ```
+
    - Resolution: 1920x1080px each
 
 6. **Mobile Screenshots** (Optional but good)
+
    ```
    client/public/images/screenshots/mobile-dashboard.png
    client/public/images/screenshots/mobile-prescription.png
    ```
+
    - Resolution: 375x812px (iPhone size)
 
 7. **Social Share Image**
    ```
    client/public/images/og-image.png
    ```
+
    - Resolution: 1200x630px
    - Content: Logo + tagline + key benefit
    - Used when sharing on Facebook, LinkedIn, Twitter
@@ -487,6 +515,7 @@ VITE_ANALYTICS_ENABLED=true
 ### **Current Asset Status:**
 
 **What's Working Now (Without Your Assets):**
+
 - ✅ Placeholder gradients for screenshots
 - ✅ Icon-based illustrations (using Lucide icons)
 - ✅ YouTube placeholder video (needs replacement)
@@ -508,6 +537,7 @@ VITE_LAUNCH_MODE=prelaunch
 ```
 
 **Test these features:**
+
 - [ ] Countdown timer shows and counts down
 - [ ] "Join Waitlist" CTA appears in hero
 - [ ] Waitlist section visible
@@ -526,6 +556,7 @@ VITE_LAUNCH_MODE=launched
 ```
 
 **Restart dev server**, then test:
+
 - [ ] Countdown timer hidden
 - [ ] "Start Free Trial" CTA appears
 - [ ] Waitlist section hidden
@@ -535,12 +566,14 @@ VITE_LAUNCH_MODE=launched
 #### **3. Mobile Responsiveness**
 
 Test on:
+
 - [ ] iPhone (Chrome DevTools → iPhone 12 Pro)
 - [ ] Android (Chrome DevTools → Pixel 5)
 - [ ] Tablet (iPad)
 - [ ] Small desktop (1366px)
 
 **Key checks:**
+
 - [ ] Countdown timer looks good on mobile
 - [ ] Waitlist form is usable on mobile
 - [ ] Problem-Agitate-Solve cards stack properly
@@ -550,6 +583,7 @@ Test on:
 #### **4. Analytics Testing**
 
 With `VITE_ANALYTICS_ENABLED=true`:
+
 - [ ] Open browser console
 - [ ] Check for initialization messages
 - [ ] Fill waitlist form → Check console for "Tracked: Waitlist Signup"
@@ -559,8 +593,9 @@ With `VITE_ANALYTICS_ENABLED=true`:
 #### **5. Cross-Browser Testing**
 
 Test on:
+
 - [ ] Chrome
-- [ ] Firefox  
+- [ ] Firefox
 - [ ] Safari (if on Mac)
 - [ ] Edge
 
@@ -588,11 +623,13 @@ VITE_LAUNCH_MODE=launched
 ```
 
 **Step 2: Update Launch Date (optional, for records)**
+
 ```env
 VITE_LAUNCH_DATE=2025-01-15  # Today's date
 ```
 
 **Step 3: Build and Deploy**
+
 ```bash
 cd client
 npm run build
@@ -600,6 +637,7 @@ npm run build
 ```
 
 **Step 4: Verify Production**
+
 - [ ] Visit production URL
 - [ ] Confirm "Start Free Trial" shows (not "Join Waitlist")
 - [ ] Test signup flow end-to-end
@@ -609,12 +647,14 @@ npm run build
 **Step 5: Email Waitlist**
 
 Send email to all waitlist signups:
+
 - Subject: "🎉 Ocura360 is LIVE! Your 50% Discount Inside"
 - Include unique coupon codes
 - Direct link to signup
 - Remind them of early bird benefits
 
 **Step 6: Monitor**
+
 - Google Analytics Real-Time
 - Microsoft Clarity sessions
 - Error logs (browser console + server logs)
@@ -637,6 +677,7 @@ Send email to all waitlist signups:
 **Cause:** `VITE_WAITLIST_API_URL` not set or still has placeholder
 
 **Solution:**
+
 1. Check `.env.local` has real Google Apps Script URL
 2. Restart dev server: `npm run dev`
 3. Form will work in development even without real API (logs to console)
@@ -648,10 +689,12 @@ Send email to all waitlist signups:
 **Cause:** Launch date is in the past or not set
 
 **Solution:**
+
 ```env
 # Set future date in .env.local
 VITE_LAUNCH_DATE=2025-02-01
 ```
+
 Restart dev server.
 
 ---
@@ -661,6 +704,7 @@ Restart dev server.
 **Cause:** IDs not configured or syntax error
 
 **Solution:**
+
 1. Check `.env.local` has correct format:
    ```env
    VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX (not G-XXXXXXXXXX")
@@ -675,6 +719,7 @@ Restart dev server.
 **Cause:** React state cached
 
 **Solution:**
+
 1. Hard refresh: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
 2. Clear browser cache
 3. Restart dev server
@@ -687,6 +732,7 @@ Restart dev server.
 
 **Solution:**
 This is intentional! Update manually as signups grow:
+
 ```env
 VITE_WAITLIST_CURRENT=127  # Update this number
 ```
@@ -698,8 +744,9 @@ VITE_WAITLIST_CURRENT=127  # Update this number
 **Cause:** Contact variables not set
 
 **Solution:**
+
 ```env
-VITE_SUPPORT_EMAIL=support@ocura360.com
+VITE_SUPPORT_EMAIL=hello@ocura360.com
 VITE_SUPPORT_PHONE=+91-9876543210
 VITE_WHATSAPP_NUMBER=919876543210
 ```
@@ -709,20 +756,24 @@ VITE_WHATSAPP_NUMBER=919876543210
 ## 📚 Key Files Reference
 
 ### **Configuration:**
+
 - `client/.env.local` - Your settings (DO NOT COMMIT)
 - `client/.env.example` - Template (committed to git)
 - `client/src/config/launchConfig.js` - Launch config logic
 
 ### **Components:**
+
 - `client/src/components/WaitlistForm.jsx` - Waitlist signup form
 - `client/src/components/CountdownTimer.jsx` - Launch countdown
 - `client/src/components/WaitlistProgress.jsx` - Progress bar
 
 ### **Utilities:**
+
 - `client/src/utils/analytics.js` - All analytics functions
 - `client/src/utils/waitlist.js` - Waitlist submission logic
 
 ### **Pages:**
+
 - `client/src/pages/LandingPage.jsx` - Main landing page
 
 ---
@@ -730,12 +781,14 @@ VITE_WHATSAPP_NUMBER=919876543210
 ## 🎯 Quick Commands
 
 ### **Start Development:**
+
 ```bash
 cd client
 npm run dev
 ```
 
 ### **Switch to Pre-Launch:**
+
 ```bash
 # In .env.local
 VITE_LAUNCH_MODE=prelaunch
@@ -743,6 +796,7 @@ VITE_LAUNCH_MODE=prelaunch
 ```
 
 ### **Switch to Post-Launch:**
+
 ```bash
 # In .env.local
 VITE_LAUNCH_MODE=launched
@@ -750,12 +804,14 @@ VITE_LAUNCH_MODE=launched
 ```
 
 ### **Build for Production:**
+
 ```bash
 cd client
 npm run build
 ```
 
 ### **Test Production Build:**
+
 ```bash
 cd client
 npm run preview
@@ -766,12 +822,14 @@ npm run preview
 ## 🎉 Success Metrics to Track
 
 ### **Pre-Launch:**
+
 - Waitlist signup rate (target: 5-10% of visitors)
 - Traffic sources (where are visitors coming from?)
 - Video play rate (% who watch demo)
 - Bounce rate (aim for < 50%)
 
 ### **Post-Launch:**
+
 - Trial signup rate (target: 2-5%)
 - Trial → Paid conversion (target: 10-25%)
 - Cost per acquisition (ads → customers)
@@ -790,8 +848,9 @@ npm run preview
    - Add to `.env.local`
 
 2. **Update Contact Info** (2 minutes)
+
    ```env
-   VITE_SUPPORT_EMAIL=support@ocura360.com
+   VITE_SUPPORT_EMAIL=hello@ocura360.com
    VITE_SUPPORT_PHONE=+91-XXXXXXXXXX
    VITE_WHATSAPP_NUMBER=91XXXXXXXXXX
    ```
@@ -837,6 +896,7 @@ npm run preview
     ```env
     VITE_LAUNCH_MODE=launched
     ```
+
     - Build and deploy
     - Email waitlist
     - Monitor analytics

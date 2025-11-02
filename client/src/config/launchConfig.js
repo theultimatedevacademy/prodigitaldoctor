@@ -59,7 +59,7 @@ export const launchConfig = {
 
   // Contact information
   contact: {
-    email: import.meta.env.VITE_SUPPORT_EMAIL || "support@ocura360.com",
+    email: import.meta.env.VITE_SUPPORT_EMAIL || "hello@ocura360.com",
     phone: import.meta.env.VITE_SUPPORT_PHONE || "",
     whatsapp: import.meta.env.VITE_WHATSAPP_NUMBER || "",
     whatsappLink: function () {

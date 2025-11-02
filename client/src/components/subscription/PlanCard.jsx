@@ -2,14 +2,20 @@
  * PlanCard - Individual subscription plan display card
  */
 
-import { Check, Sparkles } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Check, Sparkles } from "lucide-react";
+import { Button } from "../ui/Button";
 
-export function PlanCard({ plan, isCurrentPlan, isPopular, onSelect, isLoading }) {
+export function PlanCard({
+  plan,
+  isCurrentPlan,
+  isPopular,
+  onSelect,
+  isLoading,
+}) {
   const getBorderColor = () => {
-    if (isCurrentPlan) return 'border-blue-500';
-    if (isPopular) return 'border-purple-500';
-    return 'border-gray-200';
+    if (isCurrentPlan) return "border-blue-500";
+    if (isPopular) return "border-purple-500";
+    return "border-gray-200";
   };
 
   return (
@@ -42,7 +48,7 @@ export function PlanCard({ plan, isCurrentPlan, isPopular, onSelect, isLoading }
       <div className="mb-6">
         <span className="text-4xl font-bold text-gray-900">₹{plan.price}</span>
         <span className="text-gray-600">/month</span>
-        {plan.id === 'basic' && (
+        {plan.id === "basic" && (
           <div className="mt-2">
             <span className="text-sm text-green-600 font-semibold">
               30-day free trial available
@@ -56,10 +62,10 @@ export function PlanCard({ plan, isCurrentPlan, isPopular, onSelect, isLoading }
         <p className="text-sm text-gray-700">
           <span className="font-semibold">
             {plan.maxClinics === 0
-              ? 'Join existing clinics'
+              ? "Join existing clinics"
               : plan.maxClinics === 999
-              ? 'Unlimited clinics'
-              : `${plan.maxClinics} clinic${plan.maxClinics > 1 ? 's' : ''}`}
+                ? "Unlimited clinics"
+                : `${plan.maxClinics} clinic${plan.maxClinics > 1 ? "s" : ""}`}
           </span>
         </p>
       </div>
@@ -79,22 +85,22 @@ export function PlanCard({ plan, isCurrentPlan, isPopular, onSelect, isLoading }
       {/* Action Button */}
       <Button
         onClick={() => onSelect(plan)}
-        disabled={isCurrentPlan || isLoading || plan.id === 'enterprise'}
+        disabled={isCurrentPlan || isLoading || plan.id === "enterprise"}
         className="w-full"
-        variant={isPopular ? 'default' : 'secondary'}
+        variant={isPopular ? "default" : "secondary"}
       >
         {isCurrentPlan
-          ? 'Current Plan'
-          : plan.id === 'enterprise'
-          ? 'Contact Sales'
-          : isLoading
-          ? 'Processing...'
-          : `Select ${plan.name}`}
+          ? "Current Plan"
+          : plan.id === "enterprise"
+            ? "Contact Sales"
+            : isLoading
+              ? "Processing..."
+              : `Select ${plan.name}`}
       </Button>
 
-      {plan.id === 'enterprise' && (
+      {plan.id === "enterprise" && (
         <p className="text-center text-xs text-gray-500 mt-2">
-          Email us at sales@ocura360.com
+          Email us at hello@ocura360.com
         </p>
       )}
     </div>
