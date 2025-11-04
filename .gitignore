@@ -38,6 +38,12 @@ client/build/
 dist/
 build/
 
+# Blog (Next.js)
+ocura360-blog/.next/
+ocura360-blog/out/
+ocura360-blog/.vercel/
+ocura360-blog/.env*.local
+
 # Testing
 coverage/
 
