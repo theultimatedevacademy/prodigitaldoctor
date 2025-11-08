@@ -676,12 +676,26 @@ export const getCalendarView = async (req, res) => {
  * POST /api/appointments/first-visit
  */
 export const createFirstVisitAppointment = async (req, res) => {
+  logger.info('=== START: createFirstVisitAppointment ===');
+  
   const session = await mongoose.startSession();
   session.startTransaction();
+  logger.info('✓ Transaction started successfully');
 
   try {
     const { userId } = req.auth;
     const { clinic, doctor, name, phone, startAt, endAt, notes } = req.body;
+    
+    logger.info({
+      userId,
+      hasAuth: !!req.auth,
+      clinic,
+      doctor,
+      name,
+      phone,
+      startAt,
+      hasEndAt: !!endAt
+    }, 'Request data received');
 
     if (!clinic || !doctor || !name || !phone || !startAt) {
       await session.abortTransaction();
@@ -691,12 +705,23 @@ export const createFirstVisitAppointment = async (req, res) => {
     }
 
     // Verify clinic and doctor exist
+    logger.info('Fetching clinic and doctor documents...');
     const [clinicDoc, doctorDoc] = await Promise.all([
       Clinic.findById(clinic),
       User.findById(doctor),
     ]);
+    
+    logger.info({
+      clinicFound: !!clinicDoc,
+      clinicId: clinicDoc?._id,
+      clinicName: clinicDoc?.name,
+      doctorFound: !!doctorDoc,
+      doctorId: doctorDoc?._id,
+      doctorName: doctorDoc?.name
+    }, 'Clinic and doctor lookup result');
 
     if (!clinicDoc || !doctorDoc) {
+      logger.error('Clinic or doctor not found - aborting');
       await session.abortTransaction();
       return res.status(404).json({ error: "Clinic or doctor not found" });
     }
@@ -741,6 +766,7 @@ export const createFirstVisitAppointment = async (req, res) => {
     // }
 
     // Use smart patient matching service to find or create patient
+    logger.info('Preparing patient data for matching...');
     const patientData = {
       name,
       phone,
@@ -755,6 +781,7 @@ export const createFirstVisitAppointment = async (req, res) => {
       notes: req.body.notes,
     };
 
+    logger.info('Calling findOrCreatePatient...');
     const patientResult = await findOrCreatePatient(
       patientData,
       clinic,
@@ -762,15 +789,49 @@ export const createFirstVisitAppointment = async (req, res) => {
       clinicDoc.name,
       doctorDoc.name
     );
+    
+    logger.info({
+      patientId: patientResult.patient?._id,
+      patientCode: patientResult.patientCode,
+      isNew: patientResult.isNew,
+      reused: patientResult.reused
+    }, '✓ Patient found/created successfully');
 
     const patient = patientResult.patient;
     const patientCode = patientResult.patientCode;
     const patientReused = patientResult.reused;
 
     // Get current user
+    logger.info({ clerkId: userId }, 'Looking up user by clerkId...');
     const user = await User.findOne({ clerkId: userId });
+    
+    logger.info({
+      userFound: !!user,
+      userId: user?._id,
+      userName: user?.name,
+      userEmail: user?.email,
+      clerkId: userId
+    }, 'User lookup result');
+    
+    if (!user) {
+      logger.error({ clerkId: userId }, '❌ CRITICAL: User not found in database!');
+      await session.abortTransaction();
+      return res.status(404).json({ 
+        error: 'User not found. Please ensure your account is properly synced.',
+        clerkId: userId 
+      });
+    }
 
     // Create appointment
+    logger.info({
+      clinic,
+      doctor,
+      patientId: patient._id,
+      createdBy: user._id,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
+    }, 'Creating appointment document...');
+    
     const appointment = await Appointment.create(
       [
         {
@@ -788,9 +849,14 @@ export const createFirstVisitAppointment = async (req, res) => {
       ],
       { session }
     );
+    
+    logger.info({ appointmentId: appointment[0]._id }, '✓ Appointment created successfully');
 
+    logger.info('Committing transaction...');
     await session.commitTransaction();
+    logger.info('✓ Transaction committed successfully');
 
+    logger.info('Populating appointment data...');
     const populatedAppointment = await Appointment.findById(appointment[0]._id)
       .populate("clinic")
       .populate("doctor")
@@ -822,7 +888,12 @@ export const createFirstVisitAppointment = async (req, res) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    logger.error({ error }, "Error creating first visit appointment");
+    logger.error({ 
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    }, "❌ ERROR: Failed to create first visit appointment");
 
     if (error.code === 11000) {
       return res.status(409).json({
@@ -830,9 +901,14 @@ export const createFirstVisitAppointment = async (req, res) => {
       });
     }
 
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ 
+      error: "Internal server error",
+      message: error.message,
+      code: error.code 
+    });
   } finally {
     session.endSession();
+    logger.info('=== END: createFirstVisitAppointment ===');
   }
 };
 

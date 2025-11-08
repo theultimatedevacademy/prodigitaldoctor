@@ -322,9 +322,25 @@ export async function findMatchingPatient(phone, name, clinicId) {
 export async function findOrCreatePatient(patientData, clinicId, doctorId, clinicName, doctorName) {
   try {
     const { name, phone } = patientData;
+    
+    logger.info({
+      phone,
+      name,
+      clinicId,
+      doctorId,
+      clinicName,
+      doctorName
+    }, '>>> findOrCreatePatient called');
 
     // Try to find matching patient
+    logger.info({ phone, name, clinicId }, 'Searching for matching patient...');
     const matchResult = await findMatchingPatient(phone, name, clinicId);
+    
+    logger.info({
+      matched: matchResult?.matched,
+      patientId: matchResult?.patient?._id,
+      similarity: matchResult?.similarity
+    }, 'Patient matching result');
 
     if (matchResult && matchResult.matched) {
       // Patient matched - update with new booking data and reuse
