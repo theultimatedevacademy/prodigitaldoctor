@@ -82,7 +82,7 @@ export const createAppointment = async (req, res) => {
     // Get current user
     const user = await User.findOne({ clerkId: userId });
 
-    console.log(`Logging user for patient appointment creation: ${user}`);
+    logger.info(`Logging user for patient appointment creation: ${user}`);
 
     // Create appointment
     const appointment = await Appointment.create({
@@ -96,7 +96,7 @@ export const createAppointment = async (req, res) => {
       createdBy: user._id,
     });
 
-    console.log(
+    logger.info(
       `Logging appointment for patient appointment creation: ${appointment}`
     );
 
@@ -107,7 +107,7 @@ export const createAppointment = async (req, res) => {
       .populate("createdBy")
       .populate("prescriptions");
 
-    console.log(
+    logger.info(
       `Logging populated appointment for patient appointment creation: ${populatedAppointment}`
     );
 
