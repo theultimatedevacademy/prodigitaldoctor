@@ -14,10 +14,12 @@ export const requireAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("❌ No authorization header or invalid format");
       return res.status(401).json({ error: "No token provided" });
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("🔑 Token received, length:", token.length);
 
     // Verify the token with Clerk
     try {
@@ -25,13 +27,14 @@ export const requireAuth = async (req, res, next) => {
         secretKey: process.env.CLERK_SECRET_KEY,
       });
       req.auth = { userId: decoded.sub };
+      console.log("✓ Token verified successfully, userId:", decoded.sub);
       next();
     } catch (verifyError) {
-      console.error("Token verification error:", verifyError);
+      console.error("❌ Token verification error:", verifyError.message);
       return res.status(401).json({ error: "Invalid or expired token" });
     }
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    console.error("❌ Auth middleware error:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
